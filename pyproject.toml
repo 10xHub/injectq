@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Modern Python dependency injection library combining simplicity, power, and performance"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [
     { name = "InjectQ Contributors" },
 ]
@@ -119,6 +119,7 @@ addopts = [
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
+    "asyncio: marks tests as async",
 ]
 
 [tool.coverage.run]

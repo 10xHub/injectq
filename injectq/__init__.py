@@ -18,6 +18,7 @@ from .core import (
 from .decorators import (
     inject,
     Inject,
+    inject_into,
     singleton,
     transient,
     scoped,
@@ -47,19 +48,20 @@ from .utils import (
 __all__ = [
     # Core classes
     "InjectQ",
-    "ScopeType", 
+    "ScopeType",
     "Scope",
     # Decorators
     "inject",
     "Inject",
+    "inject_into",
     "singleton",
     "transient",
-    "scoped", 
+    "scoped",
     "register_as",
     # Modules
     "Module",
     "SimpleModule",
-    "ProviderModule", 
+    "ProviderModule",
     "ConfigurationModule",
     "provider",
     # Testing
@@ -67,11 +69,11 @@ __all__ = [
     # Exceptions
     "InjectQError",
     "DependencyNotFoundError",
-    "CircularDependencyError", 
+    "CircularDependencyError",
     "BindingError",
     "InjectionError",
     "ScopeError",
 ]
 
 # Create default container instance for convenience
-container = InjectQ.get_instance()
+injectq = InjectQ.get_instance()

@@ -11,7 +11,7 @@ else:
 if sys.version_info >= (3, 8):
     from typing import get_origin, get_args
 else:
-    from typing_extensions import get_origin, get_args
+    from typing_extensions import get_origin
 
 # Type variables
 T = TypeVar("T")
@@ -44,9 +44,9 @@ def is_concrete_type(type_hint: Type[Any]) -> bool:
     # Check if it's a class that can be instantiated
     try:
         return (
-            isinstance(type_hint, type) and
-            not is_generic_type(type_hint) and
-            hasattr(type_hint, "__init__")
+            isinstance(type_hint, type)
+            and not is_generic_type(type_hint)
+            and hasattr(type_hint, "__init__")
         )
     except (TypeError, AttributeError):
         return False
@@ -59,10 +59,10 @@ def normalize_type(type_hint: Any) -> Type[Any]:
         # For forward references, we'll need to resolve them in context
         # For now, return as-is and handle resolution at injection time
         return type_hint
-    
+
     # Handle generic types by getting the origin
     origin = get_origin(type_hint)
     if origin is not None:
         return origin
-    
+
     return type_hint
