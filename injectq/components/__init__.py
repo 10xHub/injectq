@@ -16,12 +16,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import (
     Any,
-    Dict,
-    List,
-    Optional,
     Protocol,
-    Set,
-    Type,
     TypeVar,
     get_type_hints,
     runtime_checkable,
@@ -37,7 +32,6 @@ T = TypeVar("T")
 
 class ComponentError(InjectQError):
     """Errors related to component architecture."""
-
 
 
 class ComponentState(Enum):
@@ -206,9 +200,7 @@ class Component:
         """Initialize the component."""
         if self.state != ComponentState.INITIALIZED:
             msg = f"Component {self.name} cannot be initialized from state {self.state}"
-            raise ComponentError(
-                msg
-            )
+            raise ComponentError(msg)
 
         # Default implementation - can be overridden
         self.state = ComponentState.INITIALIZED
@@ -217,9 +209,7 @@ class Component:
         """Configure the component with parameters."""
         if self.state not in (ComponentState.INITIALIZED, ComponentState.CONFIGURED):
             msg = f"Component {self.name} cannot be configured from state {self.state}"
-            raise ComponentError(
-                msg
-            )
+            raise ComponentError(msg)
 
         # Store configuration
         for key, value in kwargs.items():
@@ -231,9 +221,7 @@ class Component:
         """Start the component."""
         if self.state not in (ComponentState.CONFIGURED, ComponentState.STOPPED):
             msg = f"Component {self.name} cannot be started from state {self.state}"
-            raise ComponentError(
-                msg
-            )
+            raise ComponentError(msg)
 
         # Resolve dependencies
         for dependency_type in self.requires:
@@ -245,9 +233,7 @@ class Component:
         """Stop the component."""
         if self.state != ComponentState.STARTED:
             msg = f"Component {self.name} cannot be stopped from state {self.state}"
-            raise ComponentError(
-                msg
-            )
+            raise ComponentError(msg)
 
         self.state = ComponentState.STOPPED
 
@@ -394,9 +380,7 @@ class ComponentRegistry:
         def visit(name: str) -> None:
             if name in temp_visited:
                 msg = f"Circular dependency detected involving component '{name}'"
-                raise ComponentError(
-                    msg
-                )
+                raise ComponentError(msg)
 
             if name not in visited:
                 temp_visited.add(name)

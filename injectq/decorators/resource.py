@@ -17,7 +17,6 @@ class ResourceError(InjectQError):
     """Raised when resource management fails."""
 
 
-
 class ResourceLifecycle(ABC):
     """Abstract base class for resource lifecycle management."""
 
@@ -114,9 +113,7 @@ class SyncResourceLifecycle(ResourceLifecycle):
                     self._context_manager.__exit__(None, None, None)
                 except Exception as e:
                     msg = f"Error during context manager cleanup: {e}"
-                    raise ResourceError(
-                        msg
-                    ) from e
+                    raise ResourceError(msg) from e
                 finally:
                     self._context_manager = None
 
@@ -170,9 +167,7 @@ class AsyncResourceLifecycle(ResourceLifecycle):
     def shutdown(self) -> None:
         """Shutdown is not supported for async resources - use shutdown_async instead."""
         msg = "Cannot shutdown async resource synchronously - use shutdown_async()"
-        raise ResourceError(
-            msg
-        )
+        raise ResourceError(msg)
 
     async def shutdown_async(self) -> None:
         """Shutdown an asynchronous resource."""
@@ -188,9 +183,7 @@ class AsyncResourceLifecycle(ResourceLifecycle):
                     pass  # Expected for proper generator cleanup
                 except Exception as e:
                     msg = f"Error during async generator cleanup: {e}"
-                    raise ResourceError(
-                        msg
-                    ) from e
+                    raise ResourceError(msg) from e
                 finally:
                     self._async_generator = None
 
@@ -200,9 +193,7 @@ class AsyncResourceLifecycle(ResourceLifecycle):
                     await self._context_manager.__aexit__(None, None, None)
                 except Exception as e:
                     msg = f"Error during async context manager cleanup: {e}"
-                    raise ResourceError(
-                        msg
-                    ) from e
+                    raise ResourceError(msg) from e
                 finally:
                     self._context_manager = None
 
@@ -235,9 +226,7 @@ class ResourceManager:
 
         if lifecycle.is_async:
             msg = f"Cannot initialize async resource '{name}' synchronously"
-            raise ResourceError(
-                msg
-            )
+            raise ResourceError(msg)
 
         return lifecycle.initialize(*args, **kwargs)
 
@@ -259,9 +248,7 @@ class ResourceManager:
         if lifecycle and lifecycle.initialized:
             if lifecycle.is_async:
                 msg = f"Cannot shutdown async resource '{name}' synchronously"
-                raise ResourceError(
-                    msg
-                )
+                raise ResourceError(msg)
             lifecycle.shutdown()
 
     async def shutdown_async_resource(self, name: str) -> None:

@@ -9,7 +9,11 @@ from injectq.utils import ServiceKey
 
 
 @contextmanager
-def override_dependency(service_type: ServiceKey, override_value: Any, container: InjectQ | None = None) -> Iterator[None]:
+def override_dependency(
+    service_type: ServiceKey,
+    override_value: Any,
+    container: InjectQ | None = None,
+) -> Iterator[None]:
     """Context manager to temporarily override a dependency for testing.
 
     Args:
@@ -82,6 +86,7 @@ class MockFactory:
                     # Return a simple mock function for any method
                     def mock_method(*args, **method_kwargs) -> str:
                         return f"mock_{name}_result"
+
                     return mock_method
 
             self._instances[service_type] = MockService(**kwargs)
@@ -130,6 +135,7 @@ class TestModule:
 
     def __init__(self) -> None:
         from injectq.modules import SimpleModule
+
         self._module = SimpleModule()
 
     def mock(self, service_type: type, **kwargs) -> "TestModule":
