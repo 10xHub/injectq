@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "injectq"
-dynamic = ["version"]
+dynamic = "0.1.1"
 description = "Modern Python dependency injection library combining simplicity, power, and performance"
 readme = "README.md"
 license = "MIT"
@@ -25,18 +25,15 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: Libraries",
     "Typing :: Typed",
 ]
 dependencies = [
-    "httpx>=0.28.1",
-    "taskiq>=0.11.18",
     "typing-extensions>=4.0.0",
 ]
 
@@ -52,6 +49,9 @@ dev = [
     "black>=22.0.0",
     "flake8>=4.0.0",
     "isort>=5.0.0",
+    "httpx>=0.28.1",
+    "taskiq>=0.11.18",
+    "fastapi>=0.68.0"
 ]
 
 [project.urls]
