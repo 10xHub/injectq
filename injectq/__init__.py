@@ -23,6 +23,10 @@ from .decorators import (
     transient,
     scoped,
     register_as,
+    resource,
+    get_resource_manager,
+    managed_resource,
+    async_managed_resource,
 )
 
 # Testing exports
@@ -58,6 +62,10 @@ __all__ = [
     "transient",
     "scoped",
     "register_as",
+    "resource",
+    "get_resource_manager",
+    "managed_resource",
+    "async_managed_resource",
     # Modules
     "Module",
     "SimpleModule",
@@ -66,6 +74,7 @@ __all__ = [
     "provider",
     # Testing
     "testing",
+    # Integrations
     # Exceptions
     "InjectQError",
     "DependencyNotFoundError",

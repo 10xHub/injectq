@@ -2,6 +2,12 @@
 
 from .inject import inject, Inject, inject_into
 from .singleton import singleton, transient, scoped, register_as
+from .resource import (
+    resource,
+    get_resource_manager,
+    managed_resource,
+    async_managed_resource,
+)
 
 __all__ = [
     # Injection decorators
@@ -10,7 +16,12 @@ __all__ = [
     "inject_into",
     # Registration decorators
     "singleton",
-    "transient", 
+    "transient",
     "scoped",
     "register_as",
+    # Resource management
+    "resource",
+    "get_resource_manager",
+    "managed_resource",
+    "async_managed_resource",
 ]

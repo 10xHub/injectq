@@ -613,6 +613,11 @@ testing = [
     { name = "pytest-asyncio" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "pytest-asyncio" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "black", marker = "extra == 'dev'", specifier = ">=22.0.0" },
@@ -630,6 +635,9 @@ requires-dist = [
     { name = "typing-extensions", specifier = ">=4.0.0" },
 ]
 provides-extras = ["dev", "fastapi", "fastmcp", "taskiq", "testing"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest-asyncio", specifier = ">=1.1.0" }]
 
 [[package]]
 name = "isodate"
