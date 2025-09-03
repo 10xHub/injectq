@@ -1,6 +1,10 @@
 # InjectQ
 
-A modern Python dependency injection library that combines the simplicity of kink, the power of python-injector, and the advanced features of modern DI frameworks.
+A modern Python dependency injection library that combines simplicity, power, and the advanced features of modern DI frameworks.
+
+## Documentation
+Online documentation is hosted at [https://iamsdt.github.io/injectq/](https://iamsdt.github.io/injectq/).
+
 
 ## Features
 
@@ -19,8 +23,6 @@ from injectq import InjectQ, inject, singleton
 # Create container
 container = InjectQ.get_instance()
 
-# Simple dict-like binding
-container[str] = "Hello, World!"
 
 # Class binding
 @singleton
@@ -51,12 +53,13 @@ With optional framework integrations:
 ```bash
 pip install injectq[fastapi]   # FastAPI integration
 pip install injectq[taskiq]    # Taskiq integration  
-pip install injectq[fastmcp]   # FastMCP integration
 ```
 
 ## Documentation
 
 See the [complete specification](INJECTQ_SPECIFICATION.md) for detailed API documentation and examples.
+
+Online documentation is hosted at [https://iamsdt.github.io/injectq/](https://iamsdt.github.io/injectq/).
 
 ## License
 
