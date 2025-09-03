@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, ParamSpec, get_origin, TypeVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, get_origin
 
 
 # Type variables
