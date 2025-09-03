@@ -1,0 +1,196 @@
+site_name: InjectQ Documentation
+site_description: Modern Python dependency injection library
+site_author: InjectQ Contributors
+site_url: https://iamsdt.github.io/injectq/
+
+repo_name: Iamsdt/injectq
+repo_url: https://github.com/Iamsdt/injectq
+edit_uri: edit/main/docs/
+
+copyright: Copyright &copy; 2024 InjectQ Contributors
+
+theme:
+  name: material
+  language: en
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  features:
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    - content.code.select
+    - content.footnote.tooltips
+    - content.tabs.link
+    - content.tooltips
+    - header.autohide
+    - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.prune
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    - toc.integrate
+
+plugins:
+  - search
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - meta
+  - tables
+  - toc:
+      permalink: true
+      permalink_title: Anchor link to this section for reference
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+      - Your First App: getting-started/first-app.md
+  - Core Concepts:
+      - What is Dependency Injection?: core-concepts/what-is-di.md
+      - The Container Pattern: core-concepts/container-pattern.md
+      - Service Lifetimes: core-concepts/service-lifetimes.md
+      - Type Safety: core-concepts/type-safety.md
+  - Injection Patterns:
+      - Dict-like Interface: injection-patterns/dict-interface.md
+      - "@inject Decorator": injection-patterns/inject-decorator.md
+      - Inject() Function: injection-patterns/inject-function.md
+      - Binding Patterns: injection-patterns/binding-patterns.md
+  - Scopes:
+      - Understanding Scopes: scopes/understanding-scopes.md
+      - Singleton Scope: scopes/singleton-scope.md
+      - Transient Scope: scopes/transient-scope.md
+      - Scoped Services: scopes/scoped-services.md
+      - Custom Scopes: scopes/custom-scopes.md
+      - Scope Best Practices: scopes/scope-best-practices.md
+  - Modules & Providers:
+      - Module System: modules/module-system.md
+      - Provider Pattern: modules/provider-pattern.md
+      - Configuration Modules: modules/configuration-modules.md
+      - Module Composition: modules/module-composition.md
+      - Lazy Loading: modules/lazy-loading.md
+  - Framework Integrations:
+      - FastAPI Integration: integrations/fastapi.md
+      - Taskiq Integration: integrations/taskiq.md
+      - FastMCP Integration: integrations/fastmcp.md
+  - Testing:
+      - Testing Overview: testing/testing-overview.md
+      - Test Containers: testing/test-containers.md
+      - Mocking & Overrides: testing/mocking-overrides.md
+      - Integration Testing: testing/integration-testing.md
+      - Unit Testing: testing/unit-testing.md
+      - AsyncIO Testing: testing/asyncio-testing.md
+      - Performance Testing: testing/performance-testing.md
+  - Advanced Features:
+      - Resource Management: advanced/resource-management.md
+      - Diagnostics & Profiling: advanced/diagnostics-profiling.md
+      - Performance Optimization: advanced/performance-optimization.md
+      - Thread Safety: advanced/thread-safety.md
+      - Async Support: advanced/async-support.md
+      - Middleware: advanced/middleware.md
+      - Plugins: advanced/plugins.md
+  - Migration Guides:
+      - From Kink: migration/from-kink.md
+      - From Python-Injector: migration/from-python-injector.md
+      - From Other Libraries: migration/from-other-libraries.md
+  - Examples:
+      - Practical Examples: examples/practical-examples.md
+      - Design Patterns: examples/design-patterns.md
+      - Architectural Examples: examples/architectural-examples.md
+  - Best Practices:
+      - Performance: best-practices/performance.md
+      - Security: best-practices/security.md
+      - Architectural Patterns: best-practices/architectural-patterns.md
+      - Testing Strategies: best-practices/testing-strategies.md
+      - Debugging: best-practices/debugging.md
+  - API Reference:
+      - Overview: api-reference/index.md
+      - Container: api-reference/container.md
+      - Module: api-reference/module.md
+      - Decorators: api-reference/decorators.md
+      - Scopes: api-reference/scopes.md
+      - Registry: api-reference/registry.md
+      - Resolver: api-reference/resolver.md
+      - Providers: api-reference/providers.md
+      - Validation: api-reference/validation.md
+      - Diagnostics: api-reference/diagnostics.md
+      - Testing: api-reference/testing.md
+      - Integrations: api-reference/integrations.md
+      - Types: api-reference/types.md
+      - Exceptions: api-reference/exceptions.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
+
+extra:
+  version:
+    provider: mike
+    default: latest
+
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Iamsdt/injectq
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/injectq/
+
+  generator: false
+
+watch:
+  - injectq/
