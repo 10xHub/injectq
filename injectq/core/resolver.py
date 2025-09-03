@@ -1,21 +1,23 @@
 """Dependency resolver for InjectQ dependency injection library."""
 
 import inspect
-from typing import Any, Dict, List, Type, Set, Optional, Callable
+from collections.abc import Callable
+from typing import Any
 
-from ..utils import (
-    ServiceKey,
-    DependencyNotFoundError,
+from injectq.utils import (
     CircularDependencyError,
+    DependencyNotFoundError,
     InjectionError,
-    get_function_dependencies,
-    get_class_constructor_dependencies,
-    is_injectable_class,
+    ServiceKey,
     format_type_name,
+    get_class_constructor_dependencies,
+    get_function_dependencies,
+    is_injectable_class,
 )
-from .registry import ServiceRegistry, ServiceBinding
-from .scopes import get_scope_manager
+
 from .base_scope_manager import BaseScopeManager
+from .registry import ServiceBinding, ServiceRegistry
+from .scopes import get_scope_manager
 
 
 class DependencyResolver:
@@ -24,15 +26,14 @@ class DependencyResolver:
     def __init__(
         self,
         registry: ServiceRegistry,
-        scope_manager: Optional[BaseScopeManager] = None,
+        scope_manager: BaseScopeManager | None = None,
     ) -> None:
         self.registry = registry
         self.scope_manager = scope_manager or get_scope_manager()
-        self._resolution_stack: List[ServiceKey] = []
+        self._resolution_stack: list[ServiceKey] = []
 
     def resolve(self, service_type: ServiceKey) -> Any:
-        """
-        Resolve a service instance with all its dependencies.
+        """Resolve a service instance with all its dependencies.
 
         Args:
             service_type: The type or key of the service to resolve
@@ -48,7 +49,7 @@ class DependencyResolver:
         # Check for circular dependencies
         if service_type in self._resolution_stack:
             cycle_start = self._resolution_stack.index(service_type)
-            cycle = self._resolution_stack[cycle_start:] + [service_type]
+            cycle = [*self._resolution_stack[cycle_start:], service_type]
             raise CircularDependencyError(cycle)
 
         try:
@@ -99,7 +100,7 @@ class DependencyResolver:
             key=service_type, factory=factory_wrapper, scope_name="transient"
         )
 
-    def _auto_resolve_class(self, cls: Type[Any]) -> Any:
+    def _auto_resolve_class(self, cls: type[Any]) -> Any:
         """Auto-resolve a class that wasn't explicitly bound."""
 
         def factory() -> Any:
@@ -125,11 +126,12 @@ class DependencyResolver:
         if callable(implementation):
             return self._invoke_factory(implementation)
 
+        msg = f"Don't know how to create instance from: {implementation}"
         raise InjectionError(
-            f"Don't know how to create instance from: {implementation}"
+            msg
         )
 
-    def _instantiate_class(self, cls: Type[Any]) -> Any:
+    def _instantiate_class(self, cls: type[Any]) -> Any:
         """Instantiate a class with dependency injection."""
         try:
             # Get constructor dependencies
@@ -154,16 +156,16 @@ class DependencyResolver:
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    else:
-                        raise
+                    raise
 
             # Create instance
             return cls(**resolved_args)
 
         except Exception as e:
-            if isinstance(e, (DependencyNotFoundError, CircularDependencyError)):
+            if isinstance(e, DependencyNotFoundError | CircularDependencyError):
                 raise
-            raise InjectionError(f"Failed to instantiate {cls}: {e}")
+            msg = f"Failed to instantiate {cls}: {e}"
+            raise InjectionError(msg)
 
     def _invoke_factory(self, factory: Callable[..., Any]) -> Any:
         """Invoke a factory function with dependency injection."""
@@ -190,16 +192,16 @@ class DependencyResolver:
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    else:
-                        raise
+                    raise
 
             # Invoke factory
             return factory(**resolved_args)
 
         except Exception as e:
-            if isinstance(e, (DependencyNotFoundError, CircularDependencyError)):
+            if isinstance(e, DependencyNotFoundError | CircularDependencyError):
                 raise
-            raise InjectionError(f"Failed to invoke factory {factory}: {e}")
+            msg = f"Failed to invoke factory {factory}: {e}"
+            raise InjectionError(msg)
 
     def validate_dependencies(self) -> None:
         """Validate all registered dependencies for resolvability."""
@@ -220,7 +222,7 @@ class DependencyResolver:
 
     def _validate_service(self, service_type: ServiceKey) -> None:
         """Validate that a service can be resolved without creating instances."""
-        visited: Set[ServiceKey] = set()
+        visited: set[ServiceKey] = set()
 
         def check_service(stype: ServiceKey) -> None:
             if stype in visited:
@@ -247,7 +249,7 @@ class DependencyResolver:
 
         check_service(service_type)
 
-    def get_dependency_graph(self) -> Dict[ServiceKey, List[ServiceKey]]:
+    def get_dependency_graph(self) -> dict[ServiceKey, list[ServiceKey]]:
         """Get the dependency graph for all registered services."""
         graph = {}
 

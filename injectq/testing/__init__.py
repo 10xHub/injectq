@@ -1,21 +1,22 @@
 """Testing utilities for InjectQ."""
 
 from .utilities import (
-    override_dependency,
-    test_container,
     MockFactory,
-    mock_factory,
-    create_test_module,
     TestModule,
+    create_test_module,
+    mock_factory,
+    override_dependency,
     pytest_container_fixture,
+    test_container,
 )
 
+
 __all__ = [
-    "override_dependency",
-    "test_container",
     "MockFactory",
-    "mock_factory",
-    "create_test_module", 
     "TestModule",
+    "create_test_module",
+    "mock_factory",
+    "override_dependency",
     "pytest_container_fixture",
+    "test_container",
 ]

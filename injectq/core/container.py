@@ -1,23 +1,33 @@
 """Main container implementation for InjectQ dependency injection library."""
 
-from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
-from contextlib import contextmanager
-from collections.abc import Iterator
+from __future__ import annotations
 
-from ..utils import ServiceKey, ServiceFactory, BindingError, DependencyNotFoundError
+from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any
+
+from injectq.utils import (
+    BindingError,
+    DependencyNotFoundError,
+    ServiceFactory,
+    ServiceKey,
+)
+
 from .registry import ServiceRegistry
 from .resolver import DependencyResolver
-from .scopes import ScopeType, ScopeManager
+from .scopes import ScopeManager, ScopeType
 from .thread_safety import HybridLock
 
+
 if TYPE_CHECKING:
-    from ..diagnostics import DependencyVisualizer
+    from collections.abc import Iterator
+
+    from injectq.diagnostics import DependencyVisualizer
 
 
 class FactoryProxy:
     """Proxy object for managing factory bindings with dict-like interface."""
 
-    def __init__(self, container: "InjectQ") -> None:
+    def __init__(self, container: InjectQ) -> None:
         self._container = container
 
     def __setitem__(self, service_type: ServiceKey, factory: ServiceFactory) -> None:
@@ -28,13 +38,15 @@ class FactoryProxy:
         """Get a factory function for a service type."""
         factory = self._container._registry.get_factory(service_type)
         if factory is None:
-            raise KeyError(f"No factory registered for {service_type}")
+            msg = f"No factory registered for {service_type}"
+            raise KeyError(msg)
         return factory
 
     def __delitem__(self, service_type: ServiceKey) -> None:
         """Remove a factory binding."""
         if not self._container._registry.remove_factory(service_type):
-            raise KeyError(f"No factory registered for {service_type}")
+            msg = f"No factory registered for {service_type}"
+            raise KeyError(msg)
 
     def __contains__(self, service_type: ServiceKey) -> bool:
         """Check if a factory is registered."""
@@ -42,8 +54,7 @@ class FactoryProxy:
 
 
 class InjectQ:
-    """
-    Main dependency injection container.
+    """Main dependency injection container.
 
     Provides multiple API styles:
     - Dict-like interface: container[Type] = instance
@@ -51,7 +62,7 @@ class InjectQ:
     - Factory methods: container.factories[Type] = factory_func
     """
 
-    _instance: Optional["InjectQ"] = None
+    _instance: Optional[InjectQ] = None
 
     def __init__(
         self,
@@ -59,8 +70,7 @@ class InjectQ:
         use_async_scopes: bool = True,
         thread_safe: bool = True,
     ) -> None:
-        """
-        Initialize the container.
+        """Initialize the container.
 
         Args:
             modules: Optional list of modules to install
@@ -94,7 +104,7 @@ class InjectQ:
                 self.install_module(module)
 
     @classmethod
-    def get_instance(cls) -> "InjectQ":
+    def get_instance(cls) -> InjectQ:
         """Get the global singleton container instance."""
         if cls._instance is None:
             cls._instance = cls()
@@ -127,9 +137,10 @@ class InjectQ:
     def __delitem__(self, service_type: ServiceKey) -> None:
         """Remove a service binding using dict syntax."""
 
-        def remove_binding():
+        def remove_binding() -> None:
             if not self._registry.remove_binding(service_type):
-                raise KeyError(f"No binding registered for {service_type}")
+                msg = f"No binding registered for {service_type}"
+                raise KeyError(msg)
 
         self._ensure_thread_safe(remove_binding)
 
@@ -145,8 +156,7 @@ class InjectQ:
         scope: Union[str, ScopeType] = ScopeType.SINGLETON,
         to: Any = None,
     ) -> None:
-        """
-        Bind a service type to an implementation.
+        """Bind a service type to an implementation.
 
         Args:
             service_type: The service type or key to bind
@@ -209,9 +219,8 @@ class InjectQ:
         # Check if scope manager supports async contexts
         if hasattr(self._scope_manager, "async_scope_context"):
             return self._scope_manager.async_scope_context(scope_name)
-        else:
-            # Fallback to regular scope context
-            return self._scope_manager.scope_context(scope_name)
+        # Fallback to regular scope context
+        return self._scope_manager.scope_context(scope_name)
 
     def clear_scope(self, scope_name: Union[str, ScopeType]) -> None:
         """Clear all instances in a scope."""
@@ -227,12 +236,13 @@ class InjectQ:
     def install_module(self, module: Any) -> None:
         """Install a module into the container."""
 
-        def install():
+        def install() -> None:
             if hasattr(module, "configure"):
                 binder = ModuleBinder(self)
                 module.configure(binder)
             else:
-                raise BindingError(f"Module {module} does not have a configure method")
+                msg = f"Module {module} does not have a configure method"
+                raise BindingError(msg)
 
         self._ensure_thread_safe(install)
 
@@ -240,7 +250,7 @@ class InjectQ:
     def validate(self) -> None:
         """Validate all dependencies for consistency and resolvability."""
 
-        def validate():
+        def validate() -> None:
             self._registry.validate()
             self._resolver.validate_dependencies()
 
@@ -250,17 +260,16 @@ class InjectQ:
         """Get the dependency graph for all registered services."""
         return self._ensure_thread_safe(lambda: self._resolver.get_dependency_graph())
 
-    def visualize_dependencies(self) -> "DependencyVisualizer":
+    def visualize_dependencies(self) -> DependencyVisualizer:
         """Get a dependency visualizer for this container."""
-        from ..diagnostics import DependencyVisualizer
+        from injectq.diagnostics import DependencyVisualizer
 
-        visualizer = DependencyVisualizer(self)
-        return visualizer
+        return DependencyVisualizer(self)
 
     def compile(self) -> None:
         """Pre-compile dependency graphs for performance optimization."""
 
-        def compile_dependencies():
+        def compile_dependencies() -> None:
             # Pre-resolve dependency graphs and cache resolution plans
             self._resolver.compile_resolution_plans()
 
@@ -270,7 +279,7 @@ class InjectQ:
     def clear(self) -> None:
         """Clear all bindings and cached instances."""
 
-        def clear():
+        def clear() -> None:
             self._registry.clear()
             self.clear_all_scopes()
 
@@ -293,7 +302,7 @@ class InjectQ:
             original_factory = self._registry.get_factory(service_type)
             return original_binding, original_factory
 
-        def restore_override(original_binding, original_factory):
+        def restore_override(original_binding, original_factory) -> None:
             # Clear cached instances again before restoring
             self._scope_manager.clear_scope("singleton")
             # Restore original binding
@@ -322,7 +331,7 @@ class InjectQ:
 
     @classmethod
     @contextmanager
-    def test_mode(cls) -> Iterator["InjectQ"]:
+    def test_mode(cls) -> Iterator[InjectQ]:
         """Create a temporary container for testing."""
         original_instance = cls._instance
         try:

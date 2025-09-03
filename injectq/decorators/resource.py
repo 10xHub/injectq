@@ -3,11 +3,12 @@
 import inspect
 import weakref
 from abc import ABC, abstractmethod
-from contextlib import contextmanager, asynccontextmanager
-from typing import Any, Callable, Dict, Optional, TypeVar, Union
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Callable, Iterator
+from contextlib import asynccontextmanager, contextmanager
+from typing import Any, TypeVar
 
-from ..utils import InjectQError
+from injectq.utils import InjectQError
+
 
 T = TypeVar("T")
 
@@ -15,7 +16,6 @@ T = TypeVar("T")
 class ResourceError(InjectQError):
     """Raised when resource management fails."""
 
-    pass
 
 
 class ResourceLifecycle(ABC):
@@ -32,15 +32,12 @@ class ResourceLifecycle(ABC):
     @abstractmethod
     def initialize(self, *args, **kwargs) -> Any:
         """Initialize the resource."""
-        pass
 
     def shutdown(self) -> None:
         """Shutdown the resource (sync version)."""
-        pass
 
     async def shutdown_async(self) -> None:
         """Shutdown the resource (async version)."""
-        pass
 
     @property
     def initialized(self) -> bool:
@@ -51,7 +48,8 @@ class ResourceLifecycle(ABC):
     def resource(self) -> Any:
         """Get the initialized resource."""
         if not self._initialized:
-            raise ResourceError("Resource not initialized")
+            msg = "Resource not initialized"
+            raise ResourceError(msg)
         return self._resource
 
 
@@ -89,7 +87,8 @@ class SyncResourceLifecycle(ResourceLifecycle):
             return self._resource
 
         except Exception as e:
-            raise ResourceError(f"Failed to initialize resource: {e}") from e
+            msg = f"Failed to initialize resource: {e}"
+            raise ResourceError(msg) from e
 
     def shutdown(self) -> None:
         """Shutdown a synchronous resource."""
@@ -104,7 +103,8 @@ class SyncResourceLifecycle(ResourceLifecycle):
                 except StopIteration:
                     pass  # Expected for proper generator cleanup
                 except Exception as e:
-                    raise ResourceError(f"Error during generator cleanup: {e}") from e
+                    msg = f"Error during generator cleanup: {e}"
+                    raise ResourceError(msg) from e
                 finally:
                     self._generator = None
 
@@ -113,8 +113,9 @@ class SyncResourceLifecycle(ResourceLifecycle):
                 try:
                     self._context_manager.__exit__(None, None, None)
                 except Exception as e:
+                    msg = f"Error during context manager cleanup: {e}"
                     raise ResourceError(
-                        f"Error during context manager cleanup: {e}"
+                        msg
                     ) from e
                 finally:
                     self._context_manager = None
@@ -163,12 +164,14 @@ class AsyncResourceLifecycle(ResourceLifecycle):
             return self._resource
 
         except Exception as e:
-            raise ResourceError(f"Failed to initialize async resource: {e}") from e
+            msg = f"Failed to initialize async resource: {e}"
+            raise ResourceError(msg) from e
 
     def shutdown(self) -> None:
         """Shutdown is not supported for async resources - use shutdown_async instead."""
+        msg = "Cannot shutdown async resource synchronously - use shutdown_async()"
         raise ResourceError(
-            "Cannot shutdown async resource synchronously - use shutdown_async()"
+            msg
         )
 
     async def shutdown_async(self) -> None:
@@ -184,8 +187,9 @@ class AsyncResourceLifecycle(ResourceLifecycle):
                 except StopAsyncIteration:
                     pass  # Expected for proper generator cleanup
                 except Exception as e:
+                    msg = f"Error during async generator cleanup: {e}"
                     raise ResourceError(
-                        f"Error during async generator cleanup: {e}"
+                        msg
                     ) from e
                 finally:
                     self._async_generator = None
@@ -195,8 +199,9 @@ class AsyncResourceLifecycle(ResourceLifecycle):
                 try:
                     await self._context_manager.__aexit__(None, None, None)
                 except Exception as e:
+                    msg = f"Error during async context manager cleanup: {e}"
                     raise ResourceError(
-                        f"Error during async context manager cleanup: {e}"
+                        msg
                     ) from e
                 finally:
                     self._context_manager = None
@@ -210,14 +215,14 @@ class ResourceManager:
     """Manages resource lifecycles and automatic cleanup."""
 
     def __init__(self) -> None:
-        self._resources: Dict[str, ResourceLifecycle] = {}
+        self._resources: dict[str, ResourceLifecycle] = {}
         self._finalizers: weakref.WeakKeyDictionary = weakref.WeakKeyDictionary()
 
     def register_resource(self, name: str, lifecycle: ResourceLifecycle) -> None:
         """Register a resource lifecycle."""
         self._resources[name] = lifecycle
 
-    def get_resource(self, name: str) -> Optional[ResourceLifecycle]:
+    def get_resource(self, name: str) -> ResourceLifecycle | None:
         """Get a resource lifecycle by name."""
         return self._resources.get(name)
 
@@ -225,11 +230,13 @@ class ResourceManager:
         """Initialize a specific resource."""
         lifecycle = self._resources.get(name)
         if not lifecycle:
-            raise ResourceError(f"Unknown resource: {name}")
+            msg = f"Unknown resource: {name}"
+            raise ResourceError(msg)
 
         if lifecycle.is_async:
+            msg = f"Cannot initialize async resource '{name}' synchronously"
             raise ResourceError(
-                f"Cannot initialize async resource '{name}' synchronously"
+                msg
             )
 
         return lifecycle.initialize(*args, **kwargs)
@@ -238,7 +245,8 @@ class ResourceManager:
         """Initialize an async resource."""
         lifecycle = self._resources.get(name)
         if not lifecycle:
-            raise ResourceError(f"Unknown resource: {name}")
+            msg = f"Unknown resource: {name}"
+            raise ResourceError(msg)
 
         if not lifecycle.is_async:
             return lifecycle.initialize(*args, **kwargs)
@@ -250,8 +258,9 @@ class ResourceManager:
         lifecycle = self._resources.get(name)
         if lifecycle and lifecycle.initialized:
             if lifecycle.is_async:
+                msg = f"Cannot shutdown async resource '{name}' synchronously"
                 raise ResourceError(
-                    f"Cannot shutdown async resource '{name}' synchronously"
+                    msg
                 )
             lifecycle.shutdown()
 
@@ -266,26 +275,26 @@ class ResourceManager:
 
     def shutdown_all(self) -> None:
         """Shutdown all synchronous resources."""
-        for name, lifecycle in self._resources.items():
+        for lifecycle in self._resources.values():
             if lifecycle.initialized and not lifecycle.is_async:
                 try:
                     lifecycle.shutdown()
-                except Exception as e:
+                except Exception:
                     # Log error but continue shutting down other resources
-                    print(f"Error shutting down resource '{name}': {e}")
+                    pass
 
     async def shutdown_all_async(self) -> None:
         """Shutdown all resources (both sync and async)."""
-        for name, lifecycle in self._resources.items():
+        for lifecycle in self._resources.values():
             if lifecycle.initialized:
                 try:
                     if lifecycle.is_async:
                         await lifecycle.shutdown_async()
                     else:
                         lifecycle.shutdown()
-                except Exception as e:
+                except Exception:
                     # Log error but continue shutting down other resources
-                    print(f"Error shutting down resource '{name}': {e}")
+                    pass
 
 
 # Global resource manager
@@ -298,8 +307,7 @@ def get_resource_manager() -> ResourceManager:
 
 
 def resource(scope: str = "singleton") -> Callable[[Callable], Callable]:
-    """
-    Decorator to mark a function as a resource provider with automatic lifecycle management.
+    """Decorator to mark a function as a resource provider with automatic lifecycle management.
 
     The decorated function can be:
     - A generator function that yields a resource and contains cleanup code after yield
@@ -344,10 +352,10 @@ def resource(scope: str = "singleton") -> Callable[[Callable], Callable]:
         _resource_manager.register_resource(resource_name, lifecycle)
 
         # Mark function as resource provider
-        setattr(func, "_is_resource", True)
-        setattr(func, "_resource_name", resource_name)
-        setattr(func, "_resource_scope", scope)
-        setattr(func, "_resource_lifecycle", lifecycle)
+        func._is_resource = True
+        func._resource_name = resource_name
+        func._resource_scope = scope
+        func._resource_lifecycle = lifecycle
 
         return func
 
@@ -357,10 +365,9 @@ def resource(scope: str = "singleton") -> Callable[[Callable], Callable]:
 # Convenience functions for common resource patterns
 @contextmanager
 def managed_resource(
-    factory: Callable[[], T], cleanup: Optional[Callable[[T], None]] = None
+    factory: Callable[[], T], cleanup: Callable[[T], None] | None = None
 ) -> Iterator[T]:
-    """
-    Context manager for simple resource management.
+    """Context manager for simple resource management.
 
     Args:
         factory: Function to create the resource
@@ -379,11 +386,10 @@ def managed_resource(
 
 @asynccontextmanager
 async def async_managed_resource(
-    factory: Callable[[], Union[T, Any]],
-    cleanup: Optional[Callable[[T], Union[None, Any]]] = None,
+    factory: Callable[[], T | Any],
+    cleanup: Callable[[T], None | Any] | None = None,
 ) -> AsyncIterator[T]:
-    """
-    Async context manager for simple resource management.
+    """Async context manager for simple resource management.
 
     Args:
         factory: Function to create the resource (can be async)

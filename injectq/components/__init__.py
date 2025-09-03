@@ -1,4 +1,4 @@
-"""InjectQ Component Architecture
+"""InjectQ Component Architecture.
 
 This module implements a component-based dependency injection architecture
 that allows for modular application design with cross-component dependency rules.
@@ -11,25 +11,26 @@ Key Features:
 - Component composition and hierarchies
 """
 
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from enum import Enum
 from typing import (
-    Type,
+    Any,
     Dict,
-    Set,
     List,
     Optional,
-    Any,
-    Callable,
     Protocol,
-    runtime_checkable,
-    get_type_hints,
+    Set,
+    Type,
     TypeVar,
+    get_type_hints,
+    runtime_checkable,
 )
-from enum import Enum
-from dataclasses import dataclass, field
 
-from ..core.container import InjectQ
-from ..core.scopes import Scope
-from ..utils.exceptions import InjectQError
+from injectq.core.container import InjectQ
+from injectq.core.scopes import Scope
+from injectq.utils.exceptions import InjectQError
+
 
 T = TypeVar("T")
 
@@ -37,7 +38,6 @@ T = TypeVar("T")
 class ComponentError(InjectQError):
     """Errors related to component architecture."""
 
-    pass
 
 
 class ComponentState(Enum):
@@ -79,13 +79,13 @@ class ComponentInterface(Protocol):
 class ComponentBinding:
     """Represents a component binding configuration."""
 
-    component_type: Type
-    interface: Optional[Type] = None
+    component_type: type
+    interface: type | None = None
     scope: str = "singleton"
-    dependencies: Set[Type] = field(default_factory=set)
-    provided_interfaces: Set[Type] = field(default_factory=set)
-    configuration: Dict[str, Any] = field(default_factory=dict)
-    tags: Set[str] = field(default_factory=set)
+    dependencies: set[type] = field(default_factory=set)
+    provided_interfaces: set[type] = field(default_factory=set)
+    configuration: dict[str, Any] = field(default_factory=dict)
+    tags: set[str] = field(default_factory=set)
     priority: int = 0
     auto_start: bool = True
 
@@ -106,10 +106,10 @@ class ComponentBinding:
 class ComponentScope(Scope):
     """Component-specific scope for managing component instances."""
 
-    def __init__(self, component_name: str):
+    def __init__(self, component_name: str) -> None:
         super().__init__(f"component:{component_name}")
         self.component_name = component_name
-        self._instances: Dict[str, Any] = {}
+        self._instances: dict[str, Any] = {}
 
     def get(self, key: str, factory: Callable[[], Any]) -> Any:
         """Get or create a component-scoped instance."""
@@ -165,16 +165,16 @@ class Component:
 
     # Component metadata (can be overridden in subclasses)
     name: str = ""
-    provides: List[Type] = []
-    requires: List[Type] = []
-    tags: Set[str] = set()
+    provides: list[type] = []
+    requires: list[type] = []
+    tags: set[str] = set()
     auto_start: bool = True
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.state = ComponentState.INITIALIZED
-        self.container: Optional[InjectQ] = None
-        self._scope: Optional[ComponentScope] = None
-        self._dependencies: Dict[Type, Any] = {}
+        self.container: InjectQ | None = None
+        self._scope: ComponentScope | None = None
+        self._dependencies: dict[type, Any] = {}
 
         # Auto-generate name if not provided
         if not self.name:
@@ -191,10 +191,11 @@ class Component:
         """Set the container for dependency resolution."""
         self.container = container
 
-    def resolve_dependency(self, dependency_type: Type[T]) -> T:
+    def resolve_dependency(self, dependency_type: type[T]) -> T:
         """Resolve a dependency through the container."""
         if self.container is None:
-            raise ComponentError(f"No container set for component {self.name}")
+            msg = f"No container set for component {self.name}"
+            raise ComponentError(msg)
 
         if dependency_type not in self._dependencies:
             self._dependencies[dependency_type] = self.container.get(dependency_type)
@@ -204,8 +205,9 @@ class Component:
     def initialize(self) -> None:
         """Initialize the component."""
         if self.state != ComponentState.INITIALIZED:
+            msg = f"Component {self.name} cannot be initialized from state {self.state}"
             raise ComponentError(
-                f"Component {self.name} cannot be initialized from state {self.state}"
+                msg
             )
 
         # Default implementation - can be overridden
@@ -214,8 +216,9 @@ class Component:
     def configure(self, **kwargs) -> None:
         """Configure the component with parameters."""
         if self.state not in (ComponentState.INITIALIZED, ComponentState.CONFIGURED):
+            msg = f"Component {self.name} cannot be configured from state {self.state}"
             raise ComponentError(
-                f"Component {self.name} cannot be configured from state {self.state}"
+                msg
             )
 
         # Store configuration
@@ -227,8 +230,9 @@ class Component:
     def start(self) -> None:
         """Start the component."""
         if self.state not in (ComponentState.CONFIGURED, ComponentState.STOPPED):
+            msg = f"Component {self.name} cannot be started from state {self.state}"
             raise ComponentError(
-                f"Component {self.name} cannot be started from state {self.state}"
+                msg
             )
 
         # Resolve dependencies
@@ -240,8 +244,9 @@ class Component:
     def stop(self) -> None:
         """Stop the component."""
         if self.state != ComponentState.STARTED:
+            msg = f"Component {self.name} cannot be stopped from state {self.state}"
             raise ComponentError(
-                f"Component {self.name} cannot be stopped from state {self.state}"
+                msg
             )
 
         self.state = ComponentState.STOPPED
@@ -267,20 +272,20 @@ class Component:
 class ComponentRegistry:
     """Registry for managing component definitions and instances."""
 
-    def __init__(self):
-        self._bindings: Dict[str, ComponentBinding] = {}
-        self._instances: Dict[str, Component] = {}
-        self._dependency_graph: Dict[str, Set[str]] = {}
-        self._reverse_graph: Dict[str, Set[str]] = {}
+    def __init__(self) -> None:
+        self._bindings: dict[str, ComponentBinding] = {}
+        self._instances: dict[str, Component] = {}
+        self._dependency_graph: dict[str, set[str]] = {}
+        self._reverse_graph: dict[str, set[str]] = {}
 
     def register(
         self,
-        component_class: Type[Component],
-        name: Optional[str] = None,
-        interface: Optional[Type] = None,
+        component_class: type[Component],
+        name: str | None = None,
+        interface: type | None = None,
         scope: str = "singleton",
-        configuration: Optional[Dict[str, Any]] = None,
-        tags: Optional[Set[str]] = None,
+        configuration: dict[str, Any] | None = None,
+        tags: set[str] | None = None,
         priority: int = 0,
         auto_start: bool = True,
     ) -> ComponentBinding:
@@ -364,15 +369,15 @@ class ComponentRegistry:
 
         return binding
 
-    def get_binding(self, name: str) -> Optional[ComponentBinding]:
+    def get_binding(self, name: str) -> ComponentBinding | None:
         """Get a component binding by name."""
         return self._bindings.get(name)
 
-    def get_bindings_by_tag(self, tag: str) -> List[ComponentBinding]:
+    def get_bindings_by_tag(self, tag: str) -> list[ComponentBinding]:
         """Get all component bindings with a specific tag."""
         return [binding for binding in self._bindings.values() if tag in binding.tags]
 
-    def get_bindings_by_interface(self, interface: Type) -> List[ComponentBinding]:
+    def get_bindings_by_interface(self, interface: type) -> list[ComponentBinding]:
         """Get all component bindings that provide a specific interface."""
         return [
             binding
@@ -380,16 +385,17 @@ class ComponentRegistry:
             if interface in binding.provided_interfaces
         ]
 
-    def get_startup_order(self) -> List[str]:
+    def get_startup_order(self) -> list[str]:
         """Get the component startup order based on dependencies."""
         visited = set()
         temp_visited = set()
         order = []
 
-        def visit(name: str):
+        def visit(name: str) -> None:
             if name in temp_visited:
+                msg = f"Circular dependency detected involving component '{name}'"
                 raise ComponentError(
-                    f"Circular dependency detected involving component '{name}'"
+                    msg
                 )
 
             if name not in visited:
@@ -431,7 +437,8 @@ class ComponentRegistry:
         """Create a component instance."""
         binding = self._bindings.get(name)
         if not binding:
-            raise ComponentError(f"No component binding found for '{name}'")
+            msg = f"No component binding found for '{name}'"
+            raise ComponentError(msg)
 
         if name in self._instances:
             return self._instances[name]
@@ -446,11 +453,11 @@ class ComponentRegistry:
         self._instances[name] = instance
         return instance
 
-    def get_instance(self, name: str) -> Optional[Component]:
+    def get_instance(self, name: str) -> Component | None:
         """Get an existing component instance."""
         return self._instances.get(name)
 
-    def list_components(self) -> List[str]:
+    def list_components(self) -> list[str]:
         """List all registered component names."""
         return list(self._bindings.keys())
 
@@ -476,13 +483,13 @@ class ComponentContainer(InjectQ):
     component-aware dependency injection.
     """
 
-    def __init__(self, thread_safe: bool = True):
+    def __init__(self, thread_safe: bool = True) -> None:
         super().__init__(thread_safe=thread_safe)
         self.component_registry = ComponentRegistry()
-        self._component_scopes: Dict[str, ComponentScope] = {}
+        self._component_scopes: dict[str, ComponentScope] = {}
 
     def register_component(
-        self, component_class: Type[Component], name: Optional[str] = None, **kwargs
+        self, component_class: type[Component], name: str | None = None, **kwargs
     ) -> ComponentBinding:
         """Register a component with the container.
 
@@ -512,14 +519,13 @@ class ComponentContainer(InjectQ):
             def component_factory(
                 comp_name=component_name,
             ):
-                instance = self.component_registry.create_instance(comp_name, self)
-                return instance
+                return self.component_registry.create_instance(comp_name, self)
 
             self.bind_factory(interface, component_factory)
 
         return binding
 
-    def start_components(self, component_names: Optional[List[str]] = None) -> None:
+    def start_components(self, component_names: list[str] | None = None) -> None:
         """Start components in dependency order.
 
         Args:
@@ -557,7 +563,7 @@ class ComponentContainer(InjectQ):
                 ):
                     instance.start()
 
-    def stop_components(self, component_names: Optional[List[str]] = None) -> None:
+    def stop_components(self, component_names: list[str] | None = None) -> None:
         """Stop components in reverse dependency order.
 
         Args:
@@ -577,7 +583,7 @@ class ComponentContainer(InjectQ):
                 if instance and instance.state == ComponentState.STARTED:
                     instance.stop()
 
-    def _add_dependencies(self, component_name: str, target_set: Set[str]) -> None:
+    def _add_dependencies(self, component_name: str, target_set: set[str]) -> None:
         """Recursively add dependencies to the target set."""
         for dep_name in self.component_registry._dependency_graph.get(
             component_name, set()
@@ -586,15 +592,15 @@ class ComponentContainer(InjectQ):
                 target_set.add(dep_name)
                 self._add_dependencies(dep_name, target_set)
 
-    def get_component(self, name: str) -> Optional[Component]:
+    def get_component(self, name: str) -> Component | None:
         """Get a component instance by name."""
         return self.component_registry.get_instance(name)
 
-    def resolve(self, service_type: Type[T]) -> T:
+    def resolve(self, service_type: type[T]) -> T:
         """Resolve a service from the container."""
         return self.get(service_type)
 
-    def list_components(self) -> Dict[str, ComponentState]:
+    def list_components(self) -> dict[str, ComponentState]:
         """List all components and their states."""
         result = {}
         for name in self.component_registry.list_components():
@@ -607,11 +613,11 @@ class ComponentContainer(InjectQ):
 # Export all public components
 __all__ = [
     "Component",
-    "ComponentInterface",
     "ComponentBinding",
-    "ComponentScope",
-    "ComponentRegistry",
     "ComponentContainer",
-    "ComponentState",
     "ComponentError",
+    "ComponentInterface",
+    "ComponentRegistry",
+    "ComponentScope",
+    "ComponentState",
 ]

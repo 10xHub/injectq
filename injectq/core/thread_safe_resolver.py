@@ -1,22 +1,24 @@
 """Thread-safe dependency resolver for InjectQ dependency injection library."""
 
-import inspect
 import asyncio
-from typing import Any, Dict, List, Type, Set, Optional, Callable
+import inspect
+from collections.abc import Callable
+from typing import Any
 
-from ..utils import (
-    ServiceKey,
-    DependencyNotFoundError,
+from injectq.utils import (
     CircularDependencyError,
+    DependencyNotFoundError,
     InjectionError,
-    get_function_dependencies,
-    get_class_constructor_dependencies,
-    is_injectable_class,
+    ServiceKey,
     format_type_name,
+    get_class_constructor_dependencies,
+    get_function_dependencies,
+    is_injectable_class,
 )
-from .registry import ServiceRegistry, ServiceBinding
-from .scopes import get_scope_manager
+
 from .base_scope_manager import BaseScopeManager
+from .registry import ServiceBinding, ServiceRegistry
+from .scopes import get_scope_manager
 from .thread_safety import HybridLock
 
 
@@ -26,7 +28,7 @@ class ThreadSafeDependencyResolver:
     def __init__(
         self,
         registry: ServiceRegistry,
-        scope_manager: Optional[BaseScopeManager] = None,
+        scope_manager: BaseScopeManager | None = None,
     ) -> None:
         self.registry = registry
         self.scope_manager = scope_manager or get_scope_manager()
@@ -39,15 +41,14 @@ class ThreadSafeDependencyResolver:
         # Lock for thread-safe operations
         self._lock = HybridLock()
 
-    def _get_resolution_stack(self) -> List[ServiceKey]:
+    def _get_resolution_stack(self) -> list[ServiceKey]:
         """Get thread-local resolution stack."""
         if not hasattr(self._thread_local, "resolution_stack"):
             self._thread_local.resolution_stack = []
         return self._thread_local.resolution_stack
 
     def resolve(self, service_type: ServiceKey) -> Any:
-        """
-        Resolve a service instance with all its dependencies.
+        """Resolve a service instance with all its dependencies.
 
         Args:
             service_type: The type or key of the service to resolve
@@ -66,7 +67,7 @@ class ThreadSafeDependencyResolver:
             # Check for circular dependencies
             if service_type in resolution_stack:
                 cycle_start = resolution_stack.index(service_type)
-                cycle = resolution_stack[cycle_start:] + [service_type]
+                cycle = [*resolution_stack[cycle_start:], service_type]
                 raise CircularDependencyError(cycle)
 
             try:
@@ -76,8 +77,7 @@ class ThreadSafeDependencyResolver:
                 resolution_stack.pop()
 
     async def aresolve(self, service_type: ServiceKey) -> Any:
-        """
-        Async resolve a service instance with all its dependencies.
+        """Async resolve a service instance with all its dependencies.
 
         Args:
             service_type: The type or key of the service to resolve
@@ -96,7 +96,7 @@ class ThreadSafeDependencyResolver:
             # Check for circular dependencies
             if service_type in resolution_stack:
                 cycle_start = resolution_stack.index(service_type)
-                cycle = resolution_stack[cycle_start:] + [service_type]
+                cycle = [*resolution_stack[cycle_start:], service_type]
                 raise CircularDependencyError(cycle)
 
             try:
@@ -164,14 +164,13 @@ class ThreadSafeDependencyResolver:
             return await self.scope_manager.aget_instance(
                 key=binding.service_type, factory=factory, scope_name=binding.scope
             )
-        else:
-            # Fall back to sync version
-            def sync_factory():
-                return asyncio.run(factory())
+        # Fall back to sync version
+        def sync_factory():
+            return asyncio.run(factory())
 
-            return self.scope_manager.get_instance(
-                key=binding.service_type, factory=sync_factory, scope_name=binding.scope
-            )
+        return self.scope_manager.get_instance(
+            key=binding.service_type, factory=sync_factory, scope_name=binding.scope
+        )
 
     def _resolve_factory(
         self, service_type: ServiceKey, factory: Callable[..., Any]
@@ -200,14 +199,14 @@ class ThreadSafeDependencyResolver:
             return await self.scope_manager.aget_instance(
                 key=service_type, factory=factory_wrapper, scope_name="transient"
             )
-        else:
-            # Fall back to sync version
-            sync_factory = lambda: asyncio.run(factory_wrapper())
-            return self.scope_manager.get_instance(
-                key=service_type, factory=sync_factory, scope_name="transient"
-            )
+        # Fall back to sync version
+        def sync_factory():
+            return asyncio.run(factory_wrapper())
+        return self.scope_manager.get_instance(
+            key=service_type, factory=sync_factory, scope_name="transient"
+        )
 
-    def _auto_resolve_class(self, cls: Type[Any]) -> Any:
+    def _auto_resolve_class(self, cls: type[Any]) -> Any:
         """Auto-resolve a class that wasn't explicitly bound."""
 
         def factory() -> Any:
@@ -219,7 +218,7 @@ class ThreadSafeDependencyResolver:
             scope_name="transient",  # Default to transient for auto-resolved
         )
 
-    async def _aauto_resolve_class(self, cls: Type[Any]) -> Any:
+    async def _aauto_resolve_class(self, cls: type[Any]) -> Any:
         """Async auto-resolve a class that wasn't explicitly bound."""
 
         async def factory() -> Any:
@@ -232,12 +231,12 @@ class ThreadSafeDependencyResolver:
                 factory=factory,
                 scope_name="transient",  # Default to transient for auto-resolved
             )
-        else:
-            # Fall back to sync version
-            sync_factory = lambda: asyncio.run(factory())
-            return self.scope_manager.get_instance(
-                key=cls, factory=sync_factory, scope_name="transient"
-            )
+        # Fall back to sync version
+        def sync_factory():
+            return asyncio.run(factory())
+        return self.scope_manager.get_instance(
+            key=cls, factory=sync_factory, scope_name="transient"
+        )
 
     def _create_instance(self, implementation: Any) -> Any:
         """Create an instance from an implementation."""
@@ -253,8 +252,9 @@ class ThreadSafeDependencyResolver:
         if callable(implementation):
             return self._invoke_factory(implementation)
 
+        msg = f"Don't know how to create instance from: {implementation}"
         raise InjectionError(
-            f"Don't know how to create instance from: {implementation}"
+            msg
         )
 
     async def _acreate_instance(self, implementation: Any) -> Any:
@@ -271,11 +271,12 @@ class ThreadSafeDependencyResolver:
         if callable(implementation):
             return await self._ainvoke_factory(implementation)
 
+        msg = f"Don't know how to create instance from: {implementation}"
         raise InjectionError(
-            f"Don't know how to create instance from: {implementation}"
+            msg
         )
 
-    def _instantiate_class(self, cls: Type[Any]) -> Any:
+    def _instantiate_class(self, cls: type[Any]) -> Any:
         """Instantiate a class with dependency injection."""
         try:
             # Get constructor dependencies
@@ -300,18 +301,18 @@ class ThreadSafeDependencyResolver:
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    else:
-                        raise
+                    raise
 
             # Create instance
             return cls(**resolved_args)
 
         except Exception as e:
-            if isinstance(e, (DependencyNotFoundError, CircularDependencyError)):
+            if isinstance(e, DependencyNotFoundError | CircularDependencyError):
                 raise
-            raise InjectionError(f"Failed to instantiate {cls}: {e}")
+            msg = f"Failed to instantiate {cls}: {e}"
+            raise InjectionError(msg)
 
-    async def _ainstantiate_class(self, cls: Type[Any]) -> Any:
+    async def _ainstantiate_class(self, cls: type[Any]) -> Any:
         """Async instantiate a class with dependency injection."""
         try:
             # Get constructor dependencies
@@ -336,16 +337,16 @@ class ThreadSafeDependencyResolver:
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    else:
-                        raise
+                    raise
 
             # Create instance
             return cls(**resolved_args)
 
         except Exception as e:
-            if isinstance(e, (DependencyNotFoundError, CircularDependencyError)):
+            if isinstance(e, DependencyNotFoundError | CircularDependencyError):
                 raise
-            raise InjectionError(f"Failed to instantiate {cls}: {e}")
+            msg = f"Failed to instantiate {cls}: {e}"
+            raise InjectionError(msg)
 
     def _invoke_factory(self, factory: Callable[..., Any]) -> Any:
         """Invoke a factory function with dependency injection."""
@@ -372,16 +373,16 @@ class ThreadSafeDependencyResolver:
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    else:
-                        raise
+                    raise
 
             # Invoke factory
             return factory(**resolved_args)
 
         except Exception as e:
-            if isinstance(e, (DependencyNotFoundError, CircularDependencyError)):
+            if isinstance(e, DependencyNotFoundError | CircularDependencyError):
                 raise
-            raise InjectionError(f"Failed to invoke factory {factory}: {e}")
+            msg = f"Failed to invoke factory {factory}: {e}"
+            raise InjectionError(msg)
 
     async def _ainvoke_factory(self, factory: Callable[..., Any]) -> Any:
         """Async invoke a factory function with dependency injection."""
@@ -408,20 +409,19 @@ class ThreadSafeDependencyResolver:
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    else:
-                        raise
+                    raise
 
             # Invoke factory (handle both sync and async factories)
             result = factory(**resolved_args)
             if asyncio.iscoroutine(result):
                 return await result
-            else:
-                return result
+            return result
 
         except Exception as e:
-            if isinstance(e, (DependencyNotFoundError, CircularDependencyError)):
+            if isinstance(e, DependencyNotFoundError | CircularDependencyError):
                 raise
-            raise InjectionError(f"Failed to invoke factory {factory}: {e}")
+            msg = f"Failed to invoke factory {factory}: {e}"
+            raise InjectionError(msg)
 
     def validate_dependencies(self) -> None:
         """Validate all registered dependencies for resolvability."""
@@ -437,13 +437,13 @@ class ThreadSafeDependencyResolver:
 
             if errors:
                 raise InjectionError(
-                    f"Dependency validation failed:\n"
+                    "Dependency validation failed:\n"
                     + "\n".join(f"  - {error}" for error in errors)
                 )
 
     def _validate_service(self, service_type: ServiceKey) -> None:
         """Validate that a service can be resolved without creating instances."""
-        visited: Set[ServiceKey] = set()
+        visited: set[ServiceKey] = set()
 
         def check_service(stype: ServiceKey) -> None:
             if stype in visited:
@@ -470,7 +470,7 @@ class ThreadSafeDependencyResolver:
 
         check_service(service_type)
 
-    def get_dependency_graph(self) -> Dict[ServiceKey, List[ServiceKey]]:
+    def get_dependency_graph(self) -> dict[ServiceKey, list[ServiceKey]]:
         """Get the dependency graph for all registered services."""
         with self._lock:
             graph = {}

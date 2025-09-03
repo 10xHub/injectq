@@ -1,17 +1,15 @@
 """Dependency graph visualization and analysis."""
 
 import inspect
-from typing import Dict, List, Set, Optional
 from collections import defaultdict
 
-from ..utils.types import ServiceKey
-from ..utils.exceptions import InjectQError
+from injectq.utils.exceptions import InjectQError
+from injectq.utils.types import ServiceKey
 
 
 class VisualizationError(InjectQError):
     """Errors related to dependency visualization."""
 
-    pass
 
 
 class DependencyVisualizer:
@@ -37,15 +35,15 @@ class DependencyVisualizer:
         ```
     """
 
-    def __init__(self, container=None):
+    def __init__(self, container=None) -> None:
         """Initialize the visualizer.
 
         Args:
             container: The InjectQ container to visualize
         """
         self.container = container
-        self._dependency_graph: Dict[ServiceKey, Set[ServiceKey]] = defaultdict(set)
-        self._service_info: Dict[ServiceKey, Dict] = {}
+        self._dependency_graph: dict[ServiceKey, set[ServiceKey]] = defaultdict(set)
+        self._service_info: dict[ServiceKey, dict] = {}
 
     def set_container(self, container) -> None:
         """Set the container to visualize."""
@@ -160,7 +158,8 @@ class DependencyVisualizer:
             DOT format string
         """
         if not self.container:
-            raise VisualizationError("No container set for visualization")
+            msg = "No container set for visualization"
+            raise VisualizationError(msg)
 
         self._analyze_dependencies()
 
@@ -269,14 +268,15 @@ class DependencyVisualizer:
         # Could add different edge styles based on dependency type
         return ""
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> dict:
         """Generate JSON representation of the dependency graph.
 
         Returns:
             Dictionary with nodes and edges information
         """
         if not self.container:
-            raise VisualizationError("No container set for visualization")
+            msg = "No container set for visualization"
+            raise VisualizationError(msg)
 
         self._analyze_dependencies()
 
@@ -313,8 +313,8 @@ class DependencyVisualizer:
             "metadata": {
                 "total_services": len(nodes),
                 "total_dependencies": len(edges),
-                "service_types": list(set(node["type"] for node in nodes)),
-                "scopes": list(set(node["scope"] for node in nodes)),
+                "service_types": list({node["type"] for node in nodes}),
+                "scopes": list({node["scope"] for node in nodes}),
             },
         }
 
@@ -328,7 +328,8 @@ class DependencyVisualizer:
             ASCII art string
         """
         if not self.container:
-            raise VisualizationError("No container set for visualization")
+            msg = "No container set for visualization"
+            raise VisualizationError(msg)
 
         self._analyze_dependencies()
 
@@ -377,12 +378,13 @@ class DependencyVisualizer:
         elif format == "ascii":
             content = self.to_ascii(**kwargs)
         else:
-            raise VisualizationError(f"Unknown format: {format}")
+            msg = f"Unknown format: {format}"
+            raise VisualizationError(msg)
 
         with open(filename, "w") as f:
             f.write(content)
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get dependency graph statistics.
 
         Returns:
@@ -433,7 +435,7 @@ class DependencyVisualizer:
             "most_depended_upon": most_depended,
         }
 
-    def find_cycles(self) -> List[List[ServiceKey]]:
+    def find_cycles(self) -> list[list[ServiceKey]]:
         """Find circular dependencies in the graph.
 
         Returns:
@@ -443,11 +445,11 @@ class DependencyVisualizer:
         visited = set()
         recursion_stack = set()
 
-        def dfs(service_key: ServiceKey, path: List[ServiceKey]) -> None:
+        def dfs(service_key: ServiceKey, path: list[ServiceKey]) -> None:
             if service_key in recursion_stack:
                 # Found cycle
                 cycle_start = path.index(service_key)
-                cycle = path[cycle_start:] + [service_key]
+                cycle = [*path[cycle_start:], service_key]
                 cycles.append(cycle)
                 return
 
@@ -458,7 +460,7 @@ class DependencyVisualizer:
             recursion_stack.add(service_key)
 
             for dependency in self._dependency_graph.get(service_key, set()):
-                dfs(dependency, path + [service_key])
+                dfs(dependency, [*path, service_key])
 
             recursion_stack.remove(service_key)
 
@@ -470,7 +472,7 @@ class DependencyVisualizer:
 
     def get_dependency_path(
         self, from_service: ServiceKey, to_service: ServiceKey
-    ) -> Optional[List[ServiceKey]]:
+    ) -> list[ServiceKey] | None:
         """Find dependency path between two services.
 
         Args:
@@ -496,10 +498,10 @@ class DependencyVisualizer:
 
             for dependency in self._dependency_graph.get(current, set()):
                 if dependency == to_service:
-                    return path + [dependency]
+                    return [*path, dependency]
 
                 if dependency not in visited:
-                    queue.append((dependency, path + [dependency]))
+                    queue.append((dependency, [*path, dependency]))
 
         return None
 

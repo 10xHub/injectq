@@ -1,18 +1,18 @@
 """Thread safety utilities for InjectQ dependency injection library."""
 
-import threading
 import asyncio
-from typing import Any, Optional, Union, Callable, TypeVar, Generic, cast
-from contextlib import contextmanager, asynccontextmanager
-from collections.abc import Iterator, AsyncIterator
+import threading
 import weakref
+from collections.abc import AsyncIterator, Callable, Iterator
+from contextlib import asynccontextmanager, contextmanager
+from typing import Any, Generic, TypeVar, cast
+
 
 T = TypeVar("T")
 
 
 class HybridLock:
-    """
-    A lock that works with both threading and asyncio contexts.
+    """A lock that works with both threading and asyncio contexts.
 
     Uses different locking mechanisms based on the execution context:
     - threading.RLock for synchronous/threaded contexts
@@ -30,7 +30,7 @@ class HybridLock:
         # Track active locks for cleanup
         self._active_locks: weakref.WeakSet = weakref.WeakSet()
 
-    def _get_async_lock(self) -> Optional[asyncio.Lock]:
+    def _get_async_lock(self) -> asyncio.Lock | None:
         """Get or create an asyncio lock for the current thread."""
         if not hasattr(self._thread_local, "async_lock"):
             try:
@@ -63,9 +63,9 @@ class HybridLock:
         else:
             # Fall back to thread lock for mixed contexts
             # Note: This uses asyncio.to_thread to avoid blocking the event loop
-            def sync_operation():
+            def sync_operation() -> None:
                 with self._thread_lock:
-                    return None
+                    return
 
             await asyncio.to_thread(sync_operation)
             yield
@@ -94,8 +94,7 @@ class HybridLock:
         async_lock = self._get_async_lock()
         if async_lock is not None:
             return await async_lock.__aexit__(exc_type, exc_val, exc_tb)
-        else:
-            return self._thread_lock.__exit__(exc_type, exc_val, exc_tb)
+        return self._thread_lock.__exit__(exc_type, exc_val, exc_tb)
 
 
 class ThreadSafeDict(Generic[T]):
@@ -105,12 +104,12 @@ class ThreadSafeDict(Generic[T]):
         self._data: dict[Any, T] = {}
         self._lock = HybridLock()
 
-    def get(self, key: Any, default: Optional[T] = None) -> Optional[T]:
+    def get(self, key: Any, default: T | None = None) -> T | None:
         """Get a value from the dictionary."""
         with self._lock.sync_lock():
             return self._data.get(key, default)
 
-    async def aget(self, key: Any, default: Optional[T] = None) -> Optional[T]:
+    async def aget(self, key: Any, default: T | None = None) -> T | None:
         """Async get a value from the dictionary."""
         async with self._lock.async_lock():
             return self._data.get(key, default)
@@ -170,7 +169,7 @@ class ThreadSafeDict(Generic[T]):
             return self._data[key]
 
     async def aget_or_create_async(
-        self, key: Any, factory: Callable[[], Union[T, asyncio.Future[T]]]
+        self, key: Any, factory: Callable[[], T | asyncio.Future[T]]
     ) -> T:
         """Async get existing value or create new one with async factory."""
         async with self._lock.async_lock():
@@ -178,7 +177,7 @@ class ThreadSafeDict(Generic[T]):
                 result = factory()
                 if asyncio.iscoroutine(result) or isinstance(result, asyncio.Future):
                     result = await result
-                self._data[key] = cast(T, result)
+                self._data[key] = cast("T", result)
             return self._data[key]
 
     def copy(self) -> dict[Any, T]:
@@ -291,9 +290,8 @@ class ThreadSafetyMixin:
 # Decorator for making functions thread-safe
 def thread_safe(
     func: Callable[..., T],
-) -> Union[Callable[..., T], Callable[..., asyncio.Future[T]]]:
-    """
-    Decorator to make a function thread-safe.
+) -> Callable[..., T] | Callable[..., asyncio.Future[T]]:
+    """Decorator to make a function thread-safe.
 
     Note: This creates a global lock per function, which may cause contention.
     For better performance, use instance-level locks in classes.
@@ -307,10 +305,9 @@ def thread_safe(
                 return await func(*args, **kwargs)
 
         return async_wrapper
-    else:
 
-        def sync_wrapper(*args, **kwargs):
-            with lock.sync_lock():
-                return func(*args, **kwargs)
+    def sync_wrapper(*args, **kwargs):
+        with lock.sync_lock():
+            return func(*args, **kwargs)
 
-        return sync_wrapper
+    return sync_wrapper

@@ -6,6 +6,7 @@ from taskiq.state import TaskiqState
 
 from injectq.core.container import InjectQ
 
+
 T = TypeVar("T")
 
 
@@ -22,7 +23,7 @@ class InjectTask(Generic[T]):
     container from the Taskiq `Context.state` (TaskiqState) at runtime.
     """
 
-    def __init__(self, service_type: type[T]):
+    def __init__(self, service_type: type[T]) -> None:
         self.service_type = service_type
 
     def __new__(cls, service_type: type[T]):
@@ -31,9 +32,10 @@ class InjectTask(Generic[T]):
             try:
                 container: InjectQ = context.injectq_container  # type: ignore[attr-defined]
             except Exception:
-                from ..utils import InjectionError
+                from injectq.utils import InjectionError
 
-                raise InjectionError("No InjectQ container found in task context.")
+                msg = "No InjectQ container found in task context."
+                raise InjectionError(msg)
             return container.get(service_type)
 
         # TaskiqDepends will inject Taskiq Context or TaskiqState depending on
@@ -72,8 +74,9 @@ def setup_taskiq(container: InjectQ, broker: AsyncBroker) -> None:
             broker.add_dependency_context({InjectQ: container})  # type: ignore[attr-defined]
             return
         except Exception:
-            from ..utils import InjectionError
+            from injectq.utils import InjectionError
 
-            raise InjectionError("Unable to attach InjectQ container to broker state.")
+            msg = "Unable to attach InjectQ container to broker state."
+            raise InjectionError(msg)
 
     _attach_injectq_taskiq(state, container)

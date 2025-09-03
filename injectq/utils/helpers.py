@@ -2,13 +2,14 @@
 
 import inspect
 import threading
-from typing import Any, Callable, Dict, Type, get_type_hints
+from collections.abc import Callable
+from typing import Any, get_type_hints
 
 from .exceptions import InjectionError
 from .types import normalize_type
 
 
-def get_function_dependencies(func: Callable[..., Any]) -> Dict[str, Type[Any]]:
+def get_function_dependencies(func: Callable[..., Any]) -> dict[str, type[Any]]:
     """Extract dependency types from function signature type hints."""
     try:
         # Get type hints for the function
@@ -42,21 +43,23 @@ def get_function_dependencies(func: Callable[..., Any]) -> Dict[str, Type[Any]]:
                 # Skip this parameter - it will be provided by the caller
                 continue
 
+    except (TypeError, ValueError, AttributeError) as e:
+        msg = f"Failed to analyze dependencies for {func}: {e}"
+        raise InjectionError(msg) from e
+    else:
         return dependencies
-    except Exception as e:
-        raise InjectionError(f"Failed to analyze dependencies for {func}: {e}")
 
 
-def get_class_constructor_dependencies(cls: Type[Any]) -> Dict[str, Type[Any]]:
+def get_class_constructor_dependencies(cls: type[Any]) -> dict[str, type[Any]]:
     """Extract dependency types from class constructor type hints."""
     try:
         # Get the __init__ method
         init_method = cls.__init__
+    except (TypeError, AttributeError) as e:
+        msg = f"Failed to analyze constructor dependencies for {cls}: {e}"
+        raise InjectionError(msg) from e
+    else:
         return get_function_dependencies(init_method)
-    except Exception as e:
-        raise InjectionError(
-            f"Failed to analyze constructor dependencies for {cls}: {e}"
-        )
 
 
 def is_injectable_function(func: Callable[..., Any]) -> bool:
@@ -77,7 +80,7 @@ def is_injectable_function(func: Callable[..., Any]) -> bool:
         return False
 
 
-def is_injectable_class(cls: Type[Any]) -> bool:
+def is_injectable_class(cls: type[Any]) -> bool:
     """Check if a class can be used for dependency injection."""
     try:
         # Skip built-in types that don't have meaningful constructors
@@ -100,11 +103,11 @@ class ThreadLocalStorage:
     def __init__(self) -> None:
         self._storage = threading.local()
 
-    def get(self, key: str, default: Any = None) -> Any:
+    def get(self, key: str, default: object = None) -> Any:  # noqa: ANN401
         """Get a value from thread-local storage."""
         return getattr(self._storage, key, default)
 
-    def set(self, key: str, value: Any) -> None:
+    def set(self, key: str, value: Any) -> None:  # noqa: ANN401
         """Set a value in thread-local storage."""
         setattr(self._storage, key, value)
 
@@ -119,7 +122,7 @@ class ThreadLocalStorage:
             self._storage.__dict__.clear()
 
 
-def safe_issubclass(obj: Any, class_or_tuple: Type[Any]) -> bool:
+def safe_issubclass(obj: Any, class_or_tuple: type[Any]) -> bool:  # noqa: ANN401
     """Safely check if obj is a subclass of class_or_tuple."""
     try:
         return inspect.isclass(obj) and issubclass(obj, class_or_tuple)
@@ -127,11 +130,12 @@ def safe_issubclass(obj: Any, class_or_tuple: Type[Any]) -> bool:
         return False
 
 
-def format_type_name(type_obj: Type[Any]) -> str:
+def format_type_name(type_obj: type[Any] | str) -> str:
     """Format a type object into a readable string."""
+    if isinstance(type_obj, str):
+        return type_obj
     if hasattr(type_obj, "__name__"):
         return type_obj.__name__
-    elif hasattr(type_obj, "_name"):
-        return str(type_obj._name)
-    else:
-        return str(type_obj)
+    if hasattr(type_obj, "__qualname__"):
+        return type_obj.__qualname__
+    return str(type_obj)

@@ -2,13 +2,14 @@
 
 import contextvars
 import threading
-from contextlib import contextmanager, asynccontextmanager
-from typing import Any, Callable, Dict, Optional
-from collections.abc import Iterator, AsyncIterator
+from collections.abc import AsyncIterator, Callable, Iterator
+from contextlib import asynccontextmanager, contextmanager
+from typing import Any
 
-from .scopes import Scope, ThreadLocalScope
+from injectq.utils import ScopeError
+
 from .base_scope_manager import BaseScopeManager
-from ..utils import ScopeError
+from .scopes import Scope, ThreadLocalScope
 
 
 class AsyncScope(Scope):
@@ -17,7 +18,7 @@ class AsyncScope(Scope):
     def __init__(self, name: str) -> None:
         super().__init__(name)
         # Use contextvars for async context isolation
-        self._instances_var: contextvars.ContextVar[Dict[Any, Any]] = (
+        self._instances_var: contextvars.ContextVar[dict[Any, Any]] = (
             contextvars.ContextVar(f"{name}_instances", default={})
         )
 
@@ -64,8 +65,7 @@ class AsyncActionScope(AsyncScope):
 
 
 class HybridScope(Scope):
-    """
-    Hybrid scope that uses contextvars for async contexts and thread-local for sync contexts.
+    """Hybrid scope that uses contextvars for async contexts and thread-local for sync contexts.
     Automatically detects the execution environment and uses appropriate storage.
     """
 
@@ -90,8 +90,7 @@ class HybridScope(Scope):
         """Get or create an instance using appropriate storage."""
         if self._is_async_context():
             return self._async_scope.get(key, factory)
-        else:
-            return self._sync_scope.get(key, factory)
+        return self._sync_scope.get(key, factory)
 
     def clear(self) -> None:
         """Clear instances in current context."""
@@ -133,7 +132,7 @@ class AsyncScopeManager(BaseScopeManager):
     """Enhanced scope manager with async context variable support."""
 
     def __init__(self) -> None:
-        self._scopes: Dict[str, Scope] = {}
+        self._scopes: dict[str, Scope] = {}
 
         # Use contextvars for async context isolation
         self._current_scopes_var: contextvars.ContextVar[list] = contextvars.ContextVar(
@@ -157,8 +156,7 @@ class AsyncScopeManager(BaseScopeManager):
         """Get current scope stack for the execution context."""
         if self._is_async_context():
             return self._current_scopes_var.get()
-        else:
-            return getattr(self._sync_current_scopes, "stack", [])
+        return getattr(self._sync_current_scopes, "stack", [])
 
     def _set_current_scopes(self, scopes: list) -> None:
         """Set current scope stack for the execution context."""
@@ -174,19 +172,20 @@ class AsyncScopeManager(BaseScopeManager):
     def get_scope(self, scope_name: str) -> Scope:
         """Get a scope by name."""
         if scope_name not in self._scopes:
-            raise ScopeError(f"Unknown scope: {scope_name}")
+            msg = f"Unknown scope: {scope_name}"
+            raise ScopeError(msg)
         return self._scopes[scope_name]
 
     def resolve_scope_name(self, scope: Any) -> str:
         """Resolve scope name from various input types."""
         if isinstance(scope, str):
             return scope
-        elif hasattr(scope, "value"):  # ScopeType enum
+        if hasattr(scope, "value"):  # ScopeType enum
             return scope.value
-        elif isinstance(scope, Scope):
+        if isinstance(scope, Scope):
             return scope.name
-        else:
-            raise ScopeError(f"Invalid scope type: {type(scope)}")
+        msg = f"Invalid scope type: {type(scope)}"
+        raise ScopeError(msg)
 
     @contextmanager
     def scope_context(self, scope_name: str) -> Iterator[None]:
@@ -265,17 +264,17 @@ def create_enhanced_scope_manager() -> AsyncScopeManager:
 
 
 # Context variable for request ID tracking (example usage)
-request_id_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+request_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "request_id", default=None
 )
 
 # Context variable for user ID tracking (example usage)
-user_id_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+user_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "user_id", default=None
 )
 
 
-def get_request_id() -> Optional[str]:
+def get_request_id() -> str | None:
     """Get the current request ID from context."""
     return request_id_var.get()
 
@@ -285,7 +284,7 @@ def set_request_id(request_id: str) -> contextvars.Token:
     return request_id_var.set(request_id)
 
 
-def get_user_id() -> Optional[str]:
+def get_user_id() -> str | None:
     """Get the current user ID from context."""
     return user_id_var.get()
 
@@ -296,7 +295,7 @@ def set_user_id(user_id: str) -> contextvars.Token:
 
 
 @contextmanager
-def request_context(request_id: str, user_id: Optional[str] = None) -> Iterator[None]:
+def request_context(request_id: str, user_id: str | None = None) -> Iterator[None]:
     """Context manager for setting request context variables."""
     request_token = set_request_id(request_id)
     user_token = None
@@ -313,7 +312,7 @@ def request_context(request_id: str, user_id: Optional[str] = None) -> Iterator[
 
 @asynccontextmanager
 async def async_request_context(
-    request_id: str, user_id: Optional[str] = None
+    request_id: str, user_id: str | None = None
 ) -> AsyncIterator[None]:
     """Async context manager for setting request context variables."""
     request_token = set_request_id(request_id)

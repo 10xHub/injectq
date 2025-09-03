@@ -1,16 +1,17 @@
 """Singleton decorator for automatic service registration."""
 
-from typing import Callable, Type, TypeVar
+from collections.abc import Callable
+from typing import TypeVar
 
-from ..core import InjectQ, ScopeType
-from ..utils import BindingError
+from injectq.core import InjectQ, ScopeType
+from injectq.utils import BindingError
+
 
 T = TypeVar("T", bound=type)
 
 
 def singleton(cls: T) -> T:
-    """
-    Decorator to automatically register a class as a singleton service.
+    """Decorator to automatically register a class as a singleton service.
 
     The decorated class will be automatically bound to itself in the
     global container with singleton scope.
@@ -28,7 +29,8 @@ def singleton(cls: T) -> T:
                 self.db = db
     """
     if not isinstance(cls, type):
-        raise BindingError("@singleton can only be applied to classes")
+        msg = "@singleton can only be applied to classes"
+        raise BindingError(msg)
 
     # Get the global container
     container = InjectQ.get_instance()
@@ -40,8 +42,7 @@ def singleton(cls: T) -> T:
 
 
 def transient(cls: T) -> T:
-    """
-    Decorator to automatically register a class as a transient service.
+    """Decorator to automatically register a class as a transient service.
 
     The decorated class will be automatically bound to itself in the
     global container with transient scope (new instance each time).
@@ -59,7 +60,8 @@ def transient(cls: T) -> T:
                 self.db = db
     """
     if not isinstance(cls, type):
-        raise BindingError("@transient can only be applied to classes")
+        msg = "@transient can only be applied to classes"
+        raise BindingError(msg)
 
     # Get the global container
     container = InjectQ.get_instance()
@@ -71,8 +73,7 @@ def transient(cls: T) -> T:
 
 
 def scoped(scope_name: str) -> Callable:
-    """
-    Decorator factory to register a class with a specific scope.
+    """Decorator factory to register a class with a specific scope.
 
     Args:
         scope_name: Name of the scope to use
@@ -89,8 +90,9 @@ def scoped(scope_name: str) -> Callable:
 
     def decorator(cls: T) -> T:
         if not isinstance(cls, type):
+            msg = f"@scoped('{scope_name}') can only be applied to classes"
             raise BindingError(
-                f"@scoped('{scope_name}') can only be applied to classes"
+                msg
             )
 
         # Get the global container
@@ -104,9 +106,8 @@ def scoped(scope_name: str) -> Callable:
     return decorator
 
 
-def register_as(service_type: Type, scope: str = "singleton") -> Callable:
-    """
-    Decorator factory to register a class as an implementation of a service type.
+def register_as(service_type: type, scope: str = "singleton") -> Callable:
+    """Decorator factory to register a class as an implementation of a service type.
 
     Args:
         service_type: The service type/interface to register as
@@ -124,8 +125,9 @@ def register_as(service_type: Type, scope: str = "singleton") -> Callable:
 
     def decorator(cls: T) -> T:
         if not isinstance(cls, type):
+            msg = f"@register_as({service_type}) can only be applied to classes"
             raise BindingError(
-                f"@register_as({service_type}) can only be applied to classes"
+                msg
             )
 
         # Get the global container

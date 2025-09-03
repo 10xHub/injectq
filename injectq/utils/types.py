@@ -1,45 +1,37 @@
 """Type utilities for InjectQ dependency injection library."""
 
-import sys
-from typing import Any, Dict, Type, TypeVar, Union
+from __future__ import annotations
 
-if sys.version_info >= (3, 10):
-    from typing import ParamSpec
-else:
-    from typing_extensions import ParamSpec
+import inspect
+from typing import Any, ParamSpec, get_origin
 
-if sys.version_info >= (3, 8):
-    from typing import get_origin, get_args
-else:
-    from typing_extensions import get_origin
 
 # Type variables
-T = TypeVar("T")
+T = Any  # Using Any for now to allow flexible typing
 P = ParamSpec("P")
 
 # Common type aliases
-ServiceKey = Union[Type[Any], str]
+ServiceKey = type[Any] | str
 ServiceFactory = Any  # Callable that returns a service instance
 ServiceInstance = Any
-BindingDict = Dict[ServiceKey, Any]
+BindingDict = dict[ServiceKey, Any]
 
 
-def is_generic_type(type_hint: Type[Any]) -> bool:
+def is_generic_type(type_hint: type[Any]) -> bool:
     """Check if a type hint is a generic type."""
     return get_origin(type_hint) is not None
 
 
-def get_type_name(type_hint: Type[Any]) -> str:
+def get_type_name(type_hint: type[Any]) -> str:
     """Get a human-readable name for a type."""
     if hasattr(type_hint, "__name__"):
         return type_hint.__name__
-    elif hasattr(type_hint, "_name"):
-        return type_hint._name
-    else:
-        return str(type_hint)
+    if hasattr(type_hint, "__qualname__"):
+        return type_hint.__qualname__
+    return str(type_hint)
 
 
-def is_concrete_type(type_hint: Type[Any]) -> bool:
+def is_concrete_type(type_hint: type[Any]) -> bool:
     """Check if a type hint represents a concrete, instantiable type."""
     # Check if it's a class that can be instantiated
     try:
@@ -52,12 +44,14 @@ def is_concrete_type(type_hint: Type[Any]) -> bool:
         return False
 
 
-def normalize_type(type_hint: Any) -> Type[Any]:
-    """Normalize a type hint to a consistent form."""
-    # Handle string type annotations
+def normalize_type(type_hint: object) -> type[Any] | str:
+    """Normalize a type hint to a consistent form.
+
+    Returns either a type or a string for forward references.
+    """
+    # Handle string type annotations (forward references)
     if isinstance(type_hint, str):
-        # For forward references, we'll need to resolve them in context
-        # For now, return as-is and handle resolution at injection time
+        # For forward references, return as-is and handle resolution at injection time
         return type_hint
 
     # Handle generic types by getting the origin
@@ -65,4 +59,49 @@ def normalize_type(type_hint: Any) -> Type[Any]:
     if origin is not None:
         return origin
 
-    return type_hint
+    # Return the type as-is if it's already a proper type
+    if isinstance(type_hint, type):
+        return type_hint
+
+    # For other cases, convert to string representation
+    return str(type_hint)
+
+
+def resolve_forward_ref(
+    type_hint: str,
+    globals_dict: dict[str, Any] | None = None,
+    locals_dict: dict[str, Any] | None = None,
+) -> type[Any]:
+    """Resolve a forward reference string to an actual type.
+
+    Args:
+        type_hint: String representation of the type
+        globals_dict: Global namespace for resolution
+        locals_dict: Local namespace for resolution
+
+    Returns:
+        The resolved type
+
+    Raises:
+        TypeError: If the forward reference cannot be resolved
+    """
+    if globals_dict is None:
+        # Try to get caller's globals
+        frame = inspect.currentframe()
+        globals_dict = frame.f_back.f_globals if frame and frame.f_back else {}
+
+    if locals_dict is None:
+        locals_dict = {}
+
+    try:
+        return eval(type_hint, globals_dict, locals_dict)  # noqa: S307
+    except (NameError, AttributeError, SyntaxError) as e:
+        msg = f"Cannot resolve forward reference '{type_hint}': {e}"
+        raise TypeError(msg) from e
+
+
+def format_type_name(type_hint: type[Any] | str) -> str:
+    """Format a type name for display purposes."""
+    if isinstance(type_hint, str):
+        return type_hint
+    return get_type_name(type_hint)

@@ -1,21 +1,20 @@
 """Performance monitoring and profiling for dependency injection."""
 
-import time
-import threading
-from typing import Dict, List, Optional, Callable
-from dataclasses import dataclass, field
-from contextlib import contextmanager
-from collections import defaultdict
 import statistics
+import threading
+import time
+from collections import defaultdict
+from collections.abc import Callable
+from contextlib import contextmanager
+from dataclasses import dataclass, field
 
-from ..utils.types import ServiceKey
-from ..utils.exceptions import InjectQError
+from injectq.utils.exceptions import InjectQError
+from injectq.utils.types import ServiceKey
 
 
 class ProfilingError(InjectQError):
     """Errors related to profiling operations."""
 
-    pass
 
 
 @dataclass
@@ -83,16 +82,16 @@ class DependencyProfiler:
         ```
     """
 
-    def __init__(self, enable_stack_tracing: bool = False):
+    def __init__(self, enable_stack_tracing: bool = False) -> None:
         """Initialize the profiler.
 
         Args:
             enable_stack_tracing: Whether to track call stack information
         """
-        self._metrics: List[ResolutionMetrics] = []
-        self._aggregated: Dict[ServiceKey, AggregatedMetrics] = {}
-        self._active_resolutions: Dict[int, float] = {}  # thread_id -> start_time
-        self._resolution_stack: Dict[int, List[ServiceKey]] = defaultdict(
+        self._metrics: list[ResolutionMetrics] = []
+        self._aggregated: dict[ServiceKey, AggregatedMetrics] = {}
+        self._active_resolutions: dict[int, float] = {}  # thread_id -> start_time
+        self._resolution_stack: dict[int, list[ServiceKey]] = defaultdict(
             list
         )  # thread_id -> stack
         self._enable_stack_tracing = enable_stack_tracing
@@ -195,24 +194,24 @@ class DependencyProfiler:
 
         return wrapper
 
-    def get_metrics(self) -> List[ResolutionMetrics]:
+    def get_metrics(self) -> list[ResolutionMetrics]:
         """Get all recorded metrics."""
         with self._lock:
             return list(self._metrics)
 
-    def get_aggregated_metrics(self) -> Dict[ServiceKey, AggregatedMetrics]:
+    def get_aggregated_metrics(self) -> dict[ServiceKey, AggregatedMetrics]:
         """Get aggregated metrics by service type."""
         with self._lock:
             return dict(self._aggregated)
 
-    def get_slowest_resolutions(self, limit: int = 10) -> List[ResolutionMetrics]:
+    def get_slowest_resolutions(self, limit: int = 10) -> list[ResolutionMetrics]:
         """Get the slowest dependency resolutions."""
         with self._lock:
             return sorted(self._metrics, key=lambda m: m.resolution_time, reverse=True)[
                 :limit
             ]
 
-    def get_most_resolved(self, limit: int = 10) -> List[AggregatedMetrics]:
+    def get_most_resolved(self, limit: int = 10) -> list[AggregatedMetrics]:
         """Get the most frequently resolved services."""
         with self._lock:
             return sorted(
@@ -221,7 +220,7 @@ class DependencyProfiler:
                 reverse=True,
             )[:limit]
 
-    def get_cache_performance(self) -> Dict[str, float]:
+    def get_cache_performance(self) -> dict[str, float]:
         """Get overall cache performance statistics."""
         with self._lock:
             if not self._metrics:
@@ -233,7 +232,7 @@ class DependencyProfiler:
 
             return {"hit_rate": hit_rate, "hits": total_hits, "misses": total_misses}
 
-    def get_timing_statistics(self) -> Dict[str, float]:
+    def get_timing_statistics(self) -> dict[str, float]:
         """Get overall timing statistics."""
         with self._lock:
             if not self._metrics:
@@ -384,7 +383,7 @@ class DependencyProfiler:
 
 
 # Global profiler instance for easy access
-_global_profiler: Optional[DependencyProfiler] = None
+_global_profiler: DependencyProfiler | None = None
 
 
 def get_global_profiler() -> DependencyProfiler:
@@ -406,11 +405,11 @@ def profile_method(func: Callable) -> Callable:
 
 
 __all__ = [
-    "DependencyProfiler",
-    "ResolutionMetrics",
     "AggregatedMetrics",
+    "DependencyProfiler",
     "ProfilingError",
+    "ResolutionMetrics",
     "get_global_profiler",
-    "profile_resolution",
     "profile_method",
+    "profile_resolution",
 ]

@@ -1,9 +1,10 @@
 """Service registry for InjectQ dependency injection library."""
 
-from typing import Any, Dict, Optional, Union
 from dataclasses import dataclass
+from typing import Any
 
-from ..utils import ServiceKey, ServiceFactory, BindingError
+from injectq.utils import BindingError, ServiceFactory, ServiceKey
+
 from .scopes import ScopeType
 
 
@@ -19,25 +20,25 @@ class ServiceBinding:
     def __post_init__(self) -> None:
         """Validate the binding after initialization."""
         if self.implementation is None:
-            raise BindingError(f"Implementation cannot be None for {self.service_type}")
+            msg = f"Implementation cannot be None for {self.service_type}"
+            raise BindingError(msg)
 
 
 class ServiceRegistry:
     """Registry for managing service bindings and their configurations."""
 
     def __init__(self) -> None:
-        self._bindings: Dict[ServiceKey, ServiceBinding] = {}
-        self._factories: Dict[ServiceKey, ServiceFactory] = {}
+        self._bindings: dict[ServiceKey, ServiceBinding] = {}
+        self._factories: dict[ServiceKey, ServiceFactory] = {}
 
     def bind(
         self,
         service_type: ServiceKey,
         implementation: Any = None,
-        scope: Union[str, ScopeType] = ScopeType.SINGLETON,
+        scope: str | ScopeType = ScopeType.SINGLETON,
         to: Any = None,
     ) -> None:
-        """
-        Bind a service type to an implementation.
+        """Bind a service type to an implementation.
 
         Args:
             service_type: The service type or key to bind
@@ -54,15 +55,13 @@ class ServiceRegistry:
             if isinstance(service_type, type):
                 implementation = service_type
             else:
+                msg = f"Must provide implementation for non-class service key: {service_type}"
                 raise BindingError(
-                    f"Must provide implementation for non-class service key: {service_type}"
+                    msg
                 )
 
         # Normalize scope
-        if isinstance(scope, ScopeType):
-            scope_name = scope.value
-        else:
-            scope_name = str(scope)
+        scope_name = scope.value if isinstance(scope, ScopeType) else str(scope)
 
         # Create binding
         binding = ServiceBinding(
@@ -74,7 +73,8 @@ class ServiceRegistry:
     def bind_factory(self, service_type: ServiceKey, factory: ServiceFactory) -> None:
         """Bind a service type to a factory function."""
         if not callable(factory):
-            raise BindingError(f"Factory must be callable for {service_type}")
+            msg = f"Factory must be callable for {service_type}"
+            raise BindingError(msg)
 
         self._factories[service_type] = factory
 
@@ -87,11 +87,11 @@ class ServiceRegistry:
         )
         self._bindings[service_type] = binding
 
-    def get_binding(self, service_type: ServiceKey) -> Optional[ServiceBinding]:
+    def get_binding(self, service_type: ServiceKey) -> ServiceBinding | None:
         """Get the binding for a service type."""
         return self._bindings.get(service_type)
 
-    def get_factory(self, service_type: ServiceKey) -> Optional[ServiceFactory]:
+    def get_factory(self, service_type: ServiceKey) -> ServiceFactory | None:
         """Get the factory for a service type."""
         return self._factories.get(service_type)
 
@@ -122,11 +122,11 @@ class ServiceRegistry:
         self._bindings.clear()
         self._factories.clear()
 
-    def get_all_bindings(self) -> Dict[ServiceKey, ServiceBinding]:
+    def get_all_bindings(self) -> dict[ServiceKey, ServiceBinding]:
         """Get all service bindings."""
         return self._bindings.copy()
 
-    def get_all_factories(self) -> Dict[ServiceKey, ServiceFactory]:
+    def get_all_factories(self) -> dict[ServiceKey, ServiceFactory]:
         """Get all service factories."""
         return self._factories.copy()
 
@@ -136,8 +136,9 @@ class ServiceRegistry:
             try:
                 # Validate that implementation is reasonable
                 if binding.implementation is None:
+                    msg = f"Binding for {service_type} has None implementation"
                     raise BindingError(
-                        f"Binding for {service_type} has None implementation"
+                        msg
                     )
 
                 # For class implementations, check if they're instantiable
@@ -145,16 +146,19 @@ class ServiceRegistry:
                     try:
                         # Check if class has __init__ method
                         if not hasattr(binding.implementation, "__init__"):
+                            msg = f"Implementation {binding.implementation} is not instantiable"
                             raise BindingError(
-                                f"Implementation {binding.implementation} is not instantiable"
+                                msg
                             )
                     except (TypeError, AttributeError) as e:
+                        msg = f"Invalid implementation for {service_type}: {e}"
                         raise BindingError(
-                            f"Invalid implementation for {service_type}: {e}"
+                            msg
                         )
 
             except Exception as e:
-                raise BindingError(f"Validation failed for {service_type}: {e}")
+                msg = f"Validation failed for {service_type}: {e}"
+                raise BindingError(msg)
 
     def __contains__(self, service_type: ServiceKey) -> bool:
         """Check if service type is registered."""

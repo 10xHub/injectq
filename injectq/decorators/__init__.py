@@ -1,27 +1,28 @@
 """Decorators for InjectQ dependency injection library."""
 
-from .inject import inject, Inject, inject_into
-from .singleton import singleton, transient, scoped, register_as
+from .inject import Inject, inject, inject_into
 from .resource import (
-    resource,
+    async_managed_resource,
     get_resource_manager,
     managed_resource,
-    async_managed_resource,
+    resource,
 )
+from .singleton import register_as, scoped, singleton, transient
+
 
 __all__ = [
+    "Inject",
+    "async_managed_resource",
+    "get_resource_manager",
     # Injection decorators
     "inject",
-    "Inject",
     "inject_into",
-    # Registration decorators
-    "singleton",
-    "transient",
-    "scoped",
+    "managed_resource",
     "register_as",
     # Resource management
     "resource",
-    "get_resource_manager",
-    "managed_resource",
-    "async_managed_resource",
+    "scoped",
+    # Registration decorators
+    "singleton",
+    "transient",
 ]

@@ -1,34 +1,30 @@
 """Base module classes for InjectQ dependency injection library."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
-from ..core import ModuleBinder, ScopeType
-from ..utils import ServiceKey, BindingError
+from injectq.core import ModuleBinder, ScopeType
+from injectq.utils import BindingError, ServiceKey
 
 
 class Module(ABC):
-    """
-    Abstract base class for dependency injection modules.
+    """Abstract base class for dependency injection modules.
 
     Modules provide a way to organize and encapsulate dependency bindings.
     """
 
     @abstractmethod
     def configure(self, binder: ModuleBinder) -> None:
-        """
-        Configure the module's bindings.
+        """Configure the module's bindings.
 
         Args:
             binder: The binder to use for configuring dependencies
         """
-        pass
 
 
 class SimpleModule(Module):
-    """
-    A simple module implementation that allows fluent binding configuration.
-    """
+    """A simple module implementation that allows fluent binding configuration."""
 
     def __init__(self) -> None:
         self._bindings: list[tuple] = []
@@ -40,8 +36,7 @@ class SimpleModule(Module):
         scope: str = ScopeType.SINGLETON.value,
         to: Any = None,
     ) -> "SimpleModule":
-        """
-        Add a binding to this module.
+        """Add a binding to this module.
 
         Args:
             service_type: The service type to bind
@@ -56,8 +51,7 @@ class SimpleModule(Module):
         return self
 
     def bind_instance(self, service_type: ServiceKey, instance: Any) -> "SimpleModule":
-        """
-        Add an instance binding to this module.
+        """Add an instance binding to this module.
 
         Args:
             service_type: The service type to bind
@@ -72,8 +66,7 @@ class SimpleModule(Module):
     def bind_factory(
         self, service_type: ServiceKey, factory: Callable
     ) -> "SimpleModule":
-        """
-        Add a factory binding to this module.
+        """Add a factory binding to this module.
 
         Args:
             service_type: The service type to bind
@@ -100,8 +93,7 @@ class SimpleModule(Module):
 
 
 def provider(func: Callable) -> Callable:
-    """
-    Decorator to mark a method as a provider within a module.
+    """Decorator to mark a method as a provider within a module.
 
     Provider methods are used to create instances of services
     with their dependencies automatically injected.
@@ -118,8 +110,7 @@ def provider(func: Callable) -> Callable:
 
 
 class ProviderModule(Module):
-    """
-    A module that supports provider methods for advanced binding scenarios.
+    """A module that supports provider methods for advanced binding scenarios.
 
     Provider methods are methods decorated with @provider that return
     instances of services. Their parameters are automatically injected.
@@ -145,14 +136,15 @@ class ProviderModule(Module):
             return_type = hints.get("return", None)
 
             if return_type is None:
+                msg = f"Provider method {provider_method.__name__} must have a return type annotation"
                 raise BindingError(
-                    f"Provider method {provider_method.__name__} must have a return type annotation"
+                    msg
                 )
 
             # Create a factory function that manually resolves dependencies
             def factory():
                 # Get dependencies for the provider method
-                from ..utils import get_function_dependencies
+                from injectq.utils import get_function_dependencies
 
                 dependencies = get_function_dependencies(provider_method)
 
@@ -181,19 +173,17 @@ class ProviderModule(Module):
             binder.bind_factory(return_type, factory)
 
         except Exception as e:
+            msg = f"Failed to configure provider {provider_method.__name__}: {e}"
             raise BindingError(
-                f"Failed to configure provider {provider_method.__name__}: {e}"
+                msg
             )
 
 
 class ConfigurationModule(Module):
-    """
-    A module for binding configuration values and settings.
-    """
+    """A module for binding configuration values and settings."""
 
     def __init__(self, config_dict: dict) -> None:
-        """
-        Initialize with a configuration dictionary.
+        """Initialize with a configuration dictionary.
 
         Args:
             config_dict: Dictionary of configuration key-value pairs
@@ -204,10 +194,7 @@ class ConfigurationModule(Module):
         """Bind all configuration values."""
         for key, value in self.config.items():
             # Bind string keys directly
-            if isinstance(key, str):
-                binder.bind_instance(key, value)
-            # For type keys, bind by type
-            elif isinstance(key, type):
+            if isinstance(key, str | type):
                 binder.bind_instance(key, value)
             else:
                 # Convert other keys to strings

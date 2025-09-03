@@ -2,23 +2,23 @@
 
 import functools
 import inspect
-from typing import Any, Callable, TypeVar, cast
-from typing import Generic
+from collections.abc import Callable
+from typing import Any, Generic, TypeVar, cast
 
-from ..core import InjectQ
-from ..utils import (
-    get_function_dependencies,
-    InjectionError,
+from injectq.core import InjectQ
+from injectq.utils import (
     DependencyNotFoundError,
+    InjectionError,
+    get_function_dependencies,
 )
+
 
 F = TypeVar("F", bound=Callable[..., Any])
 T = TypeVar("T")
 
 
 def inject(func: F) -> F:
-    """
-    Decorator for automatic dependency injection.
+    """Decorator for automatic dependency injection.
 
     Analyzes function signature and automatically injects dependencies
     based on type hints.
@@ -33,17 +33,20 @@ def inject(func: F) -> F:
         InjectionError: If dependency injection fails
     """
     if not callable(func):
-        raise InjectionError("@inject can only be applied to callable objects")
+        msg = "@inject can only be applied to callable objects"
+        raise InjectionError(msg)
 
     # Check if it's a function (not a class)
     if inspect.isclass(func):
-        raise InjectionError("@inject can only be applied to functions, not classes")
+        msg = "@inject can only be applied to functions, not classes"
+        raise InjectionError(msg)
 
     # Analyze function dependencies
     try:
         dependencies = get_function_dependencies(func)
     except Exception as e:
-        raise InjectionError(f"Failed to analyze dependencies for {func.__name__}: {e}")
+        msg = f"Failed to analyze dependencies for {func.__name__}: {e}"
+        raise InjectionError(msg)
 
     if inspect.iscoroutinefunction(func):
 
@@ -53,16 +56,15 @@ def inject(func: F) -> F:
             container = InjectQ.get_instance()
             return await _inject_and_call(func, dependencies, container, args, kwargs)
 
-        return cast(F, async_wrapper)
-    else:
+        return cast("F", async_wrapper)
 
-        @functools.wraps(func)
-        def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
-            # Get the container at call time (not decoration time)
-            container = InjectQ.get_instance()
-            return _inject_and_call(func, dependencies, container, args, kwargs)
+    @functools.wraps(func)
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+        # Get the container at call time (not decoration time)
+        container = InjectQ.get_instance()
+        return _inject_and_call(func, dependencies, container, args, kwargs)
 
-        return cast(F, sync_wrapper)
+    return cast("F", sync_wrapper)
 
 
 def _inject_and_call(
@@ -101,9 +103,8 @@ def _inject_and_call(
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    else:
-                        # Re-raise if no default value
-                        raise
+                    # Re-raise if no default value
+                    raise
 
         # Apply defaults for remaining parameters
         bound_args.apply_defaults()
@@ -113,19 +114,21 @@ def _inject_and_call(
 
     except Exception as e:
         if isinstance(e, DependencyNotFoundError):
-            raise InjectionError(
+            msg = (
                 f"Cannot inject dependency '{e.dependency_type}' for parameter "
                 f"in function '{func.__name__}': {e}"
             )
-        elif isinstance(e, InjectionError):
+            raise InjectionError(
+                msg
+            )
+        if isinstance(e, InjectionError):
             raise
-        else:
-            raise InjectionError(f"Injection failed for {func.__name__}: {e}")
+        msg = f"Injection failed for {func.__name__}: {e}"
+        raise InjectionError(msg)
 
 
 class Inject(Generic[T]):
-    """
-    Explicit dependency injection marker.
+    """Explicit dependency injection marker.
 
     Used as default parameter value to explicitly mark dependencies:
 
@@ -151,8 +154,7 @@ class Inject(Generic[T]):
 
 
 def inject_into(container: InjectQ) -> Callable[[F], F]:
-    """
-    Create an inject decorator that uses a specific container.
+    """Create an inject decorator that uses a specific container.
 
     Args:
         container: The container to use for dependency resolution
@@ -163,14 +165,16 @@ def inject_into(container: InjectQ) -> Callable[[F], F]:
 
     def decorator(func: F) -> F:
         if not callable(func):
-            raise InjectionError("@inject can only be applied to callable objects")
+            msg = "@inject can only be applied to callable objects"
+            raise InjectionError(msg)
 
         # Analyze function dependencies
         try:
             dependencies = get_function_dependencies(func)
         except Exception as e:
+            msg = f"Failed to analyze dependencies for {func.__name__}: {e}"
             raise InjectionError(
-                f"Failed to analyze dependencies for {func.__name__}: {e}"
+                msg
             )
 
         if inspect.iscoroutinefunction(func):
@@ -181,13 +185,12 @@ def inject_into(container: InjectQ) -> Callable[[F], F]:
                     func, dependencies, container, args, kwargs
                 )
 
-            return cast(F, async_wrapper)
-        else:
+            return cast("F", async_wrapper)
 
-            @functools.wraps(func)
-            def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
-                return _inject_and_call(func, dependencies, container, args, kwargs)
+        @functools.wraps(func)
+        def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+            return _inject_and_call(func, dependencies, container, args, kwargs)
 
-            return cast(F, sync_wrapper)
+        return cast("F", sync_wrapper)
 
     return decorator

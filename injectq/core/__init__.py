@@ -1,35 +1,36 @@
 """Core InjectQ dependency injection components."""
 
-from .container import InjectQ, ModuleBinder
-from .registry import ServiceRegistry, ServiceBinding
-from .resolver import DependencyResolver
-from .scopes import ScopeType, Scope, ScopeManager, get_scope_manager
 from .async_scopes import (
     AsyncScope,
-    HybridScope,
     AsyncScopeManager,
+    HybridScope,
     create_enhanced_scope_manager,
 )
-from .thread_safety import HybridLock, ThreadSafeDict, AsyncSafeCounter, thread_safe
 from .base_scope_manager import BaseScopeManager
+from .container import InjectQ, ModuleBinder
+from .registry import ServiceBinding, ServiceRegistry
+from .resolver import DependencyResolver
+from .scopes import Scope, ScopeManager, ScopeType, get_scope_manager
+from .thread_safety import AsyncSafeCounter, HybridLock, ThreadSafeDict, thread_safe
+
 
 __all__ = [
+    "AsyncSafeCounter",
+    "AsyncScope",
+    "AsyncScopeManager",
+    "BaseScopeManager",
+    "DependencyResolver",
+    "HybridLock",
+    "HybridScope",
     "InjectQ",
     "ModuleBinder",
-    "ServiceRegistry",
-    "ServiceBinding",
-    "DependencyResolver",
-    "ScopeType",
     "Scope",
     "ScopeManager",
-    "get_scope_manager",
-    "AsyncScope",
-    "HybridScope",
-    "AsyncScopeManager",
-    "create_enhanced_scope_manager",
-    "BaseScopeManager",
-    "HybridLock",
+    "ScopeType",
+    "ServiceBinding",
+    "ServiceRegistry",
     "ThreadSafeDict",
-    "AsyncSafeCounter",
+    "create_enhanced_scope_manager",
+    "get_scope_manager",
     "thread_safe",
 ]

@@ -1,14 +1,13 @@
 """Scope management for InjectQ dependency injection library."""
 
-import weakref
-import threading
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Any, Dict, Callable
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from collections.abc import Iterator
+from enum import Enum
+from typing import Any
 
-from ..utils import ThreadLocalStorage, ScopeError
+from injectq.utils import ScopeError, ThreadLocalStorage
+
 from .base_scope_manager import BaseScopeManager
 from .thread_safety import HybridLock
 
@@ -37,20 +36,16 @@ class Scope(ABC):
     @abstractmethod
     def get(self, key: Any, factory: Callable[[], Any]) -> Any:
         """Get or create an instance for the given key."""
-        pass
 
     @abstractmethod
     def clear(self) -> None:
         """Clear all instances in this scope."""
-        pass
 
     def enter(self) -> None:
         """Called when entering the scope context."""
-        pass
 
     def exit(self) -> None:
         """Called when exiting the scope context."""
-        pass
 
     def _safe_execute(self, operation):
         """Execute operation with thread safety if enabled."""
@@ -66,7 +61,7 @@ class SingletonScope(Scope):
 
     def __init__(self, thread_safe: bool = True) -> None:
         super().__init__("singleton", thread_safe)
-        self._instances: Dict[Any, Any] = {}
+        self._instances: dict[Any, Any] = {}
 
     def get(self, key: Any, factory: Callable[[], Any]) -> Any:
         """Get or create a singleton instance."""
@@ -95,7 +90,6 @@ class TransientScope(Scope):
 
     def clear(self) -> None:
         """Nothing to clear for transient scope."""
-        pass
 
 
 class ThreadLocalScope(Scope):
@@ -123,7 +117,7 @@ class ThreadLocalScope(Scope):
     def clear(self) -> None:
         """Clear thread-local instances."""
 
-        def clear_storage():
+        def clear_storage() -> None:
             instances_key = f"{self.name}_instances"
             self._storage.delete(instances_key)
 
@@ -148,7 +142,7 @@ class ScopeManager(BaseScopeManager):
     """Manages scopes and scope contexts."""
 
     def __init__(self, thread_safe: bool = True) -> None:
-        self._scopes: Dict[str, Scope] = {}
+        self._scopes: dict[str, Scope] = {}
         self._current_scopes = ThreadLocalStorage()
         self.thread_safe = thread_safe
 
@@ -180,7 +174,8 @@ class ScopeManager(BaseScopeManager):
 
         def get():
             if scope_name not in self._scopes:
-                raise ScopeError(f"Unknown scope: {scope_name}")
+                msg = f"Unknown scope: {scope_name}"
+                raise ScopeError(msg)
             return self._scopes[scope_name]
 
         return self._safe_execute(get)
@@ -189,12 +184,12 @@ class ScopeManager(BaseScopeManager):
         """Resolve scope name from various input types."""
         if isinstance(scope, str):
             return scope
-        elif isinstance(scope, ScopeType):
+        if isinstance(scope, ScopeType):
             return scope.value
-        elif isinstance(scope, Scope):
+        if isinstance(scope, Scope):
             return scope.name
-        else:
-            raise ScopeError(f"Invalid scope type: {type(scope)}")
+        msg = f"Invalid scope type: {type(scope)}"
+        raise ScopeError(msg)
 
     @contextmanager
     def scope_context(self, scope_name: str) -> Iterator[None]:
@@ -232,7 +227,7 @@ class ScopeManager(BaseScopeManager):
     def clear_all_scopes(self) -> None:
         """Clear all instances in all scopes."""
 
-        def clear_all():
+        def clear_all() -> None:
             for scope in self._scopes.values():
                 scope.clear()
 

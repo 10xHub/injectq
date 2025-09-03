@@ -1,5 +1,4 @@
-"""
-InjectQ - Modern Python dependency injection library.
+"""InjectQ - Modern Python dependency injection library.
 
 Combines the simplicity of kink, the power of python-injector,
 and the advanced features of modern DI frameworks.
@@ -8,40 +7,39 @@ and the advanced features of modern DI frameworks.
 __version__ = "0.1.0"
 
 # Core exports
-from .core import (
-    InjectQ,
-    ScopeType,
-    Scope,
-)
-
-# Decorator exports
-from .decorators import (
-    inject,
-    Inject,
-    inject_into,
-    singleton,
-    transient,
-    scoped,
-    register_as,
-    resource,
-    get_resource_manager,
-    managed_resource,
-    async_managed_resource,
-)
-
 # Testing exports
 from . import testing
 
 # Component exports
 from .components import (
     Component,
-    ComponentContainer,
-    ComponentRegistry,
-    ComponentInterface,
     ComponentBinding,
+    ComponentContainer,
+    ComponentError,
+    ComponentInterface,
+    ComponentRegistry,
     ComponentScope,
     ComponentState,
-    ComponentError,
+)
+from .core import (
+    InjectQ,
+    Scope,
+    ScopeType,
+)
+
+# Decorator exports
+from .decorators import (
+    Inject,
+    async_managed_resource,
+    get_resource_manager,
+    inject,
+    inject_into,
+    managed_resource,
+    register_as,
+    resource,
+    scoped,
+    singleton,
+    transient,
 )
 
 # Diagnostics exports
@@ -51,69 +49,96 @@ from .diagnostics import (
     DependencyVisualizer,
 )
 from .modules import (
-    Module,
-    SimpleModule,
-    ProviderModule,
     ConfigurationModule,
+    Module,
+    ProviderModule,
+    SimpleModule,
     provider,
 )
 
 # Utility exports
 from .utils import (
-    InjectQError,
-    DependencyNotFoundError,
-    CircularDependencyError,
+    AsyncFactory,
+    AsyncProvider,
+    AsyncResourceProvider,
     BindingError,
+    CircularDependencyError,
+    Configurable,
+    DependencyNotFoundError,
+    Factory,
+    Injectable,
     InjectionError,
+    InjectQError,
+    Provider,
+    Resolvable,
+    ResourceProvider,
+    ScopeAware,
     ScopeError,
+    ServiceFactory,
+    # Type utilities and protocols
+    ServiceKey,
 )
 
+
 __all__ = [
-    # Core classes
-    "InjectQ",
-    "ScopeType",
-    "Scope",
-    # Decorators
-    "inject",
-    "Inject",
-    "inject_into",
-    "singleton",
-    "transient",
-    "scoped",
-    "register_as",
-    "resource",
-    "get_resource_manager",
-    "managed_resource",
-    "async_managed_resource",
-    # Modules
-    "Module",
-    "SimpleModule",
-    "ProviderModule",
-    "ConfigurationModule",
-    "provider",
-    # Testing
-    "testing",
+    "BindingError",
+    "CircularDependencyError",
     # Components
     "Component",
-    "ComponentContainer",
-    "ComponentRegistry",
-    "ComponentInterface",
     "ComponentBinding",
+    "ComponentContainer",
+    "ComponentError",
+    "ComponentInterface",
+    "ComponentRegistry",
     "ComponentScope",
     "ComponentState",
-    "ComponentError",
+    "ConfigurationModule",
+    "DependencyNotFoundError",
     # Diagnostics
     "DependencyProfiler",
     "DependencyValidator",
     "DependencyVisualizer",
+    "Inject",
+    # Core classes
+    "InjectQ",
     # Integrations
     # Exceptions
     "InjectQError",
-    "DependencyNotFoundError",
-    "CircularDependencyError",
-    "BindingError",
     "InjectionError",
+    # Modules
+    "Module",
+    "ProviderModule",
+    "Scope",
     "ScopeError",
+    "ScopeType",
+    "SimpleModule",
+    "async_managed_resource",
+    "get_resource_manager",
+    # Decorators
+    "inject",
+    "inject_into",
+    "managed_resource",
+    "provider",
+    "register_as",
+    "resource",
+    "scoped",
+    "singleton",
+    # Testing
+    "testing",
+    "transient",
+    # Type utilities and protocols
+    "ServiceKey",
+    "ServiceFactory",
+    "Injectable",
+    "Provider",
+    "AsyncProvider",
+    "Factory",
+    "AsyncFactory",
+    "ResourceProvider",
+    "AsyncResourceProvider",
+    "Resolvable",
+    "Configurable",
+    "ScopeAware",
 ]
 
 # Create default container instance for convenience

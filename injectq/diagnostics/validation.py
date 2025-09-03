@@ -1,35 +1,31 @@
 """Dependency validation and early error detection."""
 
 import inspect
-from typing import Dict, List, Set, Optional, Type, get_type_hints
 from collections import defaultdict
+from typing import get_type_hints
 
-from ..utils.types import ServiceKey
-from ..utils.exceptions import InjectQError
+from injectq.utils.exceptions import InjectQError
+from injectq.utils.types import ServiceKey
 
 
 class ValidationError(InjectQError):
     """Errors related to dependency validation."""
 
-    pass
 
 
 class MissingDependencyError(ValidationError):
     """Error for missing dependencies."""
 
-    pass
 
 
 class InvalidBindingError(ValidationError):
     """Error for invalid bindings."""
 
-    pass
 
 
 class TypeMismatchError(ValidationError):
     """Error for type mismatches in bindings."""
 
-    pass
 
 
 class DependencyValidator:
@@ -51,16 +47,16 @@ class DependencyValidator:
         ```
     """
 
-    def __init__(self, container=None):
+    def __init__(self, container=None) -> None:
         """Initialize the validator.
 
         Args:
             container: The InjectQ container to validate
         """
         self.container = container
-        self._dependency_graph: Dict[ServiceKey, Set[ServiceKey]] = defaultdict(set)
-        self._binding_types: Dict[ServiceKey, Type] = {}
-        self._validation_cache: Dict[ServiceKey, bool] = {}
+        self._dependency_graph: dict[ServiceKey, set[ServiceKey]] = defaultdict(set)
+        self._binding_types: dict[ServiceKey, type] = {}
+        self._validation_cache: dict[ServiceKey, bool] = {}
 
     def set_container(self, container) -> None:
         """Set the container to validate."""
@@ -170,11 +166,11 @@ class DependencyValidator:
         visited = set()
         recursion_stack = set()
 
-        def dfs(service_key: ServiceKey, path: List[ServiceKey]) -> bool:
+        def dfs(service_key: ServiceKey, path: list[ServiceKey]) -> bool:
             if service_key in recursion_stack:
                 # Found circular dependency
                 cycle_start = path.index(service_key)
-                cycle = path[cycle_start:] + [service_key]
+                cycle = [*path[cycle_start:], service_key]
                 # Convert to string for error message since CircularDependencyError expects Type list
                 error_msg = f"Circular dependency detected: {' -> '.join(str(s) for s in cycle)}"
                 result.errors.append(ValidationError(error_msg))
@@ -187,7 +183,7 @@ class DependencyValidator:
             recursion_stack.add(service_key)
 
             for dependency in self._dependency_graph.get(service_key, set()):
-                if not dfs(dependency, path + [service_key]):
+                if not dfs(dependency, [*path, service_key]):
                     return False
 
             recursion_stack.remove(service_key)
@@ -203,7 +199,6 @@ class DependencyValidator:
         if not self.container:
             return
 
-        registry = self.container._registry
 
         for service_key, dependencies in self._dependency_graph.items():
             for dependency in dependencies:
@@ -276,7 +271,7 @@ class DependencyValidator:
                             )
                         )
 
-    def _is_compatible_type(self, expected: Type, actual: Type) -> bool:
+    def _is_compatible_type(self, expected: type, actual: type) -> bool:
         """Check if two types are compatible."""
         if expected == actual:
             return True
@@ -375,11 +370,11 @@ class DependencyValidator:
                     )
                 )
 
-    def get_dependency_graph(self) -> Dict[ServiceKey, Set[ServiceKey]]:
+    def get_dependency_graph(self) -> dict[ServiceKey, set[ServiceKey]]:
         """Get the computed dependency graph."""
         return dict(self._dependency_graph)
 
-    def get_dependency_chain(self, service_key: ServiceKey) -> List[ServiceKey]:
+    def get_dependency_chain(self, service_key: ServiceKey) -> list[ServiceKey]:
         """Get the full dependency chain for a service."""
         chain = []
         visited = set()
@@ -396,14 +391,14 @@ class DependencyValidator:
         build_chain(service_key)
         return chain
 
-    def find_potential_cycles(self) -> List[List[ServiceKey]]:
+    def find_potential_cycles(self) -> list[list[ServiceKey]]:
         """Find all potential circular dependency cycles."""
         cycles = []
         visited = set()
 
         def dfs(
-            service_key: ServiceKey, path: List[ServiceKey], ancestors: Set[ServiceKey]
-        ):
+            service_key: ServiceKey, path: list[ServiceKey], ancestors: set[ServiceKey]
+        ) -> None:
             if service_key in ancestors:
                 # Found cycle
                 cycle_start = path.index(service_key)
@@ -418,7 +413,7 @@ class DependencyValidator:
             ancestors.add(service_key)
 
             for dependency in self._dependency_graph.get(service_key, set()):
-                dfs(dependency, path + [service_key], ancestors.copy())
+                dfs(dependency, [*path, service_key], ancestors.copy())
 
             ancestors.remove(service_key)
 
@@ -433,9 +428,9 @@ class ValidationResult:
 
     def __init__(
         self,
-        errors: Optional[List[Exception]] = None,
-        warnings: Optional[List[Exception]] = None,
-    ):
+        errors: list[Exception] | None = None,
+        warnings: list[Exception] | None = None,
+    ) -> None:
         self.errors = errors or []
         self.warnings = warnings or []
 
@@ -473,9 +468,9 @@ class ValidationResult:
 
 __all__ = [
     "DependencyValidator",
-    "ValidationResult",
-    "ValidationError",
-    "MissingDependencyError",
     "InvalidBindingError",
+    "MissingDependencyError",
     "TypeMismatchError",
+    "ValidationError",
+    "ValidationResult",
 ]
