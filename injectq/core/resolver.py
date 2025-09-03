@@ -131,7 +131,12 @@ class DependencyResolver:
             resolved_args = {}
             for param_name, param_type in dependencies.items():
                 try:
-                    resolved_args[param_name] = self.resolve(param_type)
+                    # First try to resolve by parameter name (string key)
+                    if self.registry.has_binding(param_name) or self.registry.has_factory(param_name):
+                        resolved_args[param_name] = self.resolve(param_name)
+                    else:
+                        # Fall back to type-based resolution
+                        resolved_args[param_name] = self.resolve(param_type)
                 except DependencyNotFoundError:
                     # Check if parameter has a default value
                     sig = inspect.signature(cls.__init__)
@@ -160,7 +165,12 @@ class DependencyResolver:
             resolved_args = {}
             for param_name, param_type in dependencies.items():
                 try:
-                    resolved_args[param_name] = self.resolve(param_type)
+                    # First try to resolve by parameter name (string key)
+                    if self.registry.has_binding(param_name) or self.registry.has_factory(param_name):
+                        resolved_args[param_name] = self.resolve(param_name)
+                    else:
+                        # Fall back to type-based resolution
+                        resolved_args[param_name] = self.resolve(param_type)
                 except DependencyNotFoundError:
                     # Check if parameter has a default value
                     sig = inspect.signature(factory)

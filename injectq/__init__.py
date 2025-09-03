@@ -24,6 +24,16 @@ from .decorators import (
     register_as,
 )
 
+# Testing exports
+from . import testing
+from .modules import (
+    Module,
+    SimpleModule,
+    ProviderModule,
+    ConfigurationModule,
+    provider,
+)
+
 # Utility exports
 from .utils import (
     InjectQError,
@@ -46,6 +56,14 @@ __all__ = [
     "transient",
     "scoped", 
     "register_as",
+    # Modules
+    "Module",
+    "SimpleModule",
+    "ProviderModule", 
+    "ConfigurationModule",
+    "provider",
+    # Testing
+    "testing",
     # Exceptions
     "InjectQError",
     "DependencyNotFoundError",

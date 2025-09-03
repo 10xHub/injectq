@@ -72,8 +72,12 @@ def _inject_and_call(
         for param_name, param_type in dependencies.items():
             if param_name not in bound_args.arguments:
                 try:
-                    # Resolve dependency from container
-                    dependency = container.get(param_type)
+                    # First try to resolve by parameter name (string key)
+                    if container.has(param_name):
+                        dependency = container.get(param_name)
+                    else:
+                        # Fall back to type-based resolution
+                        dependency = container.get(param_type)
                     bound_args.arguments[param_name] = dependency
                 except DependencyNotFoundError:
                     # Check if parameter has a default value
