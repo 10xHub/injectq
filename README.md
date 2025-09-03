@@ -56,7 +56,7 @@ pip install injectq[fastmcp]   # FastMCP integration
 
 ## Documentation
 
-See the [complete specification](idea.md) for detailed API documentation and examples.
+See the [complete specification](INJECTQ_SPECIFICATION.md) for detailed API documentation and examples.
 
 ## License
 
