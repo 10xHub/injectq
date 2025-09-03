@@ -168,3 +168,13 @@ Below each missing feature I reference whether it's required by the spec/example
 If you want, I can proceed to implement one of the high-priority items now (choose: FastAPI integration, @resource support with async finalizers, or Inject marker wiring). Pick one and I'll create a focused todo list and implement it with tests.
 
 ```
+
+
+Latest Update Left
+1. Framework integration for FastAPI
+2. Framework integration for taskiq
+
+
+- Component Architecture: Missing
+- Diagnostics & Profiling: Missing
+- Mypy/type-safety polish: Partially done (helpers exist but more work needed)

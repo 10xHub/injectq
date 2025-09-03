@@ -35,6 +35,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
+    "httpx>=0.28.1",
     "typing-extensions>=4.0.0",
 ]
 

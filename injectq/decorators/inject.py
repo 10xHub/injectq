@@ -3,6 +3,7 @@
 import functools
 import inspect
 from typing import Any, Callable, TypeVar, cast
+from typing import Generic
 
 from ..core import InjectQ
 from ..utils import (
@@ -12,6 +13,7 @@ from ..utils import (
 )
 
 F = TypeVar("F", bound=Callable[..., Any])
+T = TypeVar("T")
 
 
 def inject(func: F) -> F:
@@ -80,6 +82,12 @@ def _inject_and_call(
         for param_name, param_type in dependencies.items():
             if param_name not in bound_args.arguments:
                 try:
+                    # If an explicit Inject(...) marker is provided as default, honor it
+                    param = sig.parameters.get(param_name)
+                    if param and isinstance(param.default, Inject):
+                        dependency = container.get(param.default.service_type)
+                        bound_args.arguments[param_name] = dependency
+                        continue
                     # First try to resolve by parameter name (string key)
                     if container.has(param_name):
                         dependency = container.get(param_name)
@@ -115,7 +123,7 @@ def _inject_and_call(
             raise InjectionError(f"Injection failed for {func.__name__}: {e}")
 
 
-class Inject:
+class Inject(Generic[T]):
     """
     Explicit dependency injection marker.
 
@@ -127,16 +135,19 @@ class Inject:
     """
 
     def __init__(self, service_type: type) -> None:
-        """
-        Initialize injection marker.
-
-        Args:
-            service_type: The type of service to inject
-        """
         self.service_type = service_type
+        self._injected_value = None
+        self._injected = False
 
     def __repr__(self) -> str:
         return f"Inject({self.service_type})"
+
+    def __getattr__(self, name: str) -> Any:
+        if not self._injected:
+            container = InjectQ.get_instance()
+            self._injected_value = container.get(self.service_type)
+            self._injected = True
+        return getattr(self._injected_value, name)
 
 
 def inject_into(container: InjectQ) -> Callable[[F], F]:

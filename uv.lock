@@ -586,6 +586,7 @@ wheels = [
 name = "injectq"
 source = { editable = "." }
 dependencies = [
+    { name = "httpx" },
     { name = "typing-extensions" },
 ]
 
@@ -624,6 +625,7 @@ requires-dist = [
     { name = "fastapi", marker = "extra == 'fastapi'", specifier = ">=0.68.0" },
     { name = "fastmcp", marker = "extra == 'fastmcp'", specifier = ">=0.1.0" },
     { name = "flake8", marker = "extra == 'dev'", specifier = ">=4.0.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=5.0.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=6.0.0" },
