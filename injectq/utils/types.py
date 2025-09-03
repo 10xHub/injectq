@@ -3,12 +3,21 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, ParamSpec, get_origin
+from typing import Any, ParamSpec, get_origin, TypeVar, TYPE_CHECKING
 
 
 # Type variables
-T = Any  # Using Any for now to allow flexible typing
+T = TypeVar("T")
 P = ParamSpec("P")
+
+# Forward declaration for Inject (to avoid circular import)
+# (No need to actually import Inject, just use as string in type alias)
+
+# Type alias to allow Inject[T] as a valid default for T
+if TYPE_CHECKING:
+    Injected = T | "Inject[T]"
+else:
+    Injected = Any
 
 # Common type aliases
 ServiceKey = type[Any] | str

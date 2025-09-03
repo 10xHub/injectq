@@ -118,9 +118,7 @@ def _inject_and_call(
                 f"Cannot inject dependency '{e.dependency_type}' for parameter "
                 f"in function '{func.__name__}': {e}"
             )
-            raise InjectionError(
-                msg
-            )
+            raise InjectionError(msg)
         if isinstance(e, InjectionError):
             raise
         msg = f"Injection failed for {func.__name__}: {e}"
@@ -139,7 +137,7 @@ class Inject(Generic[T]):
 
     def __init__(self, service_type: type) -> None:
         self.service_type = service_type
-        self._injected_value = None
+        self._injected_value: T | None = None
         self._injected = False
 
     def __repr__(self) -> str:
@@ -150,7 +148,45 @@ class Inject(Generic[T]):
             container = InjectQ.get_instance()
             self._injected_value = container.get(self.service_type)
             self._injected = True
-        return getattr(self._injected_value, name)
+        if self._injected_value is not None:
+            return getattr(self._injected_value, name)
+        msg = f"'{self.__class__.__name__}' object has no attribute '{name}'"
+        raise AttributeError(msg)
+
+    def __call__(self) -> T:
+        """Allow Inject to be called to get the injected value."""
+        if not self._injected:
+            container = InjectQ.get_instance()
+            self._injected_value = container.get(self.service_type)
+            self._injected = True
+        return self._injected_value  # type: ignore
+
+    def __bool__(self) -> bool:
+        """Make Inject truthy when injected."""
+        return self._injected
+
+    def __eq__(self, other: object) -> bool:
+        """Compare with injected value."""
+        if not self._injected:
+            container = InjectQ.get_instance()
+            self._injected_value = container.get(self.service_type)
+            self._injected = True
+        return self._injected_value == other
+
+    def __hash__(self) -> int:
+        """Hash based on injected value."""
+        if not self._injected:
+            container = InjectQ.get_instance()
+            self._injected_value = container.get(self.service_type)
+            self._injected = True
+        return hash(self._injected_value)
+
+    @classmethod
+    def __class_getitem__(cls, item: type | tuple) -> "Inject":
+        """Support generic syntax Inject[ServiceType]."""
+        if isinstance(item, type):
+            return cls(item)
+        return super().__class_getitem__(item)  # type: ignore
 
 
 def inject_into(container: InjectQ) -> Callable[[F], F]:
@@ -173,9 +209,7 @@ def inject_into(container: InjectQ) -> Callable[[F], F]:
             dependencies = get_function_dependencies(func)
         except Exception as e:
             msg = f"Failed to analyze dependencies for {func.__name__}: {e}"
-            raise InjectionError(
-                msg
-            )
+            raise InjectionError(msg)
 
         if inspect.iscoroutinefunction(func):
 

@@ -1,4 +1,6 @@
-from injectq import injectq, Inject
+from typing import cast
+
+from injectq import Inject, injectq
 
 
 class A:
@@ -28,7 +30,10 @@ print(injectq.get(A).bark())  # should print "Woof!"
 print(injectq.get(B).meow())  # should print "Meow!"
 
 
-def test(aa: A = Inject[A]):  # type: ignore
+# Create inject instance using Inject[A] syntax
+
+
+def test(aa: A = Inject[A]):
     print(aa)
     print(aa.bark())
 
