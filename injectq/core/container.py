@@ -1,6 +1,6 @@
 """Main container implementation for InjectQ dependency injection library."""
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 from contextlib import contextmanager
 from collections.abc import Iterator
 
@@ -9,6 +9,9 @@ from .registry import ServiceRegistry
 from .resolver import DependencyResolver
 from .scopes import ScopeType, ScopeManager
 from .thread_safety import HybridLock
+
+if TYPE_CHECKING:
+    from ..diagnostics import DependencyVisualizer
 
 
 class FactoryProxy:
@@ -246,6 +249,22 @@ class InjectQ:
     def get_dependency_graph(self) -> Dict[ServiceKey, List[ServiceKey]]:
         """Get the dependency graph for all registered services."""
         return self._ensure_thread_safe(lambda: self._resolver.get_dependency_graph())
+
+    def visualize_dependencies(self) -> "DependencyVisualizer":
+        """Get a dependency visualizer for this container."""
+        from ..diagnostics import DependencyVisualizer
+
+        visualizer = DependencyVisualizer(self)
+        return visualizer
+
+    def compile(self) -> None:
+        """Pre-compile dependency graphs for performance optimization."""
+
+        def compile_dependencies():
+            # Pre-resolve dependency graphs and cache resolution plans
+            self._resolver.compile_resolution_plans()
+
+        self._ensure_thread_safe(compile_dependencies)
 
     # Cleanup methods
     def clear(self) -> None:

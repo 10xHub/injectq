@@ -31,6 +31,25 @@ from .decorators import (
 
 # Testing exports
 from . import testing
+
+# Component exports
+from .components import (
+    Component,
+    ComponentContainer,
+    ComponentRegistry,
+    ComponentInterface,
+    ComponentBinding,
+    ComponentScope,
+    ComponentState,
+    ComponentError,
+)
+
+# Diagnostics exports
+from .diagnostics import (
+    DependencyProfiler,
+    DependencyValidator,
+    DependencyVisualizer,
+)
 from .modules import (
     Module,
     SimpleModule,
@@ -74,6 +93,19 @@ __all__ = [
     "provider",
     # Testing
     "testing",
+    # Components
+    "Component",
+    "ComponentContainer",
+    "ComponentRegistry",
+    "ComponentInterface",
+    "ComponentBinding",
+    "ComponentScope",
+    "ComponentState",
+    "ComponentError",
+    # Diagnostics
+    "DependencyProfiler",
+    "DependencyValidator",
+    "DependencyVisualizer",
     # Integrations
     # Exceptions
     "InjectQError",
