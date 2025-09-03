@@ -375,7 +375,9 @@ class TestComponentContainer:
         assert message_comp is not None
         assert storage_comp is not None
         assert message_comp.state == ComponentState.STARTED
-        assert storage_comp.state == ComponentState.CONFIGURED  # Configured but not started
+        assert (
+            storage_comp.state == ComponentState.CONFIGURED
+        )  # Configured but not started
 
     def test_stop_components(self):
         """Test stopping components."""
