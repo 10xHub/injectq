@@ -1,8 +1,10 @@
+from typing import Annotated
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from injectq import InjectQ, singleton, Inject
-from injectq.integrations.fastapi import setup_injectq, InjectAPI
-from typing import Annotated
+
+from injectq import InjectQ, singleton
+from injectq.integrations.fastapi import InjectAPI, setup_fastapi
 
 
 @singleton
@@ -21,7 +23,7 @@ def create_app():
         print("Getting called")
         return service.get_users()
 
-    setup_injectq(container, app)
+    setup_fastapi(container, app)
     return app
 
 

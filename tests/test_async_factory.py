@@ -1,6 +1,7 @@
 """Test async factory support in InjectQ."""
 
 import asyncio
+
 from injectq import InjectQ, inject
 
 

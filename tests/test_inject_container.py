@@ -1,6 +1,7 @@
 """Test the new inject decorator with container parameter."""
 
 import pytest
+
 from injectq import InjectQ, inject
 from injectq.decorators.inject import Inject
 

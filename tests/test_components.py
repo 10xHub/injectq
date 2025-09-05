@@ -1,16 +1,17 @@
 """Tests for component architecture."""
 
-import pytest
 from typing import Protocol
 from unittest.mock import Mock
 
+import pytest
+
 from injectq.components import (
     Component,
-    ComponentRegistry,
     ComponentContainer,
-    ComponentState,
     ComponentError,
+    ComponentRegistry,
     ComponentScope,
+    ComponentState,
 )
 
 

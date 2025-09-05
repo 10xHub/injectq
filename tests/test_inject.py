@@ -1,11 +1,11 @@
 """Test inject decorator functionality."""
 
-import pytest
 import asyncio
-from typing import Optional
+
+import pytest
 
 from injectq import InjectQ, inject
-from injectq.utils import DependencyNotFoundError, InjectionError
+from injectq.utils import InjectionError
 
 
 class MockService:

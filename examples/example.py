@@ -78,6 +78,7 @@ print(result)
 # Async example
 import asyncio
 
+
 async_result = asyncio.run(async_user_service())  # type: ignore
 print(async_result)
 

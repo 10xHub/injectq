@@ -87,7 +87,7 @@ def inject(
                     f, dependencies, target_container, args, kwargs
                 )
 
-            return cast(F, async_wrapper)
+            return cast("F", async_wrapper)
 
         @functools.wraps(f)
         def sync_wrapper(*args, **kwargs):
@@ -101,7 +101,7 @@ def inject(
                 target_container = InjectQ.get_instance()
             return _inject_and_call(f, dependencies, target_container, args, kwargs)
 
-        return cast(F, sync_wrapper)
+        return cast("F", sync_wrapper)
 
     # If called without arguments, return the decorator
     if func is None:
@@ -309,9 +309,8 @@ class _InjectMeta(type):
         if TYPE_CHECKING:
             # For type checking, return the actual type
             return item  # type: ignore[return-value]
-        else:
-            # At runtime, return InjectType instance
-            return InjectType(item)  # type: ignore[return-value]
+        # At runtime, return InjectType instance
+        return InjectType(item)  # type: ignore[return-value]
 
 
 class InjectRequiresServiceTypeError(TypeError):

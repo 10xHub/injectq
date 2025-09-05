@@ -1,8 +1,8 @@
 """Testing utilities for InjectQ dependency injection library."""
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from typing import Any, Callable
+from typing import Any
 
 from injectq.core import InjectQ
 from injectq.utils import ServiceKey

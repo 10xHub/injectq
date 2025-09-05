@@ -1,7 +1,8 @@
 """Tests for resource management decorator."""
 
 import pytest
-from injectq import resource, get_resource_manager
+
+from injectq import get_resource_manager, resource
 from injectq.decorators.resource import ResourceError
 
 
@@ -149,8 +150,8 @@ def test_resource_attributes():
     assert hasattr(test_resource, "_resource_scope")
     assert hasattr(test_resource, "_resource_lifecycle")
 
-    assert getattr(test_resource, "_is_resource") is True
-    assert getattr(test_resource, "_resource_scope") == "custom"
+    assert test_resource._is_resource is True
+    assert test_resource._resource_scope == "custom"
 
 
 @pytest.mark.asyncio

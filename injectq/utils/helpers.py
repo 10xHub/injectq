@@ -10,8 +10,7 @@ from .types import normalize_type
 
 
 def get_function_dependencies(func: Callable[..., Any]) -> dict[str, type[Any]]:
-    """
-    Extract dependency types from function signature
+    """Extract dependency types from function signature
     type hints and Inject markers.
     """
     try:

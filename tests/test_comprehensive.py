@@ -1,12 +1,12 @@
 """Comprehensive pytest tests for multi-container, async factory, and type checking features."""
 
 import asyncio
-import pytest
 from typing import Protocol
+
+import pytest
 
 from injectq import InjectQ
 from injectq.decorators.inject import Inject, inject
-from injectq.core.context import ContainerContext
 
 
 # Test services and interfaces
@@ -200,7 +200,7 @@ class TestAsyncFactory:
         with container.context():
             consumer = await get_consumer()
             result = consumer.get_async_value()
-            assert "Consumer got: from async factory" == result
+            assert result == "Consumer got: from async factory"
 
     @pytest.mark.asyncio
     async def test_multiple_async_factories(self) -> None:

@@ -83,7 +83,7 @@ class InjectQRequestMiddleware:
             return await call_next(request)
 
 
-def setup_injectq(container: InjectQ, app: Any) -> None:
+def setup_fastapi(container: InjectQ, app: Any) -> None:
     """Register InjectQ with FastAPI app for per-request scope
     and dependency injection.
     """

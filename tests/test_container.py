@@ -1,10 +1,10 @@
 """Test basic functionality of InjectQ container."""
 
+
 import pytest
-from typing import Protocol
 
 from injectq import InjectQ, inject, singleton, transient
-from injectq.utils import DependencyNotFoundError, CircularDependencyError
+from injectq.utils import CircularDependencyError, DependencyNotFoundError
 
 
 class Database:

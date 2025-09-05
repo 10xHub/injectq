@@ -148,7 +148,6 @@ class DependencyResolver:
 
     async def _resolve_binding_async(self, binding: ServiceBinding) -> Any:
         """Resolve a service from a binding configuration asynchronously."""
-
         # For async resolution, we always create instances directly to avoid
         # the complexity of async factories with the scope manager
         return await self._create_instance_async(binding.implementation)
