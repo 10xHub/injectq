@@ -1,0 +1,79 @@
+Issue: example `examples/multi_container.py` fails with InjectionError when calling `test1()`
+
+Summary
+-------
+Running `examples/multi_container.py` raises an InjectionError because the `@inject` decorator resolves dependencies from the global singleton container (InjectQ.get_instance()). The example creates two separate containers, `c1` and `c2`, binds values on them, but never makes `c1` the global container used by the `@inject` decorator. As a result, the decorator tries to resolve `str` and other types from a fresh empty global container and fails with "No binding found for type: <class 'str'>".
+
+Reproduction
+------------
+1. Run: python3 examples/multi_container.py
+2. Observe traceback and error:
+
+Traceback (most recent call last):
+  File ".../injectq/decorators/inject.py", line 98, in _inject_and_call
+    dependency = container.get(param_type)
+  File ".../injectq/core/container.py", line 191, in get
+    return self._ensure_thread_safe(lambda: self._resolver.resolve(service_type))
+  File ".../injectq/core/resolver.py", line 78, in _do_resolve
+    raise DependencyNotFoundError(service_type)
+injectq.utils.exceptions.DependencyNotFoundError: No binding found for type: <class 'str'>
+
+During handling of the above exception, another exception occurred:
+
+injectq.utils.exceptions.InjectionError: Cannot inject dependency '<class 'str'>' for parameter in function 'test1': No binding found for type: <class 'str'>
+
+Root cause
+----------
+- The `@inject` decorator (defined in `injectq/decorators/inject.py`) resolves dependencies at call time using `InjectQ.get_instance()` (the global singleton container).
+- The example creates two independent container instances (`c1` and `c2`) and binds values to them, but does not assign either to the global singleton used by the decorator.
+- Therefore `InjectQ.get_instance()` creates a fresh, empty container (or returns an unrelated singleton), so lookups for `str` (and other types) fail.
+
+Why it fails specifically for this example
+---------------------------------------
+- In `examples/multi_container.py`, function `test1` has signature `def test1(s: str, name: str):`.
+- The injection logic first checks for a binding by the parameter name, then falls back to type-based resolution. The parameter name `s` isn't registered, so it tries to resolve by type `str`.
+- Since the decorator used the global container (which doesn't have `str` bound), resolution raises `DependencyNotFoundError` and then `InjectionError`.
+
+Suggested fixes / workarounds
+----------------------------
+1) Use a container-bound decorator so `c1` (the container with bindings) is used for resolution:
+   - Replace the `@inject` decorator with `@inject_into(c1)` (either by writing `@inject_into(c1)` above the function or by rewrapping afterward: `test1 = inject_into(c1)(test1)`).
+
+2) Make `c1` the global singleton container used by `@inject` before calling the injected functions:
+   - Set the class-level singleton to your container: `InjectQ._instance = c1` (or `InjectQ.reset_instance(); InjectQ._instance = c1`).
+   - Note: the public API currently exposes `get_instance()` and `reset_instance()` but not a dedicated `set_instance()`; direct assignment to `_instance` is a practical option.
+
+3) Bind values on the global container rather than separate instances:
+   - Instead of `c1 = InjectQ()` then `c1.bind(...)`, use `global_container = InjectQ.get_instance()` and bind into that container.
+
+4) (Cleaner API suggestion) Add a publicly documented API to set the global container (e.g., `InjectQ.set_instance(container)`) to avoid touching the protected `_instance` attribute.
+
+Minimal code examples
+---------------------
+- Option A: use a container-bound decorator
+    from injectq.decorators import inject_into
+
+    c1 = InjectQ()
+    # ...binds on c1...
+
+    @inject_into(c1)
+    def test1(s: str, name: str):
+        print(s)
+        print(name)
+
+- Option B: set the global singleton
+    c1 = InjectQ()
+    # ...binds on c1...
+    InjectQ.reset_instance()
+    InjectQ._instance = c1
+
+Notes
+-----
+- The observed traceback clearly shows the decorator used `InjectQ.get_instance()` (stack frame in `inject.py`), so the problem is not with binding syntax but with which container is being used for resolution.
+- Both parameter-name and parameter-type resolution paths exist; using string keys (like `"name"`) will be found if the chosen container has those string keys bound, but the parameter `s` is a short name and the example intent was to resolve by type `str`.
+
+Next steps (suggested)
+---------------------
+- If you want, I can: 1) modify the example to use `@inject_into(c1)` and run it to verify it prints expected values, or 2) update docs / add a small helper `set_instance()` API and a test demonstrating the correct usage.
+
+End of report

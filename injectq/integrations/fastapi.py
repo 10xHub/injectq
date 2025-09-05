@@ -20,7 +20,7 @@ class InjectAPI(Generic[T]):
         def _get_service(request: Request) -> Any:
             container = getattr(request.state, "injectq_container", None)
             if container is None:
-                from injectq.utils import InjectionError
+                from injectq.utils import InjectionError  # noqa: PLC0415
 
                 msg = "No InjectQ container found in request state."
                 raise InjectionError(msg)
@@ -44,6 +44,6 @@ class InjectQRequestMiddleware(BaseHTTPMiddleware):
 
 def setup_injectq(container, app) -> None:
     """Register InjectQ with FastAPI app for per-request scope
-    and dependency injection.
-    """
+    and dependency injection."""
+
     app.add_middleware(InjectQRequestMiddleware, container=container)
