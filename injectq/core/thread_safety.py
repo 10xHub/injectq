@@ -75,7 +75,7 @@ class HybridLock:
         self._thread_lock.__enter__()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
         """Support for sync 'with' statement."""
         return self._thread_lock.__exit__(exc_type, exc_val, exc_tb)
 
@@ -89,7 +89,7 @@ class HybridLock:
             self._thread_lock.__enter__()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
         """Support for async 'async with' statement."""
         async_lock = self._get_async_lock()
         if async_lock is not None:
@@ -257,9 +257,10 @@ def detect_async_context() -> bool:
     """Detect if we're currently in an asyncio context."""
     try:
         asyncio.current_task()
-        return True
     except RuntimeError:
         return False
+    else:
+        return True
 
 
 def is_main_thread() -> bool:
@@ -300,13 +301,13 @@ def thread_safe(
 
     if asyncio.iscoroutinefunction(func):
 
-        async def async_wrapper(*args, **kwargs):
+        async def async_wrapper(*args, **kwargs) -> Any:
             async with lock.async_lock():
                 return await func(*args, **kwargs)
 
-        return async_wrapper
+        return async_wrapper  # type: ignore  # noqa: PGH003
 
-    def sync_wrapper(*args, **kwargs):
+    def sync_wrapper(*args, **kwargs) -> Any:
         with lock.sync_lock():
             return func(*args, **kwargs)
 

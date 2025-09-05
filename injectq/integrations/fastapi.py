@@ -1,40 +1,81 @@
-from typing import Any, Generic, TypeVar
+"""FastAPI integration for InjectQ (optional dependency).
 
-from fastapi import Depends
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
+Uses FastAPI for dependency injection in web applications.
+
+Dependency: fastapi
+Not installed by default; install extra: `pip install injectq[fastapi]`.
+"""
+
+from __future__ import annotations
+
+import importlib
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from injectq.core.container import InjectQ, ScopeType
+from injectq.utils import InjectionError
 
 
 T = TypeVar("T")
 
 
-class InjectAPI(Generic[T]):
+if TYPE_CHECKING:
+    # Type-only base class that makes InjectAPI appear as T to type checkers
+    class _InjectAPIBase(Generic[T]):
+        def __new__(cls, service_type: type[T]) -> T:  # type: ignore[misc]
+            # This will never be called at runtime
+            return super().__new__(cls)  # type: ignore[return-value]
+else:
+    _InjectAPIBase = Generic
+
+
+class InjectAPI(_InjectAPIBase[T]):
     """FastAPI dependency injector for InjectQ."""
 
     def __init__(self, service_type: type[T]) -> None:
         self.service_type = service_type
 
-    def __new__(cls, service_type: type[T]):
-        def _get_service(request: Request) -> Any:
+    def __new__(cls, service_type: type[T]) -> Any:
+        if TYPE_CHECKING:
+            # For type checking, return the actual type
+            return service_type  # type: ignore[return-value]
+
+        try:
+            fastapi = importlib.import_module("fastapi")
+            depends = fastapi.Depends
+        except ImportError as exc:
+            msg = (
+                "InjectAPI requires the 'fastapi' package. Install with "
+                "'pip install injectq[fastapi]' or 'pip install fastapi'."
+            )
+            raise RuntimeError(msg) from exc
+
+        def _get_service(request: Any) -> Any:
             container = getattr(request.state, "injectq_container", None)
             if container is None:
-                from injectq.utils import InjectionError  # noqa: PLC0415
-
                 msg = "No InjectQ container found in request state."
-                raise InjectionError(msg)
+                raise InjectionError(msg) from None
             return container.get(service_type)
 
-        return Depends(_get_service, use_cache=True)
+        return depends(_get_service, use_cache=True)
 
 
-class InjectQRequestMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, container: InjectQ) -> None:
-        super().__init__(app)
+class InjectQRequestMiddleware:
+    def __init__(self, app: Any, container: InjectQ) -> None:
+        try:
+            starlette_middleware = importlib.import_module("starlette.middleware.base")
+            base_middleware = starlette_middleware.BaseHTTPMiddleware
+        except ImportError as exc:
+            msg = (
+                "InjectQRequestMiddleware requires the 'fastapi' package. Install with "
+                "'pip install injectq[fastapi]' or 'pip install fastapi'."
+            )
+            raise RuntimeError(msg) from exc
+
+        # Initialize the base middleware
+        base_middleware.__init__(self, app)
         self.container = container
 
-    async def dispatch(self, request, call_next):
+    async def dispatch(self, request: Any, call_next: Any) -> Any:
         # Use async_scope for async context management
         async_cm = self.container.async_scope(ScopeType.REQUEST)
         async with async_cm:
@@ -42,8 +83,17 @@ class InjectQRequestMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
 
-def setup_injectq(container, app) -> None:
+def setup_injectq(container: InjectQ, app: Any) -> None:
     """Register InjectQ with FastAPI app for per-request scope
-    and dependency injection."""
+    and dependency injection.
+    """
+    try:
+        importlib.import_module("fastapi")
+    except ImportError as exc:
+        msg = (
+            "setup_injectq requires the 'fastapi' package. Install with "
+            "'pip install injectq[fastapi]' or 'pip install fastapi'."
+        )
+        raise RuntimeError(msg) from exc
 
     app.add_middleware(InjectQRequestMiddleware, container=container)

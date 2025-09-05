@@ -34,7 +34,7 @@ class ThreadSafeDependencyResolver:
         self.scope_manager = scope_manager or get_scope_manager()
 
         # Thread-safe resolution stack using thread-local storage
-        import threading
+        import threading  # noqa: PLC0415
 
         self._thread_local = threading.local()
 
@@ -68,7 +68,7 @@ class ThreadSafeDependencyResolver:
             if service_type in resolution_stack:
                 cycle_start = resolution_stack.index(service_type)
                 cycle = [*resolution_stack[cycle_start:], service_type]
-                raise CircularDependencyError(cycle)
+                raise CircularDependencyError(cycle)  # type: ignore  # noqa: PGH003
 
             try:
                 resolution_stack.append(service_type)
@@ -97,7 +97,7 @@ class ThreadSafeDependencyResolver:
             if service_type in resolution_stack:
                 cycle_start = resolution_stack.index(service_type)
                 cycle = [*resolution_stack[cycle_start:], service_type]
-                raise CircularDependencyError(cycle)
+                raise CircularDependencyError(cycle)  # type: ignore  # noqa: PGH003
 
             try:
                 resolution_stack.append(service_type)
@@ -122,7 +122,7 @@ class ThreadSafeDependencyResolver:
             return self._auto_resolve_class(service_type)
 
         # Service not found
-        raise DependencyNotFoundError(service_type)
+        raise DependencyNotFoundError(service_type)  # type: ignore  # noqa: PGH003
 
     async def _ado_resolve(self, service_type: ServiceKey) -> Any:
         """Internal async method to perform the actual resolution."""
@@ -141,7 +141,7 @@ class ThreadSafeDependencyResolver:
             return await self._aauto_resolve_class(service_type)
 
         # Service not found
-        raise DependencyNotFoundError(service_type)
+        raise DependencyNotFoundError(service_type)  # type: ignore  # noqa: PGH003
 
     def _resolve_binding(self, binding: ServiceBinding) -> Any:
         """Resolve a service from a binding configuration."""
@@ -161,11 +161,12 @@ class ThreadSafeDependencyResolver:
 
         # Check if scope manager supports async operations
         if hasattr(self.scope_manager, "aget_instance"):
-            return await self.scope_manager.aget_instance(
+            return await self.scope_manager.aget_instance(  # type: ignore  # noqa: PGH003
                 key=binding.service_type, factory=factory, scope_name=binding.scope
             )
+
         # Fall back to sync version
-        def sync_factory():
+        def sync_factory() -> Any:
             return asyncio.run(factory())
 
         return self.scope_manager.get_instance(
@@ -196,12 +197,14 @@ class ThreadSafeDependencyResolver:
 
         # Check if scope manager supports async operations
         if hasattr(self.scope_manager, "aget_instance"):
-            return await self.scope_manager.aget_instance(
+            return await self.scope_manager.aget_instance(  # type: ignore  # noqa: PGH003
                 key=service_type, factory=factory_wrapper, scope_name="transient"
             )
+
         # Fall back to sync version
-        def sync_factory():
+        def sync_factory() -> Any:
             return asyncio.run(factory_wrapper())
+
         return self.scope_manager.get_instance(
             key=service_type, factory=sync_factory, scope_name="transient"
         )
@@ -226,14 +229,16 @@ class ThreadSafeDependencyResolver:
 
         # Check if scope manager supports async operations
         if hasattr(self.scope_manager, "aget_instance"):
-            return await self.scope_manager.aget_instance(
+            return await self.scope_manager.aget_instance(  # type: ignore  # noqa: PGH003
                 key=cls,
                 factory=factory,
                 scope_name="transient",  # Default to transient for auto-resolved
             )
+
         # Fall back to sync version
-        def sync_factory():
+        def sync_factory() -> Any:
             return asyncio.run(factory())
+
         return self.scope_manager.get_instance(
             key=cls, factory=sync_factory, scope_name="transient"
         )
@@ -253,9 +258,7 @@ class ThreadSafeDependencyResolver:
             return self._invoke_factory(implementation)
 
         msg = f"Don't know how to create instance from: {implementation}"
-        raise InjectionError(
-            msg
-        )
+        raise InjectionError(msg)
 
     async def _acreate_instance(self, implementation: Any) -> Any:
         """Async create an instance from an implementation."""
@@ -272,9 +275,7 @@ class ThreadSafeDependencyResolver:
             return await self._ainvoke_factory(implementation)
 
         msg = f"Don't know how to create instance from: {implementation}"
-        raise InjectionError(
-            msg
-        )
+        raise InjectionError(msg)
 
     def _instantiate_class(self, cls: type[Any]) -> Any:
         """Instantiate a class with dependency injection."""
@@ -294,14 +295,14 @@ class ThreadSafeDependencyResolver:
                     else:
                         # Fall back to type-based resolution
                         resolved_args[param_name] = self.resolve(param_type)
-                except DependencyNotFoundError:
+                except DependencyNotFoundError as e:  # noqa: PERF203
                     # Check if parameter has a default value
                     sig = inspect.signature(cls.__init__)
                     param = sig.parameters.get(param_name)
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    raise
+                    raise Exception from e  # noqa: TRY002
 
             # Create instance
             return cls(**resolved_args)
@@ -310,7 +311,7 @@ class ThreadSafeDependencyResolver:
             if isinstance(e, DependencyNotFoundError | CircularDependencyError):
                 raise
             msg = f"Failed to instantiate {cls}: {e}"
-            raise InjectionError(msg)
+            raise InjectionError(msg) from e
 
     async def _ainstantiate_class(self, cls: type[Any]) -> Any:
         """Async instantiate a class with dependency injection."""
@@ -330,14 +331,14 @@ class ThreadSafeDependencyResolver:
                     else:
                         # Fall back to type-based resolution
                         resolved_args[param_name] = await self.aresolve(param_type)
-                except DependencyNotFoundError:
+                except DependencyNotFoundError as e:  # noqa: PERF203
                     # Check if parameter has a default value
                     sig = inspect.signature(cls.__init__)
                     param = sig.parameters.get(param_name)
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    raise
+                    raise Exception from e  # noqa: TRY002
 
             # Create instance
             return cls(**resolved_args)
@@ -346,7 +347,7 @@ class ThreadSafeDependencyResolver:
             if isinstance(e, DependencyNotFoundError | CircularDependencyError):
                 raise
             msg = f"Failed to instantiate {cls}: {e}"
-            raise InjectionError(msg)
+            raise InjectionError(msg) from e
 
     def _invoke_factory(self, factory: Callable[..., Any]) -> Any:
         """Invoke a factory function with dependency injection."""
@@ -366,14 +367,14 @@ class ThreadSafeDependencyResolver:
                     else:
                         # Fall back to type-based resolution
                         resolved_args[param_name] = self.resolve(param_type)
-                except DependencyNotFoundError:
+                except DependencyNotFoundError as e:  # noqa: PERF203
                     # Check if parameter has a default value
                     sig = inspect.signature(factory)
                     param = sig.parameters.get(param_name)
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    raise
+                    raise Exception from e  # noqa: TRY002
 
             # Invoke factory
             return factory(**resolved_args)
@@ -382,7 +383,7 @@ class ThreadSafeDependencyResolver:
             if isinstance(e, DependencyNotFoundError | CircularDependencyError):
                 raise
             msg = f"Failed to invoke factory {factory}: {e}"
-            raise InjectionError(msg)
+            raise InjectionError(msg) from e
 
     async def _ainvoke_factory(self, factory: Callable[..., Any]) -> Any:
         """Async invoke a factory function with dependency injection."""
@@ -402,26 +403,28 @@ class ThreadSafeDependencyResolver:
                     else:
                         # Fall back to type-based resolution
                         resolved_args[param_name] = await self.aresolve(param_type)
-                except DependencyNotFoundError:
+                except DependencyNotFoundError as e:  # noqa: PERF203
                     # Check if parameter has a default value
                     sig = inspect.signature(factory)
                     param = sig.parameters.get(param_name)
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    raise
+                    raise Exception from e  # noqa: TRY002
 
             # Invoke factory (handle both sync and async factories)
             result = factory(**resolved_args)
             if asyncio.iscoroutine(result):
                 return await result
-            return result
 
         except Exception as e:
             if isinstance(e, DependencyNotFoundError | CircularDependencyError):
                 raise
             msg = f"Failed to invoke factory {factory}: {e}"
-            raise InjectionError(msg)
+            raise InjectionError(msg) from e
+
+        else:
+            return result
 
     def validate_dependencies(self) -> None:
         """Validate all registered dependencies for resolvability."""
@@ -432,7 +435,7 @@ class ThreadSafeDependencyResolver:
                 try:
                     # Try to resolve each service (but don't create instances)
                     self._validate_service(service_type)
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001, PERF203
                     errors.append(f"{format_type_name(service_type)}: {e}")
 
             if errors:
@@ -454,9 +457,12 @@ class ThreadSafeDependencyResolver:
             binding = self.registry.get_binding(stype)
             factory = self.registry.get_factory(stype)
 
-            if binding is None and factory is None:
-                if not (isinstance(stype, type) and is_injectable_class(stype)):
-                    raise DependencyNotFoundError(stype)
+            if (
+                binding is None
+                and factory is None
+                and not (isinstance(stype, type) and is_injectable_class(stype))
+            ):
+                raise DependencyNotFoundError(stype)  # type: ignore  # noqa: PGH003
 
             # Check dependencies
             if binding and isinstance(binding.implementation, type):

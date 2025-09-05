@@ -1,5 +1,6 @@
 """Async context variable-based scopes for InjectQ dependency injection library."""
 
+import asyncio
 import contextvars
 import threading
 from collections.abc import AsyncIterator, Callable, Iterator
@@ -19,7 +20,10 @@ class AsyncScope(Scope):
         super().__init__(name)
         # Use contextvars for async context isolation
         self._instances_var: contextvars.ContextVar[dict[Any, Any]] = (
-            contextvars.ContextVar(f"{name}_instances", default={})
+            contextvars.ContextVar(
+                f"{name}_instances",
+                default={},  # noqa: B039
+            )
         )
 
     def get(self, key: Any, factory: Callable[[], Any]) -> Any:
@@ -65,8 +69,9 @@ class AsyncActionScope(AsyncScope):
 
 
 class HybridScope(Scope):
-    """Hybrid scope that uses contextvars for async contexts and thread-local for sync contexts.
-    Automatically detects the execution environment and uses appropriate storage.
+    """Hybrid scope that uses contextvars for async contexts and thread-local
+    for sync contexts. Automatically detects the execution environment and uses
+    appropriate storage.
     """
 
     def __init__(self, name: str) -> None:
@@ -78,13 +83,12 @@ class HybridScope(Scope):
         """Check if we're running in an async context."""
         try:
             # Try to get current task - if successful, we're in async context
-            import asyncio
-
             asyncio.current_task()
-            return True
         except RuntimeError:
             # No current task, we're in sync context
             return False
+        else:
+            return True
 
     def get(self, key: Any, factory: Callable[[], Any]) -> Any:
         """Get or create an instance using appropriate storage."""
@@ -136,7 +140,8 @@ class AsyncScopeManager(BaseScopeManager):
 
         # Use contextvars for async context isolation
         self._current_scopes_var: contextvars.ContextVar[list] = contextvars.ContextVar(
-            "current_scopes", default=[]
+            "current_scopes",
+            default=[],  # noqa: B039
         )
 
         # Fallback to thread-local for sync contexts
@@ -145,12 +150,11 @@ class AsyncScopeManager(BaseScopeManager):
     def _is_async_context(self) -> bool:
         """Check if we're running in an async context."""
         try:
-            import asyncio
-
             asyncio.current_task()
-            return True
         except RuntimeError:
             return False
+        else:
+            return True
 
     def _get_current_scopes(self) -> list:
         """Get current scope stack for the execution context."""
@@ -246,7 +250,7 @@ def create_enhanced_scope_manager() -> AsyncScopeManager:
     manager = AsyncScopeManager()
 
     # Register built-in scopes - import here to avoid circular imports
-    from .scopes import SingletonScope, TransientScope
+    from .scopes import SingletonScope, TransientScope  # noqa: PLC0415
 
     # Register core scopes
     manager.register_scope(SingletonScope())

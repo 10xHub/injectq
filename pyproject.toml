@@ -258,6 +258,7 @@ ignore = [
     "PLR2004", # Magic value used in comparison
     "COM812", # Missing trailing comma (conflicts with formatter)
     "ISC001", # Implicit string concatenation (conflicts with formatter)
+    "ANN401", # Missing type annotation for function
 ]
 
 [tool.ruff.lint.per-file-ignores]

@@ -1,13 +1,13 @@
 """Test thread safety features in InjectQ dependency injection library."""
 
-import pytest
 import asyncio
 import threading
 import time
-from typing import List
+
+import pytest
 
 from injectq import InjectQ, ScopeType
-from injectq.core.thread_safety import HybridLock, ThreadSafeDict, AsyncSafeCounter
+from injectq.core.thread_safety import AsyncSafeCounter, HybridLock, ThreadSafeDict
 
 
 class TestService:
@@ -152,7 +152,7 @@ def test_container_thread_safety():
     # Bind singleton service
     container.bind(TestService, TestService, scope=ScopeType.SINGLETON)
 
-    def resolve_service(results: List, index: int):
+    def resolve_service(results: list, index: int):
         try:
             service = container.get(TestService)
             results[index] = service
@@ -214,7 +214,7 @@ def test_container_concurrent_resolution():
     container.bind(TestService, TestService, scope=ScopeType.SINGLETON)
     container.bind(DependentService, DependentService, scope=ScopeType.TRANSIENT)
 
-    def resolve_dependent_service(results: List, index: int):
+    def resolve_dependent_service(results: list, index: int):
         try:
             service = container.get(DependentService)
             results[index] = service
@@ -253,7 +253,7 @@ def test_scope_thread_safety():
 
     container.bind(TestService, TestService, scope=ScopeType.SINGLETON)
 
-    def clear_and_resolve(results: List, index: int):
+    def clear_and_resolve(results: list, index: int):
         try:
             # Clear scopes and resolve service
             container.clear_scope(ScopeType.SINGLETON)

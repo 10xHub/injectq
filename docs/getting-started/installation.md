@@ -26,16 +26,10 @@ pip install injectq[fastapi]
 pip install injectq[taskiq]
 ```
 
-### FastMCP Integration
-
-```bash
-pip install injectq[fastmcp]
-```
-
 ### All Integrations
 
 ```bash
-pip install injectq[fastapi,taskiq,fastmcp]
+pip install injectq[fastapi,taskiq]
 ```
 
 ### Development Dependencies
@@ -62,15 +56,19 @@ InjectQ supports Python 3.10 and above:
 After installation, verify that InjectQ is working correctly:
 
 ```python
-import injectq
+from injectq import injectq
 
 print(f"InjectQ version: {injectq.__version__}")
 
-# Create a simple container
-container = injectq.InjectQ.get_instance()
-container[str] = "Hello, InjectQ!"
+class A:
+    pass
 
-print(container[str])  # Should print: Hello, InjectQ!
+# Create a simple container
+injectq[A] = A()
+
+print(injectq[A])  # Should print: <__main__.A object at 0x...>
+print(injectq.get(A))  # Should print the same object
+print(injectq.try_get(A, None))  # Should print the same object
 ```
 
 ## 🛠️ Development Installation

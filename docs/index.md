@@ -18,13 +18,10 @@
 ## 📖 Quick Example
 
 ```python
-from injectq import InjectQ, inject, singleton
-
-# Create container
-container = InjectQ.get_instance()
+from injectq import injectq, inject, singleton
 
 # Simple dict-like binding
-container[str] = "Hello, World!"
+injectq[str] = "Hello, World!"
 
 # Class binding
 @singleton
@@ -52,9 +49,9 @@ InjectQ supports several ways to inject dependencies:
 
 === "Dict-like Interface"
     ```python
-    container = InjectQ.get_instance()
-    container[str] = "config_value"
-    container[Database] = Database()
+    from injectq import injectq
+    injectq[str] = "config_value"
+    injectq[Database] = Database()
     ```
 
 === "@inject Decorator"
@@ -114,20 +111,20 @@ Seamlessly integrate with popular frameworks:
 
 === "FastAPI"
     ```python
-    from injectq.integrations.fastapi import Injected
+    from injectq.integrations.fastapi import InjectAPI
 
     @app.get("/users")
-    async def get_users(service: Injected[UserService]):
+    async def get_users(service: InjectAPI[UserService]):
         return await service.get_all()
     ```
 
 === "Taskiq"
     ```python
-    from injectq.integrations.taskiq import setup_injectq
+    from injectq.integrations.taskiq import setup_injectq, InjectTask
 
     @broker.task
     @inject
-    async def process_task(service: UserService):
+    async def process_task(service: InjectTask[UserService]):
         await service.process()
     ```
 

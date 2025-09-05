@@ -112,7 +112,7 @@ class DatabaseComponent(Component):
 
     def __init__(self):
         super().__init__()
-        self.service = None
+        self.service: DatabaseService | None = None
 
     def configure(self, **kwargs):
         super().configure(**kwargs)
@@ -124,6 +124,12 @@ class DatabaseComponent(Component):
         self.service = DatabaseService()
         connection = self.service.connect()
         print(f"Database component started: {connection}")
+
+    def connect(self) -> str:
+        return self.service.connect()  # type: ignore  # noqa: PGH003
+
+    def query(self, sql: str) -> list:
+        return self.service.query(sql)  # type: ignore  # noqa: PGH003
 
     def stop(self):
         super().stop()
@@ -171,7 +177,7 @@ class UserComponent(Component):
 
     def __init__(self):
         super().__init__()
-        self.service = None
+        self.service: UserService | None = None
 
     def start(self):
         super().start()
@@ -179,6 +185,12 @@ class UserComponent(Component):
         cache_service = self.resolve_dependency(ICacheService)
         self.service = UserService(db_service, cache_service)
         print("User component started")
+
+    def get_user(self, user_id: int):
+        return self.service.get_user(user_id)  # type: ignore  # noqa: PGH003
+
+    def create_user(self, name: str) -> int:
+        return self.service.create_user(name)  # type: ignore  # noqa: PGH003
 
     def stop(self):
         super().stop()
@@ -197,7 +209,7 @@ class OrderComponent(Component):
 
     def __init__(self):
         super().__init__()
-        self.service = None
+        self.service: OrderService | None = None
 
     def start(self):
         super().start()
@@ -205,6 +217,12 @@ class OrderComponent(Component):
         db_service = self.resolve_dependency(IDatabaseService)
         self.service = OrderService(user_service, db_service)
         print("Order component started")
+
+    def get_order(self, order_id: int):
+        return self.service.get_order(order_id)  # type: ignore  # noqa: PGH003
+
+    def create_order(self, user_id: int, items: list) -> int:
+        return self.service.create_order(user_id, items)  # type: ignore  # noqa: PGH003
 
     def stop(self):
         super().stop()

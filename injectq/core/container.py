@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from injectq.utils import (
     BindingError,
@@ -36,7 +36,7 @@ class FactoryProxy:
 
     def __getitem__(self, service_type: ServiceKey) -> ServiceFactory:
         """Get a factory function for a service type."""
-        factory = self._container._registry.get_factory(service_type)
+        factory = self._container._registry.get_factory(service_type)  # noqa: SLF001
         if factory is None:
             msg = f"No factory registered for {service_type}"
             raise KeyError(msg)
@@ -44,13 +44,13 @@ class FactoryProxy:
 
     def __delitem__(self, service_type: ServiceKey) -> None:
         """Remove a factory binding."""
-        if not self._container._registry.remove_factory(service_type):
+        if not self._container._registry.remove_factory(service_type):  # noqa: SLF001
             msg = f"No factory registered for {service_type}"
             raise KeyError(msg)
 
     def __contains__(self, service_type: ServiceKey) -> bool:
         """Check if a factory is registered."""
-        return self._container._registry.has_factory(service_type)
+        return self._container._registry.has_factory(service_type)  # noqa: SLF001
 
 
 class InjectQ:
@@ -62,11 +62,11 @@ class InjectQ:
     - Factory methods: container.factories[Type] = factory_func
     """
 
-    _instance: Optional[InjectQ] = None
+    _instance: InjectQ | None = None
 
     def __init__(
         self,
-        modules: Optional[List[Any]] = None,
+        modules: list[Any] | None = None,
         use_async_scopes: bool = True,
         thread_safe: bool = True,
     ) -> None:
@@ -82,7 +82,7 @@ class InjectQ:
 
         # Choose scope manager based on async support requirement
         if use_async_scopes:
-            from .async_scopes import create_enhanced_scope_manager
+            from .async_scopes import create_enhanced_scope_manager  # noqa: PLC0415
 
             self._scope_manager = create_enhanced_scope_manager()
         else:
@@ -115,7 +115,7 @@ class InjectQ:
         """Reset the global singleton instance (mainly for testing)."""
         cls._instance = None
 
-    def _ensure_thread_safe(self, operation):
+    def _ensure_thread_safe(self, operation: Callable) -> Any:
         """Execute operation with thread safety if enabled."""
         if self._thread_safe and self._lock:
             with self._lock:
@@ -153,7 +153,7 @@ class InjectQ:
         self,
         service_type: ServiceKey,
         implementation: Any = None,
-        scope: Union[str, ScopeType] = ScopeType.SINGLETON,
+        scope: str | ScopeType = ScopeType.SINGLETON,
         to: Any = None,
     ) -> None:
         """Bind a service type to an implementation.
@@ -190,10 +190,16 @@ class InjectQ:
         """Get a service instance."""
         return self._ensure_thread_safe(lambda: self._resolver.resolve(service_type))
 
+    async def get_async(self, service_type: ServiceKey) -> Any:
+        """Get a service instance asynchronously."""
+        return await self._ensure_thread_safe(
+            lambda: self._resolver.resolve_async(service_type)
+        )
+
     def try_get(self, service_type: ServiceKey, default: Any = None) -> Any:
         """Try to get a service instance, returning default if not found."""
 
-        def try_resolve():
+        def try_resolve() -> Any:
             try:
                 return self._resolver.resolve(service_type)
             except DependencyNotFoundError:
@@ -206,23 +212,23 @@ class InjectQ:
         return self._ensure_thread_safe(lambda: service_type in self._registry)
 
     # Scope management
-    def scope(self, scope_name: Union[str, ScopeType]) -> Any:
+    def scope(self, scope_name: str | ScopeType) -> Any:
         """Enter a scope context."""
         if isinstance(scope_name, ScopeType):
             scope_name = scope_name.value
         return self._scope_manager.scope_context(scope_name)
 
-    def async_scope(self, scope_name: Union[str, ScopeType]) -> Any:
+    def async_scope(self, scope_name: str | ScopeType) -> Any:
         """Enter an async scope context."""
         if isinstance(scope_name, ScopeType):
             scope_name = scope_name.value
         # Check if scope manager supports async contexts
         if hasattr(self._scope_manager, "async_scope_context"):
-            return self._scope_manager.async_scope_context(scope_name)
+            return self._scope_manager.async_scope_context(scope_name)  # type: ignore  # noqa: PGH003
         # Fallback to regular scope context
         return self._scope_manager.scope_context(scope_name)
 
-    def clear_scope(self, scope_name: Union[str, ScopeType]) -> None:
+    def clear_scope(self, scope_name: str | ScopeType) -> None:
         """Clear all instances in a scope."""
         if isinstance(scope_name, ScopeType):
             scope_name = scope_name.value
@@ -231,6 +237,43 @@ class InjectQ:
     def clear_all_scopes(self) -> None:
         """Clear all instances in all scopes."""
         self._ensure_thread_safe(lambda: self._scope_manager.clear_all_scopes())
+
+    # Context management for multi-container support
+    @contextmanager
+    def context(self) -> Iterator[None]:
+        """Use this container as the active context for dependency resolution.
+
+        This allows the container to be used without the global singleton pattern.
+
+        Example:
+            container = InjectQ()
+            with container.context():
+                # Dependencies resolved using this container
+                my_function()
+        """
+        from .context import ContainerContext  # noqa: PLC0415
+
+        old_container = ContainerContext.get_current()
+        ContainerContext.set_current(self)
+        try:
+            yield
+        finally:
+            if old_container is not None:
+                ContainerContext.set_current(old_container)
+            else:
+                ContainerContext.clear_current()
+
+    def activate(self) -> None:
+        """Activate this container as the current default context.
+
+        This sets the container as the active context for all subsequent
+        dependency resolution calls that don't specify a container explicitly.
+
+        Note: Use context() manager for temporary activation instead.
+        """
+        from .context import ContainerContext  # noqa: PLC0415
+
+        ContainerContext.set_current(self)
 
     # Module installation
     def install_module(self, module: Any) -> None:
@@ -256,13 +299,13 @@ class InjectQ:
 
         self._ensure_thread_safe(validate)
 
-    def get_dependency_graph(self) -> Dict[ServiceKey, List[ServiceKey]]:
+    def get_dependency_graph(self) -> dict[ServiceKey, list[ServiceKey]]:
         """Get the dependency graph for all registered services."""
         return self._ensure_thread_safe(lambda: self._resolver.get_dependency_graph())
 
     def visualize_dependencies(self) -> DependencyVisualizer:
         """Get a dependency visualizer for this container."""
-        from injectq.diagnostics import DependencyVisualizer
+        from injectq.diagnostics import DependencyVisualizer  # noqa: PLC0415
 
         return DependencyVisualizer(self)
 
@@ -296,13 +339,16 @@ class InjectQ:
     def override(self, service_type: ServiceKey, override_value: Any) -> Iterator[None]:
         """Temporarily override a service binding for testing."""
 
-        def setup_override():
+        def setup_override() -> Any:
             # Store original binding
             original_binding = self._registry.get_binding(service_type)
             original_factory = self._registry.get_factory(service_type)
             return original_binding, original_factory
 
-        def restore_override(original_binding, original_factory) -> None:
+        def restore_override(
+            original_binding: Any,
+            original_factory: Any,
+        ) -> None:
             # Clear cached instances again before restoring
             self._scope_manager.clear_scope("singleton")
             # Restore original binding
@@ -310,7 +356,7 @@ class InjectQ:
             if original_factory:
                 self._registry.bind_factory(service_type, original_factory)
             elif original_binding:
-                self._registry._bindings[service_type] = original_binding
+                self._registry._bindings[service_type] = original_binding  # noqa: SLF001
 
         original_binding, original_factory = self._ensure_thread_safe(setup_override)
 
@@ -353,7 +399,7 @@ class ModuleBinder:
         self,
         service_type: ServiceKey,
         implementation: Any = None,
-        scope: Union[str, ScopeType] = ScopeType.SINGLETON,
+        scope: str | ScopeType = ScopeType.SINGLETON,
         to: Any = None,
     ) -> None:
         """Bind a service type to an implementation."""

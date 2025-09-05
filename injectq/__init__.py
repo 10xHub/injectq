@@ -22,9 +22,11 @@ from .components import (
     ComponentState,
 )
 from .core import (
+    ContainerContext,
     InjectQ,
     Scope,
     ScopeType,
+    get_active_container,
 )
 
 # Decorator exports
@@ -33,7 +35,6 @@ from .decorators import (
     async_managed_resource,
     get_resource_manager,
     inject,
-    inject_into,
     managed_resource,
     register_as,
     resource,
@@ -81,6 +82,9 @@ from .utils import (
 
 
 __all__ = [
+    "AsyncFactory",
+    "AsyncProvider",
+    "AsyncResourceProvider",
     "BindingError",
     "CircularDependencyError",
     # Components
@@ -92,31 +96,41 @@ __all__ = [
     "ComponentRegistry",
     "ComponentScope",
     "ComponentState",
+    "Configurable",
     "ConfigurationModule",
+    "ContainerContext",
     "DependencyNotFoundError",
     # Diagnostics
     "DependencyProfiler",
     "DependencyValidator",
     "DependencyVisualizer",
+    "Factory",
     "Inject",
     # Core classes
     "InjectQ",
     # Integrations
     # Exceptions
     "InjectQError",
+    "Injectable",
     "InjectionError",
     # Modules
     "Module",
+    "Provider",
     "ProviderModule",
+    "Resolvable",
+    "ResourceProvider",
     "Scope",
+    "ScopeAware",
     "ScopeError",
     "ScopeType",
+    "ServiceFactory",
+    # Type utilities and protocols
+    "ServiceKey",
     "SimpleModule",
     "async_managed_resource",
     "get_resource_manager",
     # Decorators
     "inject",
-    "inject_into",
     "managed_resource",
     "provider",
     "register_as",
@@ -126,20 +140,9 @@ __all__ = [
     # Testing
     "testing",
     "transient",
-    # Type utilities and protocols
-    "ServiceKey",
-    "ServiceFactory",
-    "Injectable",
-    "Provider",
-    "AsyncProvider",
-    "Factory",
-    "AsyncFactory",
-    "ResourceProvider",
-    "AsyncResourceProvider",
-    "Resolvable",
-    "Configurable",
-    "ScopeAware",
 ]
 
 # Create default container instance for convenience
-injectq = InjectQ.get_instance()
+# It will use the active context container if available, otherwise the global singleton
+# User can use `injectq` to resolve dependencies
+injectq = get_active_container() or InjectQ.get_instance()

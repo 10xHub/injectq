@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from typing import Any
+from typing import Any, get_type_hints
 
 from injectq.core import ModuleBinder, ScopeType
 from injectq.utils import BindingError, ServiceKey
@@ -105,7 +105,7 @@ def provider(func: Callable) -> Callable:
         The decorated function with provider metadata
     """
     # Mark the function as a provider
-    func._is_provider = True  # type: ignore
+    func._is_provider = True  # type: ignore  # noqa: PGH003, SLF001
     return func
 
 
@@ -130,21 +130,19 @@ class ProviderModule(Module):
         """Configure a binding from a provider method."""
         try:
             # Get return type annotation as the service type
-            from typing import get_type_hints
 
             hints = get_type_hints(provider_method)
             return_type = hints.get("return", None)
 
             if return_type is None:
-                msg = f"Provider method {provider_method.__name__} must have a return type annotation"
-                raise BindingError(
-                    msg
-                )
+                msg = f"Provider method {provider_method.__name__} must"
+                msg += " have a return type annotation"
+                raise BindingError(msg)  # noqa: TRY301
 
             # Create a factory function that manually resolves dependencies
-            def factory():
+            def factory() -> Any:
                 # Get dependencies for the provider method
-                from injectq.utils import get_function_dependencies
+                from injectq.utils import get_function_dependencies  # noqa: PLC0415
 
                 dependencies = get_function_dependencies(provider_method)
 
@@ -153,17 +151,17 @@ class ProviderModule(Module):
                 for param_name, param_type in dependencies.items():
                     try:
                         # First try to resolve by parameter name (string key)
-                        if binder._container.has(param_name):
-                            resolved_args[param_name] = binder._container.get(
+                        if binder._container.has(param_name):  # noqa: SLF001
+                            resolved_args[param_name] = binder._container.get(  # noqa: SLF001
                                 param_name
                             )
                         else:
                             # Fall back to type-based resolution
-                            resolved_args[param_name] = binder._container.get(
+                            resolved_args[param_name] = binder._container.get(  # noqa: SLF001
                                 param_type
                             )
-                    except Exception:
-                        # If dependency cannot be resolved, skip it (it might have a default)
+                    except Exception:  # noqa: BLE001, PERF203, S110
+                        # If dependency cannot be resolved, skip it
                         pass
 
                 # Call the provider method (it's already bound to self)
@@ -174,9 +172,7 @@ class ProviderModule(Module):
 
         except Exception as e:
             msg = f"Failed to configure provider {provider_method.__name__}: {e}"
-            raise BindingError(
-                msg
-            )
+            raise BindingError(msg) from e
 
 
 class ConfigurationModule(Module):

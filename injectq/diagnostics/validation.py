@@ -2,8 +2,9 @@
 
 import inspect
 from collections import defaultdict
-from typing import get_type_hints
+from typing import Any, get_type_hints
 
+from injectq.core.container import InjectQ
 from injectq.utils.exceptions import InjectQError
 from injectq.utils.types import ServiceKey
 
@@ -12,20 +13,16 @@ class ValidationError(InjectQError):
     """Errors related to dependency validation."""
 
 
-
 class MissingDependencyError(ValidationError):
     """Error for missing dependencies."""
-
 
 
 class InvalidBindingError(ValidationError):
     """Error for invalid bindings."""
 
 
-
 class TypeMismatchError(ValidationError):
     """Error for type mismatches in bindings."""
-
 
 
 class DependencyValidator:
@@ -47,7 +44,7 @@ class DependencyValidator:
         ```
     """
 
-    def __init__(self, container=None) -> None:
+    def __init__(self, container: InjectQ | None = None) -> None:
         """Initialize the validator.
 
         Args:
@@ -58,7 +55,7 @@ class DependencyValidator:
         self._binding_types: dict[ServiceKey, type] = {}
         self._validation_cache: dict[ServiceKey, bool] = {}
 
-    def set_container(self, container) -> None:
+    def set_container(self, container: InjectQ) -> None:
         """Set the container to validate."""
         self.container = container
         self._clear_cache()
@@ -100,17 +97,21 @@ class DependencyValidator:
             return
 
         # Get all registered services
-        registry = self.container._registry
+        registry = self.container._registry  # noqa: SLF001
 
         # Analyze bindings
-        for service_key, binding in registry._bindings.items():
+        for service_key, binding in registry._bindings.items():  # noqa: SLF001
             self._analyze_binding_dependencies(service_key, binding)
 
         # Analyze factories
-        for service_key, factory in registry._factories.items():
+        for service_key, factory in registry._factories.items():  # noqa: SLF001
             self._analyze_factory_dependencies(service_key, factory)
 
-    def _analyze_binding_dependencies(self, service_key: ServiceKey, binding) -> None:
+    def _analyze_binding_dependencies(
+        self,
+        service_key: ServiceKey,
+        binding: Any,
+    ) -> None:
         """Analyze dependencies for a service binding."""
         implementation = binding.implementation
 
@@ -136,7 +137,11 @@ class DependencyValidator:
                 # Skip if we can't analyze the signature
                 pass
 
-    def _analyze_factory_dependencies(self, service_key: ServiceKey, factory) -> None:
+    def _analyze_factory_dependencies(
+        self,
+        service_key: ServiceKey,
+        factory,
+    ) -> None:
         """Analyze dependencies for a factory function."""
         try:
             factory_signature = inspect.signature(factory)
@@ -198,7 +203,6 @@ class DependencyValidator:
         """Validate that all dependencies can be resolved."""
         if not self.container:
             return
-
 
         for service_key, dependencies in self._dependency_graph.items():
             for dependency in dependencies:

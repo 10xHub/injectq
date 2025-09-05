@@ -47,7 +47,7 @@ class Scope(ABC):
     def exit(self) -> None:
         """Called when exiting the scope context."""
 
-    def _safe_execute(self, operation):
+    def _safe_execute(self, operation: Callable) -> Any:
         """Execute operation with thread safety if enabled."""
         if self.thread_safe and self._lock:
             with self._lock:
@@ -66,7 +66,7 @@ class SingletonScope(Scope):
     def get(self, key: Any, factory: Callable[[], Any]) -> Any:
         """Get or create a singleton instance."""
 
-        def get_or_create():
+        def get_or_create() -> Any:
             if key not in self._instances:
                 self._instances[key] = factory()
             return self._instances[key]
@@ -102,7 +102,7 @@ class ThreadLocalScope(Scope):
     def get(self, key: Any, factory: Callable[[], Any]) -> Any:
         """Get or create an instance in thread-local storage."""
 
-        def get_or_create():
+        def get_or_create() -> Any:
             instances_key = f"{self.name}_instances"
             instances = self._storage.get(instances_key, {})
 
@@ -157,7 +157,7 @@ class ScopeManager(BaseScopeManager):
         self.register_scope(RequestScope(thread_safe))
         self.register_scope(ActionScope(thread_safe))
 
-    def _safe_execute(self, operation):
+    def _safe_execute(self, operation: Callable) -> Any:
         """Execute operation with thread safety if enabled."""
         if self.thread_safe and self._lock:
             with self._lock:

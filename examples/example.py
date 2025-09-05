@@ -6,6 +6,7 @@ This example demonstrates the key features and API styles of InjectQ.
 
 from injectq import InjectQ, inject, singleton, transient
 
+
 # Example 1: Simple dict-like interface
 print("=== Example 1: Dict-like Interface ===")
 container = InjectQ.get_instance()

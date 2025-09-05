@@ -83,7 +83,7 @@ class ComponentBinding:
     priority: int = 0
     auto_start: bool = True
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Post-initialization processing."""
         if self.interface is None:
             # Try to infer interface from type hints
@@ -114,17 +114,15 @@ class ComponentScope(Scope):
     def clear(self) -> None:
         """Clear all component-scoped instances."""
         # Stop and destroy component instances
+        import contextlib  # noqa: PLC0415
+
         for instance in self._instances.values():
             if hasattr(instance, "stop"):
-                try:
+                with contextlib.suppress(Exception):
                     instance.stop()
-                except Exception:
-                    pass  # Ignore stop errors
             if hasattr(instance, "destroy"):
-                try:
+                with contextlib.suppress(Exception):
                     instance.destroy()
-                except Exception:
-                    pass  # Ignore destroy errors
 
         self._instances.clear()
 
@@ -159,9 +157,9 @@ class Component:
 
     # Component metadata (can be overridden in subclasses)
     name: str = ""
-    provides: list[type] = []
-    requires: list[type] = []
-    tags: set[str] = set()
+    provides: list[type] = []  # noqa: RUF012
+    requires: list[type] = []  # noqa: RUF012
+    tags: set[str] = set()  # noqa: RUF012
     auto_start: bool = True
 
     def __init__(self) -> None:
@@ -205,7 +203,7 @@ class Component:
         # Default implementation - can be overridden
         self.state = ComponentState.INITIALIZED
 
-    def configure(self, **kwargs) -> None:
+    def configure(self, **kwargs) -> None:  # noqa: ANN003
         """Configure the component with parameters."""
         if self.state not in (ComponentState.INITIALIZED, ComponentState.CONFIGURED):
             msg = f"Component {self.name} cannot be configured from state {self.state}"
@@ -448,11 +446,11 @@ class ComponentRegistry:
     def clear(self) -> None:
         """Clear all registrations and instances."""
         # Stop and destroy all instances
+        import contextlib  # noqa: PLC0415
+
         for instance in self._instances.values():
-            try:
+            with contextlib.suppress(Exception):
                 instance.destroy()
-            except Exception:
-                pass  # Ignore errors during cleanup
 
         self._bindings.clear()
         self._instances.clear()
@@ -473,7 +471,10 @@ class ComponentContainer(InjectQ):
         self._component_scopes: dict[str, ComponentScope] = {}
 
     def register_component(
-        self, component_class: type[Component], name: str | None = None, **kwargs
+        self,
+        component_class: type[Component],
+        name: str | None = None,
+        **kwargs,  # noqa: ANN003
     ) -> ComponentBinding:
         """Register a component with the container.
 
@@ -501,8 +502,15 @@ class ComponentContainer(InjectQ):
         for interface in binding.provided_interfaces:
 
             def component_factory(
-                comp_name=component_name,
-            ):
+                comp_name: str = component_name,
+            ) -> Component:
+                """Factory to create or get the component instance.
+
+                Args:
+                    comp_name: Name of the component to create/get
+
+                Returns: Component instance
+                """
                 return self.component_registry.create_instance(comp_name, self)
 
             self.bind_factory(interface, component_factory)
@@ -513,13 +521,14 @@ class ComponentContainer(InjectQ):
         """Start components in dependency order.
 
         Args:
-            component_names: Specific components to start (defaults to all auto-start components)
+            component_names: Specific components to start (defaults to all
+                auto-start components)
         """
         if component_names is None:
             # Get all auto-start components
             component_names = [
                 name
-                for name, binding in self.component_registry._bindings.items()
+                for name, binding in self.component_registry._bindings.items()  # noqa: SLF001
                 if binding.auto_start
             ]
 
@@ -528,7 +537,7 @@ class ComponentContainer(InjectQ):
 
         # Create instances for all registered components
         for name in self.component_registry.list_components():
-            if name not in self.component_registry._instances:
+            if name not in self.component_registry._instances:  # noqa: SLF001
                 self.component_registry.create_instance(name, self)
 
         # Filter to requested components and their dependencies
@@ -554,7 +563,7 @@ class ComponentContainer(InjectQ):
             component_names: Specific components to stop (defaults to all)
         """
         if component_names is None:
-            component_names = list(self.component_registry._instances.keys())
+            component_names = list(self.component_registry._instances.keys())  # noqa: SLF001
 
         # Get shutdown order (reverse of startup)
         startup_order = self.component_registry.get_startup_order()
@@ -569,7 +578,7 @@ class ComponentContainer(InjectQ):
 
     def _add_dependencies(self, component_name: str, target_set: set[str]) -> None:
         """Recursively add dependencies to the target set."""
-        for dep_name in self.component_registry._dependency_graph.get(
+        for dep_name in self.component_registry._dependency_graph.get(  # noqa: SLF001
             component_name, set()
         ):
             if dep_name not in target_set:

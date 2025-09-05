@@ -18,11 +18,9 @@ Online documentation is hosted at [https://iamsdt.github.io/injectq/](https://ia
 ## Quick Start
 
 ```python
-from injectq import InjectQ, inject, singleton
+from injectq import InjectQ, inject, singleton, injectq
 
-# Create container
-container = InjectQ.get_instance()
-
+injectq["message"] = "Hello, World!"
 
 # Class binding
 @singleton

@@ -27,5 +27,5 @@ def test2(i: int, name: str):
     print(name)
 
 
-test1()  # should use c1
-test2()  # should use c1, but int is not bound in c1,
+test1()  # type: ignore # should use c1
+test2()  # type: ignore # should use c1, but int is not bound in c1,
