@@ -73,10 +73,10 @@ service = create_user_service()
 ### With a DI Container
 
 ```python
-from injectq import InjectQ, inject
+from injectq import injectq, inject
 
 # Container automatically wires dependencies
-container = InjectQ.get_instance()
+container = injectq
 
 # Bind implementations
 container.bind(DatabaseConfig, DatabaseConfig)

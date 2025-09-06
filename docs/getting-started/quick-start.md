@@ -7,20 +7,17 @@ Get up and running with InjectQ in minutes! This guide will walk you through the
 Let's start with a simple example:
 
 ```python
-from injectq import InjectQ, inject
+from injectq import injectq, inject
 
-# 1. Create a container
-container = InjectQ.get_instance()
+# 1. Bind a simple value
+injectq[str] = "Hello, InjectQ!"
 
-# 2. Bind a simple value
-container[str] = "Hello, InjectQ!"
-
-# 3. Use dependency injection
+# 2. Use dependency injection
 @inject
 def greet(message: str) -> str:
     return f"Message: {message}"
 
-# 4. Call the function
+# 3. Call the function
 result = greet()
 print(result)  # Output: Message: Hello, InjectQ!
 ```
@@ -51,14 +48,11 @@ class UserService:
         return 42  # Mock result
 
 # 2. Set up the container
-container = InjectQ.get_instance()
-
-# Bind configuration
-container[str] = "postgresql://localhost:5432/myapp"
+injectq[str] = "postgresql://localhost:5432/myapp"
 
 # Bind services (classes are automatically resolved)
-container.bind(Database, Database)
-container.bind(UserService, UserService)
+injectq[Database] = Database
+injectq[UserService] = UserService
 
 # 3. Use dependency injection
 @inject
@@ -90,23 +84,20 @@ process_data()
 ### Method 2: Dict-like Interface
 
 ```python
-container = InjectQ.get_instance()
-container["api_key"] = "your-secret-key"
-container[UserService] = UserService()
+injectq["api_key"] = "your-secret-key"
+injectq[UserService] = UserService()
 
 # Access directly
-api_key = container["api_key"]
-service = container[UserService]
+api_key = injectq["api_key"]
+service = injectq[UserService]
 ```
 
 ### Method 3: Manual Resolution
 
 ```python
-container = InjectQ.get_instance()
-
 # Get services when needed
-service = container.get(UserService)
-config = container.get(str)
+service = injectq[UserService]
+config = injectq[str]
 ```
 
 ## 🎭 Understanding Scopes
@@ -129,18 +120,17 @@ class RequestHandler:
         self.id = id(self)
         print(f"Handler created: {self.id}")
 
-container = InjectQ.get_instance()
-container.bind(DatabaseConnection, DatabaseConnection)
-container.bind(RequestHandler, RequestHandler)
+injectq[DatabaseConnection] = DatabaseConnection
+injectq[RequestHandler] = RequestHandler
 
 # Test singleton behavior
-db1 = container.get(DatabaseConnection)
-db2 = container.get(DatabaseConnection)
+db1 = injectq[DatabaseConnection]
+db2 = injectq[DatabaseConnection]
 print(f"Same database? {db1 is db2}")  # True
 
 # Test transient behavior
-handler1 = container.get(RequestHandler)
-handler2 = container.get(RequestHandler)
+handler1 = injectq[RequestHandler]
+handler2 = injectq[RequestHandler]
 print(f"Different handlers? {handler1 is not handler2}")  # True
 print(f"Same database in handlers? {handler1.db is handler2.db}")  # True
 ```

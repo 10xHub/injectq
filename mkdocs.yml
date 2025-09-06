@@ -139,7 +139,7 @@ nav:
       - Unit Testing: testing/unit-testing.md
       - AsyncIO Testing: testing/asyncio-testing.md
       - Performance Testing: testing/performance-testing.md
-  - Advanced Features:
+  - Advanced:
       - Resource Management: advanced/resource-management.md
       - Diagnostics & Profiling: advanced/diagnostics-profiling.md
       - Performance Optimization: advanced/performance-optimization.md
@@ -148,9 +148,9 @@ nav:
       - Middleware: advanced/middleware.md
       - Plugins: advanced/plugins.md
   - Migration Guides:
-      - From Kink: migration/from-kink.md
       - From Python-Injector: migration/from-python-injector.md
       - From Other Libraries: migration/from-other-libraries.md
+      - From Old Versions: migration/from-old-versions.md
   - Examples:
       - Practical Examples: examples/practical-examples.md
       - Design Patterns: examples/design-patterns.md

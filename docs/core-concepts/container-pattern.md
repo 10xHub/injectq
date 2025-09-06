@@ -114,9 +114,9 @@ The scope manager controls service lifetimes:
 
 ```python
 # Different scopes for different lifetimes
-container.bind(AppConfig, scope=Scope.APP)        # Application lifetime
-container.bind(RequestContext, scope=Scope.REQUEST)  # Per request
-container.bind(TempData, scope=Scope.TRANSIENT)      # Always new
+injectq.bind(AppConfig, scope=Scope.APP)        # Application lifetime
+injectq.bind(RequestContext, scope=Scope.REQUEST)  # Per request
+injectq.bind(TempData, scope=Scope.TRANSIENT)      # Always new
 ```
 
 ## 🎯 Container Patterns
