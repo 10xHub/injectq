@@ -6,6 +6,7 @@
 
 InjectQ's advanced features help you:
 
+- **Enhanced bindings** - Nullable dependencies and abstract class validation
 - **Manage resources** - Automatic cleanup and lifecycle management
 - **Diagnose issues** - Debug dependency resolution and detect problems
 - **Optimize performance** - Lazy loading, caching, and efficient resolution
@@ -16,6 +17,16 @@ InjectQ's advanced features help you:
 ### Advanced Features Categories
 
 ```python
+# Enhanced Bindings - Nullable Dependencies
+container.bind(EmailService, None, allow_none=True)  # Optional service
+
+# Enhanced Bindings - Abstract Class Validation
+from abc import ABC, abstractmethod
+
+class PaymentProcessor(ABC):  # Will be rejected during binding
+    @abstractmethod
+    def process(self): pass
+
 # Resource Management
 @injectq.resource
 class DatabaseConnection:
@@ -53,6 +64,7 @@ container = ThreadSafeContainer()
 
 This section covers:
 
+- **[Enhanced Features](enhanced-features.md)** - Nullable dependencies and abstract class validation
 - **[Resource Management](resource-management.md)** - Automatic resource lifecycle management
 - **[Diagnostics](diagnostics.md)** - Debugging and dependency analysis tools
 - **[Performance Optimization](performance-optimization.md)** - Lazy loading, caching, and optimization techniques

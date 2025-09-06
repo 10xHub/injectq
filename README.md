@@ -49,6 +49,71 @@ Notes:
 - Use `injectq[...]` for simple bindings and values.
 - Use `@inject` and `Inject[T]` for function/class injection.
 
+## Enhanced Features
+
+### Nullable Dependencies
+
+InjectQ supports binding `None` values for optional dependencies using the `allow_none` parameter:
+
+```python
+from injectq import InjectQ
+
+container = InjectQ()
+
+# Optional service - can be None
+class EmailService:
+    def send_email(self, to: str, message: str) -> str:
+        return f"Email sent to {to}: {message}"
+
+class NotificationService:
+    def __init__(self, email_service: EmailService | None = None):
+        self.email_service = email_service
+    
+    def notify(self, message: str) -> str:
+        if self.email_service:
+            return self.email_service.send_email("user", message)
+        return f"Basic notification: {message}"
+
+# Bind None for optional dependency
+container.bind(EmailService, None, allow_none=True)
+container.bind(NotificationService, NotificationService)
+
+service = container.get(NotificationService)
+print(service.notify("Hello"))  # Prints: Basic notification: Hello
+```
+
+### Abstract Class Validation
+
+InjectQ automatically prevents binding abstract classes and raises a `BindingError` during binding (not at resolution time):
+
+```python
+from abc import ABC, abstractmethod
+from injectq import InjectQ
+from injectq.utils.exceptions import BindingError
+
+class PaymentProcessor(ABC):  # Abstract class
+    @abstractmethod
+    def process_payment(self, amount: float) -> str:
+        pass
+
+class CreditCardProcessor(PaymentProcessor):  # Concrete implementation
+    def process_payment(self, amount: float) -> str:
+        return f"Processing ${amount} via credit card"
+
+container = InjectQ()
+
+# This will raise BindingError immediately
+try:
+    container.bind(PaymentProcessor, PaymentProcessor)  # Error!
+except BindingError:
+    print("Cannot bind abstract class")
+
+# This works fine
+container.bind(PaymentProcessor, CreditCardProcessor)  # OK
+```
+
+See `examples/enhanced_features_demo.py` for a complete demonstration.
+
 ## Installation
 
 Install from PyPI:

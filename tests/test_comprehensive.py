@@ -137,6 +137,9 @@ class TestMultiContainer:
         # Should revert to global container after context
         assert get_value() == "global_value"
 
+        # Clean up the global binding to avoid test pollution
+        del global_container["test_service"]
+
     def test_multiple_services_in_context(self) -> None:
         """Test multiple services in the same container context."""
         container = InjectQ()
