@@ -1,4 +1,9 @@
 # InjectQ
+[![PyPI version](https://badge.fury.io/py/injectq.svg)](https://pypi.org/project/injectq/)
+[![Python versions](https://img.shields.io/pypi/pyversions/injectq.svg)](https://pypi.org/project/injectq/)
+[![License](https://img.shields.io/github/license/Iamsdt/injectq.svg)](https://github.com/Iamsdt/injectq/blob/main/LICENSE)
+[![Coverage](https://img.shields.io/badge/coverage-73%25-yellow.svg)](#)
+
 
 InjectQ is a modern, lightweight Python dependency injection library focused on clarity, type-safety, and seamless framework integration.
 
