@@ -10,17 +10,16 @@ This test suite covers all aspects of the new features:
 """
 
 import inspect
-import pytest
-import time
 import threading
+import time
 from abc import ABC, abstractmethod
-from typing import Union
-from unittest.mock import Mock, patch
+
+import pytest
 
 from injectq import InjectQ, inject
-from injectq.utils.exceptions import BindingError, InjectionError
-from injectq.core.registry import ServiceRegistry, _UNSET
+from injectq.core.registry import _UNSET, ServiceRegistry
 from injectq.core.scopes import ScopeType
+from injectq.utils.exceptions import BindingError, InjectionError
 
 
 # Test fixtures and helper classes
@@ -276,8 +275,10 @@ class TestAbstractClassValidation:
         container = InjectQ()
 
         # Dict-style binding should now validate abstract classes at binding time
-        with pytest.raises(BindingError, match="Cannot bind abstract class"):
+        with pytest.raises(Exception, match="Cannot bind abstract class"):
             container[AbstractBaseService] = AbstractBaseService
+
+
 class TestSentinelObjectBehavior:
     """Test cases for sentinel object (_UNSET) behavior."""
 

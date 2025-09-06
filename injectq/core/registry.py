@@ -1,11 +1,15 @@
 """Service registry for InjectQ dependency injection library."""
 
 import inspect
-from abc import ABC
 from dataclasses import dataclass
 from typing import Any
 
-from injectq.utils import BindingError, ServiceFactory, ServiceKey
+from injectq.utils import (
+    AlreadyRegisteredError,
+    BindingError,
+    ServiceFactory,
+    ServiceKey,
+)
 
 from .scopes import ScopeType
 
@@ -44,6 +48,8 @@ class ServiceRegistry:
         scope: str | ScopeType = ScopeType.SINGLETON,
         to: Any = None,
         allow_none: bool = False,
+        allow_concrete: bool = True,
+        allow_override: bool = True,
     ) -> None:
         """Bind a service type to an implementation.
 
@@ -53,6 +59,10 @@ class ServiceRegistry:
             scope: The scope for the service (singleton, transient, etc.)
             to: Alternative parameter name for implementation (for fluent API)
             allow_none: Whether to allow None as a valid implementation
+            allow_concrete: Whether to auto-register concrete types when
+                          registering instances (default: True)
+            allow_override: Whether to allow overriding existing registrations
+                          (default: True)
         """
         # Handle alternative parameter naming
         if to is not None:
@@ -83,6 +93,10 @@ class ServiceRegistry:
             msg = f"Cannot bind abstract class {implementation}"
             raise BindingError(msg)
 
+        # Check for existing binding if override not allowed
+        if not allow_override and service_type in self._bindings:
+            raise AlreadyRegisteredError(service_type)
+
         # Normalize scope
         scope_name = scope.value if isinstance(scope, ScopeType) else str(scope)
 
@@ -95,19 +109,82 @@ class ServiceRegistry:
         )
 
         self._bindings[service_type] = binding
+        # Auto-register concrete type if requested and implementation is an instance
+        if (
+            allow_concrete
+            and implementation is not None
+            and not isinstance(implementation, type)
+            and type(implementation) is not service_type
+        ):
+            concrete_type = type(implementation)
+            # Check for existing concrete binding if override not allowed
+            if not allow_override and concrete_type in self._bindings:
+                raise AlreadyRegisteredError(concrete_type)
 
-    def bind_factory(self, service_type: ServiceKey, factory: ServiceFactory) -> None:
-        """Bind a service type to a factory function."""
+            # Create concrete binding
+            concrete_binding = ServiceBinding(
+                service_type=concrete_type,
+                implementation=implementation,
+                scope=scope_name,
+                allow_none=allow_none,
+            )
+            self._bindings[concrete_type] = concrete_binding
+
+    def bind_factory(
+        self,
+        service_type: ServiceKey,
+        factory: ServiceFactory,
+        allow_concrete: bool = True,
+        allow_override: bool = True,
+    ) -> None:
+        """Bind a service type to a factory function.
+
+        Args:
+            service_type: The service type or key to bind
+            factory: The factory function
+            allow_concrete: Whether to auto-register concrete types when
+                          registering instances (default: True)
+            allow_override: Whether to allow overriding existing registrations
+                          (default: True)
+        """
         if not callable(factory):
             msg = f"Factory must be callable for {service_type}"
             raise BindingError(msg)
 
+        # Check for existing factory if override not allowed
+        if not allow_override and service_type in self._factories:
+            raise AlreadyRegisteredError(service_type)
+
         self._factories[service_type] = factory
 
     def bind_instance(
-        self, service_type: ServiceKey, instance: Any, allow_none: bool = False
+        self,
+        service_type: ServiceKey,
+        instance: Any,
+        allow_none: bool = False,
+        allow_concrete: bool = True,
+        allow_override: bool = True,
     ) -> None:
-        """Bind a service type to a specific instance."""
+        """Bind a service type to a specific instance.
+
+        Args:
+            service_type: The service type or key to bind
+            instance: The instance to bind
+            allow_none: Whether to allow None as a valid instance
+            allow_concrete: Whether to auto-register concrete types when
+                          registering instances (default: True)
+            allow_override: Whether to allow overriding existing registrations
+                          (default: True)
+        """
+        # Check its instance of service_type if it's a class then raise error
+        if instance and (isinstance(instance, type)):
+            msg = f"Cannot bind instance of {type(instance)} to {service_type}"
+            raise BindingError(msg)
+
+        # Check for existing binding if override not allowed
+        if not allow_override and service_type in self._bindings:
+            raise AlreadyRegisteredError(service_type)
+
         binding = ServiceBinding(
             service_type=service_type,
             implementation=instance,
@@ -115,6 +192,27 @@ class ServiceRegistry:
             allow_none=allow_none,
         )
         self._bindings[service_type] = binding
+
+        # Auto-register concrete type if requested and instance is not None
+        if (
+            allow_concrete
+            and instance is not None
+            and not isinstance(instance, type)
+            and type(instance) is not service_type
+        ):
+            concrete_type = type(instance)
+            # Check for existing concrete binding if override not allowed
+            if not allow_override and concrete_type in self._bindings:
+                raise AlreadyRegisteredError(concrete_type)
+
+            # Create concrete binding
+            concrete_binding = ServiceBinding(
+                service_type=concrete_type,
+                implementation=instance,
+                scope=ScopeType.SINGLETON.value,
+                allow_none=allow_none,
+            )
+            self._bindings[concrete_type] = concrete_binding
 
     def get_binding(self, service_type: ServiceKey) -> ServiceBinding | None:
         """Get the binding for a service type."""

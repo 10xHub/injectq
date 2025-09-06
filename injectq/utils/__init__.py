@@ -1,6 +1,7 @@
 """Utilities package for InjectQ."""
 
 from .exceptions import (
+    AlreadyRegisteredError,
     BindingError,
     CircularDependencyError,
     DependencyNotFoundError,
@@ -48,6 +49,7 @@ from .types import (
 
 
 __all__ = [
+    "AlreadyRegisteredError",
     "AnyFactory",
     "AnyProvider",
     "AnyResourceProvider",

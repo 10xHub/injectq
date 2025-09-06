@@ -70,14 +70,18 @@ class InjectQ:
         modules: list[Any] | None = None,
         use_async_scopes: bool = True,
         thread_safe: bool = True,
+        allow_override: bool = True,
     ) -> None:
-        """Initialize the container.
+        """Initialize the InjectQ container.
 
         Args:
-            modules: Optional list of modules to install
-            use_async_scopes: Whether to use async-aware scope manager (default: True)
-            thread_safe: Whether to enable thread safety (default: True)
+            modules: List of modules to register
+            use_async_scopes: Whether to use async scope management
+            thread_safe: Whether to use thread-safe operations
+            allow_override: Whether to allow overriding existing registrations
+                          (default: True)
         """
+        self._allow_override = allow_override
         self._registry = ServiceRegistry()
         self._resolver = DependencyResolver(self._registry)
 
@@ -129,9 +133,28 @@ class InjectQ:
         """Bind a service type to an implementation using dict syntax."""
         # Auto-detect if None should be allowed based on implementation value
         allow_none = implementation is None
-        self._ensure_thread_safe(
-            lambda: self.bind_instance(service_type, implementation, allow_none)
-        )
+
+        # If implementation is a class type, use bind() for proper validation
+        # If implementation is an instance, use bind_instance()
+        if isinstance(implementation, type):
+            self._ensure_thread_safe(
+                lambda: self.bind(
+                    service_type,
+                    implementation,
+                    scope=ScopeType.SINGLETON,
+                    allow_none=allow_none,
+                    allow_concrete=True,
+                )
+            )
+        else:
+            self._ensure_thread_safe(
+                lambda: self.bind_instance(
+                    service_type,
+                    implementation,
+                    allow_none,
+                    allow_concrete=True,
+                )
+            )
 
     def __getitem__(self, service_type: ServiceKey) -> Any:
         """Get a service instance using dict syntax."""
@@ -159,6 +182,7 @@ class InjectQ:
         scope: str | ScopeType = ScopeType.SINGLETON,
         to: Any = None,
         allow_none: bool = False,
+        allow_concrete: bool = True,
     ) -> None:
         """Bind a service type to an implementation.
 
@@ -168,25 +192,65 @@ class InjectQ:
             scope: The scope for the service
             to: Alternative parameter for implementation (fluent API)
             allow_none: Whether to allow None as a valid implementation
+            allow_concrete: Whether to auto-register concrete types when
+                          registering instances (default: True)
         """
         self._ensure_thread_safe(
             lambda: self._registry.bind(
-                service_type, implementation, scope, to, allow_none
+                service_type,
+                implementation,
+                scope,
+                to,
+                allow_none,
+                allow_concrete,
+                self._allow_override,
             )
         )
 
     def bind_instance(
-        self, service_type: ServiceKey, instance: Any, allow_none: bool = False
+        self,
+        service_type: ServiceKey,
+        instance: Any,
+        allow_none: bool = False,
+        allow_concrete: bool = True,
     ) -> None:
-        """Bind a service type to a specific instance."""
+        """Bind a service type to a specific instance.
+
+        Args:
+            service_type: The service type or key to bind
+            instance: The instance to bind
+            allow_none: Whether to allow None as a valid instance
+            allow_concrete: Whether to auto-register concrete types when
+                          registering instances (default: True)
+        """
         self._ensure_thread_safe(
-            lambda: self._registry.bind_instance(service_type, instance, allow_none)
+            lambda: self._registry.bind_instance(
+                service_type,
+                instance,
+                allow_none,
+                allow_concrete,
+                self._allow_override,
+            )
         )
 
-    def bind_factory(self, service_type: ServiceKey, factory: ServiceFactory) -> None:
-        """Bind a service type to a factory function."""
+    def bind_factory(
+        self,
+        service_type: ServiceKey,
+        factory: ServiceFactory,
+        allow_concrete: bool = True,
+    ) -> None:
+        """Bind a service type to a factory function.
+
+        Args:
+            service_type: The service type or key to bind
+            factory: The factory function
+            allow_concrete: Whether to auto-register concrete types when
+                          registering instances (default: True)
+        """
         self._ensure_thread_safe(
-            lambda: self._registry.bind_factory(service_type, factory)
+            lambda: self._registry.bind_factory(
+                service_type, factory, allow_concrete, self._allow_override
+            )
         )
 
     @property

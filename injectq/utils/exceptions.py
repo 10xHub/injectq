@@ -34,3 +34,11 @@ class InjectionError(InjectQError):
 
 class ScopeError(InjectQError):
     """Raised when there's an error with scope management."""
+
+
+class AlreadyRegisteredError(InjectQError):
+    """Raised when trying to register a type that is already registered."""
+
+    def __init__(self, dependency_type: Any) -> None:
+        self.dependency_type = dependency_type
+        super().__init__(f"Type already registered: {dependency_type}")

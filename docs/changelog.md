@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Auto-registration of concrete types**: New `allow_concrete` parameter (default: True) 
+  automatically registers concrete types when registering instances to base types
+- **Registration override control**: New `allow_override` parameter (default: True) 
+  controls whether existing service registrations can be overwritten
+- Enhanced `bind_instance()` method with `allow_concrete` parameter
+- Enhanced `bind_factory()` method with `allow_concrete` parameter
+- Enhanced `bind()` method with `allow_concrete` parameter
+- New `AlreadyRegisteredError` exception for override conflicts
 - Comprehensive documentation with MkDocs
 - Plugin system for extensibility
 - Advanced middleware support
@@ -18,11 +26,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migration guides from other DI libraries
 
 ### Changed
+- **Breaking**: InjectQ constructor now accepts `allow_override` parameter
+- **Breaking**: All binding methods now accept `allow_concrete` parameter
+- Dict-like syntax (`container[Type] = instance`) now uses `allow_concrete=True` by default
+- Improved subclass injection support - both base and concrete types can be resolved
 - Improved type safety and mypy compliance
 - Enhanced error messages and debugging information
 - Optimized performance for large dependency graphs
 
 ### Fixed
+- Subclass injection issues where concrete types weren't accessible after registering to base type
 - Various bug fixes and stability improvements
 
 ## [0.1.0] - 2024-01-15
