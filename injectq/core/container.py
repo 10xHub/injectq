@@ -13,7 +13,7 @@ from injectq.utils import (
     ServiceKey,
 )
 
-from .registry import ServiceRegistry
+from .registry import ServiceRegistry, _UNSET
 from .resolver import DependencyResolver
 from .scopes import ScopeManager, ScopeType
 from .thread_safety import HybridLock
@@ -127,8 +127,10 @@ class InjectQ:
     # Dict-like interface
     def __setitem__(self, service_type: ServiceKey, implementation: Any) -> None:
         """Bind a service type to an implementation using dict syntax."""
+        # Auto-detect if None should be allowed based on implementation value
+        allow_none = implementation is None
         self._ensure_thread_safe(
-            lambda: self.bind_instance(service_type, implementation)
+            lambda: self.bind_instance(service_type, implementation, allow_none)
         )
 
     def __getitem__(self, service_type: ServiceKey) -> Any:
@@ -153,9 +155,10 @@ class InjectQ:
     def bind(
         self,
         service_type: ServiceKey,
-        implementation: Any = None,
+        implementation: Any = _UNSET,
         scope: str | ScopeType = ScopeType.SINGLETON,
         to: Any = None,
+        allow_none: bool = False,
     ) -> None:
         """Bind a service type to an implementation.
 
@@ -164,15 +167,20 @@ class InjectQ:
             implementation: The implementation (class, instance, or factory)
             scope: The scope for the service
             to: Alternative parameter for implementation (fluent API)
+            allow_none: Whether to allow None as a valid implementation
         """
         self._ensure_thread_safe(
-            lambda: self._registry.bind(service_type, implementation, scope, to)
+            lambda: self._registry.bind(
+                service_type, implementation, scope, to, allow_none
+            )
         )
 
-    def bind_instance(self, service_type: ServiceKey, instance: Any) -> None:
+    def bind_instance(
+        self, service_type: ServiceKey, instance: Any, allow_none: bool = False
+    ) -> None:
         """Bind a service type to a specific instance."""
         self._ensure_thread_safe(
-            lambda: self._registry.bind_instance(service_type, instance)
+            lambda: self._registry.bind_instance(service_type, instance, allow_none)
         )
 
     def bind_factory(self, service_type: ServiceKey, factory: ServiceFactory) -> None:

@@ -1,11 +1,16 @@
 """Service registry for InjectQ dependency injection library."""
 
+import inspect
+from abc import ABC
 from dataclasses import dataclass
 from typing import Any
 
 from injectq.utils import BindingError, ServiceFactory, ServiceKey
 
 from .scopes import ScopeType
+
+# Sentinel value to detect when implementation is not provided
+_UNSET = object()
 
 
 @dataclass
@@ -16,10 +21,11 @@ class ServiceBinding:
     implementation: Any  # Can be class, instance, or factory function
     scope: str = ScopeType.SINGLETON.value
     is_factory: bool = False
+    allow_none: bool = False
 
     def __post_init__(self) -> None:
         """Validate the binding after initialization."""
-        if self.implementation is None:
+        if self.implementation is None and not self.allow_none:
             msg = f"Implementation cannot be None for {self.service_type}"
             raise BindingError(msg)
 
@@ -34,9 +40,10 @@ class ServiceRegistry:
     def bind(
         self,
         service_type: ServiceKey,
-        implementation: Any = None,
+        implementation: Any = _UNSET,
         scope: str | ScopeType = ScopeType.SINGLETON,
         to: Any = None,
+        allow_none: bool = False,
     ) -> None:
         """Bind a service type to an implementation.
 
@@ -45,25 +52,46 @@ class ServiceRegistry:
             implementation: The implementation (class, instance, or factory)
             scope: The scope for the service (singleton, transient, etc.)
             to: Alternative parameter name for implementation (for fluent API)
+            allow_none: Whether to allow None as a valid implementation
         """
         # Handle alternative parameter naming
         if to is not None:
             implementation = to
 
-        # Default implementation to service_type if it's a concrete class
-        if implementation is None:
+        # Handle implementation logic
+        if implementation is _UNSET:
+            # No implementation provided, auto-bind if possible
             if isinstance(service_type, type):
                 implementation = service_type
             else:
-                msg = f"Must provide implementation for non-class service key: {service_type}"
+                msg = (
+                    f"Must provide implementation for non-class service key: "
+                    f"{service_type}"
+                )
                 raise BindingError(msg)
+        elif implementation is None and not allow_none:
+            # Explicit None without allow_none should fail
+            msg = f"Implementation cannot be None for {service_type}"
+            raise BindingError(msg)
+
+        # Check if implementation is an abstract class
+        if (
+            implementation is not None
+            and isinstance(implementation, type)
+            and inspect.isabstract(implementation)
+        ):
+            msg = f"Cannot bind abstract class {implementation}"
+            raise BindingError(msg)
 
         # Normalize scope
         scope_name = scope.value if isinstance(scope, ScopeType) else str(scope)
 
         # Create binding
         binding = ServiceBinding(
-            service_type=service_type, implementation=implementation, scope=scope_name
+            service_type=service_type,
+            implementation=implementation,
+            scope=scope_name,
+            allow_none=allow_none,
         )
 
         self._bindings[service_type] = binding
@@ -76,12 +104,15 @@ class ServiceRegistry:
 
         self._factories[service_type] = factory
 
-    def bind_instance(self, service_type: ServiceKey, instance: Any) -> None:
+    def bind_instance(
+        self, service_type: ServiceKey, instance: Any, allow_none: bool = False
+    ) -> None:
         """Bind a service type to a specific instance."""
         binding = ServiceBinding(
             service_type=service_type,
             implementation=instance,
             scope=ScopeType.SINGLETON.value,
+            allow_none=allow_none,
         )
         self._bindings[service_type] = binding
 
@@ -144,7 +175,10 @@ class ServiceRegistry:
                     try:
                         # Check if class has __init__ method
                         if not hasattr(binding.implementation, "__init__"):
-                            msg = f"Implementation {binding.implementation} is not instantiable"
+                            msg = (
+                                f"Implementation {binding.implementation} "
+                                f"is not instantiable"
+                            )
                             raise BindingError(msg)
                     except (TypeError, AttributeError) as e:
                         msg = f"Invalid implementation for {service_type}: {e}"

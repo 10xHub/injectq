@@ -125,6 +125,15 @@ class DependencyResolver:
 
     def _resolve_binding(self, binding: ServiceBinding) -> Any:
         """Resolve a service from a binding configuration."""
+        # Handle None implementations when allowed
+        if binding.implementation is None:
+            if binding.allow_none:
+                return None
+            msg = (
+                f"Implementation is None for {binding.service_type} "
+                f"and allow_none is False"
+            )
+            raise InjectionError(msg)
 
         def factory() -> Any:
             return self._create_instance(binding.implementation)
@@ -148,6 +157,16 @@ class DependencyResolver:
 
     async def _resolve_binding_async(self, binding: ServiceBinding) -> Any:
         """Resolve a service from a binding configuration asynchronously."""
+        # Handle None implementations when allowed
+        if binding.implementation is None:
+            if binding.allow_none:
+                return None
+            msg = (
+                f"Implementation is None for {binding.service_type} "
+                f"and allow_none is False"
+            )
+            raise InjectionError(msg)
+
         # For async resolution, we always create instances directly to avoid
         # the complexity of async factories with the scope manager
         return await self._create_instance_async(binding.implementation)
