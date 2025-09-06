@@ -1,4 +1,4 @@
-from injectq import InjectQ, inject
+from injectq import inject
 
 
 class BaseCheckpointer:
@@ -25,7 +25,10 @@ def call(checkpointer: BaseCheckpointer | None = None, name: str = "default_name
 
 
 if __name__ == "__main__":
-    container = InjectQ.get_instance()
+    from injectq import injectq
+
+    # recommended global convenience container
+    container = injectq
     # Don't bind anything for BaseCheckpointer to get None
     container.bind(BaseCheckpointer, None)
     container.bind("name", "value")

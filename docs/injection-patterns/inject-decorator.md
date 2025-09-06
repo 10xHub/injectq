@@ -7,12 +7,11 @@ The **`@inject` decorator** is InjectQ's most powerful and recommended way to in
 The `@inject` decorator eliminates manual dependency management:
 
 ```python
-from injectq import InjectQ, inject
+from injectq import injectq, inject
 
 # Set up container
-container = InjectQ.get_instance()
-container[Database] = Database
-container[UserService] = UserService
+injectq[Database] = Database
+injectq[UserService] = UserService
 
 # Use @inject decorator
 @inject
@@ -62,7 +61,7 @@ class UserRepository:
         pass
 
 # Register implementation
-container.bind(IUserRepository, UserRepository)
+injectq.bind(IUserRepository, UserRepository)
 
 @inject
 def get_user(repo: IUserRepository) -> Optional[User]:
@@ -136,7 +135,7 @@ class UserService:
         self.repo = repo
 
 # Register only the top-level service
-container[UserService] = UserService
+injectq[UserService] = UserService
 
 @inject
 def use_service(service: UserService) -> None:

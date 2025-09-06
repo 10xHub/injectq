@@ -29,7 +29,7 @@ Note: this will handle if service is null itself, so user don't need to check it
 
 
 3. We updated inject and Inject decorator, and allow to pass container or it will be used from context or golabl instance
-4. We removed inject_into decorator, so remove it from docs
+4. The `inject_into` decorator was removed; update any docs or examples that referenced it to use supported patterns (`@inject`, `Inject[...]`, `with container.context()`, or explicit container usage).
 
 
 # Asny support

@@ -125,6 +125,7 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "--cov=injectq",
+    "--cov-fail-under=73",
     "--cov-report=term-missing:skip-covered",
     "--cov-report=html",
     "--cov-report=xml",

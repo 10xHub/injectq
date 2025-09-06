@@ -12,7 +12,7 @@ This file summarizes findings from scanning the repository (code, docs, examples
 
 - Mismatches found in docs/code:
   - Many docs still show `InjectQ.get_instance()` usage; the recommended public pattern is to import and use `injectq` global.
-  - `inject_into` decorator is referenced in docs/examples but not present in the library code — docs must remove it.
+	- The legacy `inject_into` decorator is no longer part of the library — docs must remove mentions and show supported alternatives (`@inject`, `Inject[...]`, or container context usage).
   - Integrations are present in code but some docs/examples are outdated or inconsistent about how to hook them up; error messages sometimes mention incorrect package names.
   - Numerous duplicated or overlapping docs folders (e.g., `advanced/` vs `advanced-features/`) that could be consolidated.
 

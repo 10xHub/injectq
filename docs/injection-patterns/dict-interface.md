@@ -1,26 +1,22 @@
+
 # Dict-like Interface
 
-InjectQ's **dict-like interface** provides the simplest way to get started with dependency injection. It treats the container like a dictionary where you can store and retrieve services using keys.
+The dict-like interface is the simplest way to start with InjectQ. Use the exported `injectq` global in application code — it prefers the active container context if present and falls back to a global singleton.
 
-## 🎯 Basic Usage
-
-The dict-like interface is perfect for simple applications and getting started quickly:
+## Basic usage
 
 ```python
-from injectq import InjectQ
+from injectq import injectq
 
-# Create container
-container = InjectQ.get_instance()
-
-# Store services like a dictionary
-container[str] = "Hello, InjectQ!"
-container[int] = 42
-container["database_url"] = "postgresql://localhost/db"
+# Bind simple values
+injectq[str] = "Hello, InjectQ!"
+injectq[int] = 42
+injectq["database_url"] = "postgresql://localhost/db"
 
 # Retrieve services
-message = container[str]      # "Hello, InjectQ!"
-number = container[int]       # 42
-db_url = container["database_url"]  # "postgresql://localhost/db"
+message = injectq[str]      # "Hello, InjectQ!"
+number = injectq[int]       # 42
+db_url = injectq["database_url"]  # "postgresql://localhost/db"
 ```
 
 ## 🏗️ Class Registration
@@ -28,6 +24,8 @@ db_url = container["database_url"]  # "postgresql://localhost/db"
 Register classes for automatic instantiation:
 
 ```python
+from injectq import injectq
+
 class DatabaseConfig:
     def __init__(self, host: str = "localhost", port: int = 5432):
         self.host = host
@@ -37,97 +35,96 @@ class DatabaseConfig:
 class Database:
     def __init__(self, config: DatabaseConfig):
         self.config = config
-        print(f"Connected to: {config.url}")
 
 class UserRepository:
     def __init__(self, db: Database):
         self.db = db
 
-# Register classes
-container[DatabaseConfig] = DatabaseConfig()
-container[Database] = Database
-container[UserRepository] = UserRepository
+# Register bindings
+injectq[DatabaseConfig] = DatabaseConfig()
+injectq[Database] = Database
+injectq[UserRepository] = UserRepository
 
 # Automatic dependency resolution
-repo = container[UserRepository]  # Creates DatabaseConfig, Database, then UserRepository
+repo = injectq[UserRepository]  # Creates DatabaseConfig, Database, then UserRepository
 ```
 
-## 🔄 Key Operations
+## Key operations
 
-### Setting Values
+### Setting values
 
 ```python
 # Simple values
-container[str] = "configuration"
-container[int] = 12345
-container[bool] = True
+injectq[str] = "configuration"
+injectq[int] = 12345
+injectq[bool] = True
 
 # Complex objects
-container["config"] = AppConfig(host="prod", debug=False)
+injectq["config"] = AppConfig(host="prod", debug=False)
 
 # Classes (for automatic instantiation)
-container[Database] = Database
-container[UserService] = UserService
+injectq[Database] = Database
+injectq[UserService] = UserService
 
 # Instances (pre-created objects)
-container["cache"] = RedisCache(host="localhost")
+injectq["cache"] = RedisCache(host="localhost")
 ```
 
-### Getting Values
+### Getting values
 
 ```python
 # Simple retrieval
-config = container[str]
-number = container[int]
+config = injectq[str]
+number = injectq[int]
 
 # With type hints (better IDE support)
-config: str = container[str]
-service: UserService = container[UserService]
+config: str = injectq[str]
+service: UserService = injectq[UserService]
 ```
 
-### Checking Existence
+### Checking existence
 
 ```python
 # Check if a service is registered
-if str in container:
-    config = container[str]
+if str in injectq:
+    config = injectq[str]
 
-if "database" in container:
-    db = container["database"]
+if "database" in injectq:
+    db = injectq["database"]
 ```
 
-### Removing Services
+### Removing services
 
 ```python
 # Remove a service
-del container[str]
-del container[Database]
+del injectq[str]
+del injectq[Database]
 
 # Check removal
-assert str not in container
-assert Database not in container
+assert str not in injectq
+assert Database not in injectq
 ```
 
 ## 🎨 Advanced Patterns
 
-### Factory Functions
+### Factory functions
 
-Use lambda functions for dynamic creation:
+Use `bind_factory` or the `factories` proxy for factory bindings (examples below show simple lambdas). For async factories, use `get_async`.
 
 ```python
 import uuid
 from datetime import datetime
 
-# Factory for unique IDs
-container["request_id"] = lambda: str(uuid.uuid4())
+# Simple factory-like binding (synchronous)
+injectq["request_id"] = lambda: str(uuid.uuid4())
 
-# Factory for timestamps
-container["timestamp"] = lambda: datetime.now().isoformat()
+# For more advanced factories use bind_factory
+injectq.bind_factory("timestamp", lambda: datetime.now().isoformat())
 
-# Each access creates a new value
-id1 = container["request_id"]
-id2 = container["request_id"]
-print(f"IDs are different: {id1 != id2}")  # True
+# Accessing factories returns created values
+id1 = injectq["request_id"]
+id2 = injectq["request_id"]
+print(f"IDs are different: {id1 != id2}")
 ```
 
 ### Conditional Registration
@@ -161,54 +158,47 @@ cache = container["redis_cache"]
 backup_cache = container["memory_cache"]
 ```
 
-## 🔧 Integration with Decorators
+### Integration with decorators
 
-The dict-like interface works seamlessly with InjectQ's decorators:
+The dict-style bindings work with the `@inject` decorator and `Inject[T]` markers.
 
 ```python
-from injectq import inject, singleton
+from injectq import inject, singleton, injectq
 
 # Register services
-container[Database] = Database
-container["config"] = AppConfig()
+injectq[Database] = Database
+injectq["config"] = AppConfig()
 
-# Use with @inject
 @inject
 def process_data(db: Database, config: dict) -> None:
     # db and config automatically injected
     print(f"Processing with config: {config}")
 
-# Call without parameters
 process_data()
 ```
 
-## 🧪 Testing with Dict Interface
+## Testing with dict interface
 
-The dict-like interface makes testing easy:
+Use the testing utilities to create disposable containers for unit tests.
 
 ```python
 from injectq.testing import test_container
 
 def test_user_service():
     with test_container() as container:
-        # Set up test dependencies
         container[Database] = MockDatabase()
         container["config"] = {"test": True}
 
-        # Get service under test
         service = container[UserService]
-
-        # Test the service
         result = service.get_user(1)
         assert result is not None
 ```
 
-## 🚀 Real-World Example
 
-Here's a complete example using the dict-like interface:
+## Real-world example
 
 ```python
-from injectq import InjectQ
+from injectq import injectq
 from typing import List, Optional
 from dataclasses import dataclass
 
@@ -221,7 +211,7 @@ class User:
 class UserRepository:
     def __init__(self, db_url: str):
         self.db_url = db_url
-        self.users = {}  # In-memory storage
+        self.users = {}
 
     def save(self, user: User) -> User:
         self.users[user.id] = user
@@ -247,29 +237,21 @@ class UserService:
         return self.repo.find_by_id(user_id)
 
 # Application setup
-container = InjectQ.get_instance()
+injectq[str] = "postgresql://localhost:5432/myapp"  # Database URL
+injectq[int] = 300  # Cache timeout in seconds
 
-# Configuration
-container[str] = "postgresql://localhost:5432/myapp"  # Database URL
-container[int] = 300  # Cache timeout in seconds
+injectq[UserRepository] = UserRepository
+injectq[UserService] = UserService
 
-# Services
-container[UserRepository] = UserRepository
-container[UserService] = UserService
+service = injectq[UserService]
 
-# Usage
-service = container[UserService]
-
-# Create users
 user1 = service.create_user("John Doe", "john@example.com")
 user2 = service.create_user("Jane Smith", "jane@example.com")
 
-# Retrieve users
 found_user = service.get_user(1)
 print(f"Found user: {found_user}")
 
-# List all users
-all_users = container[UserRepository].find_all()
+all_users = injectq[UserRepository].find_all()
 print(f"All users: {all_users}")
 ```
 

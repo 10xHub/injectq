@@ -18,14 +18,11 @@ A **Dependency Injection Container** (or DI Container) is an object that:
 The container needs to know what services exist and how to create them:
 
 ```python
-from injectq import InjectQ
-
-container = InjectQ.get_instance()
-
+from injectq import injectq
 # Register services
-container.bind(Database, PostgreSQLDatabase)
-container.bind(Cache, RedisCache)
-container.bind(UserService, UserService)
+injectq.bind(Database, PostgreSQLDatabase)
+injectq.bind(Cache, RedisCache)
+injectq.bind(UserService, UserService)
 ```
 
 ### 2. Dependency Resolution
@@ -126,13 +123,13 @@ container.bind(TempData, scope=Scope.TRANSIENT)      # Always new
 
 ### 1. Singleton Container (Default)
 
-One global container for the entire application:
+One global container for the entire application (recommended pattern):
 
 ```python
-from injectq import InjectQ
+from injectq import injectq
 
-# Global singleton container
-container = InjectQ.get_instance()
+# Global convenience container
+container = injectq
 
 # Register services
 container.bind(Database, PostgreSQLDatabase)
@@ -193,15 +190,13 @@ async with container.scope("request"):
 Simple key-value bindings:
 
 ```python
-container = InjectQ()
-
 # Simple values
-container[str] = "postgresql://localhost/db"
-container[int] = 42
-container[bool] = True
+injectq[str] = "postgresql://localhost/db"
+injectq[int] = 42
+injectq[bool] = True
 
 # Complex objects
-container["config"] = AppConfig(host="localhost", port=8080)
+injectq["config"] = AppConfig(host="localhost", port=8080)
 ```
 
 ### 2. Type-based Configuration
@@ -209,7 +204,6 @@ container["config"] = AppConfig(host="localhost", port=8080)
 Bind interfaces to implementations:
 
 ```python
-container = InjectQ()
 
 # Interface to implementation
 container.bind(IDatabase, PostgreSQLDatabase)

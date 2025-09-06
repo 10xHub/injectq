@@ -95,7 +95,7 @@ def setup_taskiq(container: InjectQ, broker: Any) -> None:
     except ImportError as exc:
         msg = (
             "setup_taskiq requires the 'taskiq' package. Install with "
-            "'pip install pyagenity[taskiq]' or 'pip install taskiq'."
+            "'pip install injectq[taskiq]' or 'pip install taskiq'."
         )
         raise RuntimeError(msg) from exc
 
