@@ -4,7 +4,7 @@ Combines the simplicity of kink, the power of python-injector,
 and the advanced features of modern DI frameworks.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 # Core exports
 # Testing exports
