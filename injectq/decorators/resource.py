@@ -339,10 +339,10 @@ def resource(scope: str = "singleton") -> Callable[[Callable], Callable]:
         _resource_manager.register_resource(resource_name, lifecycle)
 
         # Mark function as resource provider
-        func._is_resource = True
-        func._resource_name = resource_name
-        func._resource_scope = scope
-        func._resource_lifecycle = lifecycle
+        func._is_resource = True  # type: ignore  # noqa: PGH003, SLF001
+        func._resource_name = resource_name  # type: ignore  # noqa: PGH003, SLF001
+        func._resource_scope = scope  # type: ignore  # noqa: PGH003, SLF001
+        func._resource_lifecycle = lifecycle  # type: ignore  # noqa: PGH003, SLF001
 
         return func
 

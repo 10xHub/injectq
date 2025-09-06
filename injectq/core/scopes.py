@@ -5,6 +5,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from enum import Enum
 from typing import Any
+import asyncio
 
 from injectq.utils import ScopeError, ThreadLocalStorage
 
@@ -38,6 +39,10 @@ class Scope(ABC):
         """Get or create an instance for the given key."""
 
     @abstractmethod
+    async def aget(self, key: Any, factory: Callable[[], Any]) -> Any:
+        """Async get or create an instance for the given key."""
+
+    @abstractmethod
     def clear(self) -> None:
         """Clear all instances in this scope."""
 
@@ -47,7 +52,7 @@ class Scope(ABC):
     def exit(self) -> None:
         """Called when exiting the scope context."""
 
-    def _safe_execute(self, operation):
+    def _safe_execute(self, operation: Callable) -> Any:
         """Execute operation with thread safety if enabled."""
         if self.thread_safe and self._lock:
             with self._lock:
@@ -66,12 +71,26 @@ class SingletonScope(Scope):
     def get(self, key: Any, factory: Callable[[], Any]) -> Any:
         """Get or create a singleton instance."""
 
-        def get_or_create():
+        def get_or_create() -> Any:
             if key not in self._instances:
                 self._instances[key] = factory()
             return self._instances[key]
 
         return self._safe_execute(get_or_create)
+
+    async def aget(self, key: Any, factory: Callable[[], Any]) -> Any:
+        """Async get or create a singleton instance."""
+
+        async def aget_or_create() -> Any:
+            if key not in self._instances:
+                result = factory()
+                if asyncio.iscoroutine(result):
+                    result = await result
+                self._instances[key] = result
+            return self._instances[key]
+
+        # For async, we don't use _safe_execute as it's sync
+        return await aget_or_create()
 
     def clear(self) -> None:
         """Clear all singleton instances."""
@@ -88,6 +107,13 @@ class TransientScope(Scope):
         """Always create a new instance."""
         return factory()
 
+    async def aget(self, key: Any, factory: Callable[[], Any]) -> Any:
+        """Always create a new instance asynchronously."""
+        result = factory()
+        if asyncio.iscoroutine(result):
+            return await result
+        return result
+
     def clear(self) -> None:
         """Nothing to clear for transient scope."""
 
@@ -102,7 +128,7 @@ class ThreadLocalScope(Scope):
     def get(self, key: Any, factory: Callable[[], Any]) -> Any:
         """Get or create an instance in thread-local storage."""
 
-        def get_or_create():
+        def get_or_create() -> Any:
             instances_key = f"{self.name}_instances"
             instances = self._storage.get(instances_key, {})
 
@@ -113,6 +139,25 @@ class ThreadLocalScope(Scope):
             return instances[key]
 
         return self._safe_execute(get_or_create)
+
+    async def aget(self, key: Any, factory: Callable[[], Any]) -> Any:
+        """Async get or create an instance in thread-local storage."""
+
+        async def aget_or_create() -> Any:
+            instances_key = f"{self.name}_instances"
+            instances = self._storage.get(instances_key, {})
+
+            if key not in instances:
+                result = factory()
+                if asyncio.iscoroutine(result):
+                    result = await result
+                instances[key] = result
+                self._storage.set(instances_key, instances)
+
+            return instances[key]
+
+        # For async, we don't use _safe_execute as it's sync
+        return await aget_or_create()
 
     def clear(self) -> None:
         """Clear thread-local instances."""
@@ -157,7 +202,7 @@ class ScopeManager(BaseScopeManager):
         self.register_scope(RequestScope(thread_safe))
         self.register_scope(ActionScope(thread_safe))
 
-    def _safe_execute(self, operation):
+    def _safe_execute(self, operation: Callable) -> Any:
         """Execute operation with thread safety if enabled."""
         if self.thread_safe and self._lock:
             with self._lock:
@@ -218,6 +263,13 @@ class ScopeManager(BaseScopeManager):
         """Get an instance from the specified scope."""
         scope = self.get_scope(scope_name)
         return scope.get(key, factory)
+
+    async def aget_instance(
+        self, key: Any, factory: Callable[[], Any], scope_name: str = "singleton"
+    ) -> Any:
+        """Async get an instance from the specified scope."""
+        scope = self.get_scope(scope_name)
+        return await scope.aget(key, factory)
 
     def clear_scope(self, scope_name: str) -> None:
         """Clear all instances in a scope."""

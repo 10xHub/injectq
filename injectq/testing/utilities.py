@@ -1,6 +1,6 @@
 """Testing utilities for InjectQ dependency injection library."""
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from typing import Any
 
@@ -82,7 +82,7 @@ class MockFactory:
                     for key, value in init_kwargs.items():
                         setattr(self, key, value)
 
-                def __getattr__(self, name):
+                def __getattr__(self, name) -> Callable:
                     # Return a simple mock function for any method
                     def mock_method(*args, **method_kwargs) -> str:
                         return f"mock_{name}_result"
@@ -118,13 +118,13 @@ def create_test_module(bindings: dict[ServiceKey, Any]) -> "TestModule":
         })
         container = InjectQ([module])
     """
-    from injectq.modules import SimpleModule
+    from injectq.modules import SimpleModule  # noqa: PLC0415
 
     module = SimpleModule()
     for service_type, implementation in bindings.items():
         module.bind_instance(service_type, implementation)
 
-    return module
+    return module  # type: ignore
 
 
 class TestModule:
@@ -134,7 +134,7 @@ class TestModule:
     """
 
     def __init__(self) -> None:
-        from injectq.modules import SimpleModule
+        from injectq.modules import SimpleModule  # noqa: PLC0415
 
         self._module = SimpleModule()
 
@@ -170,7 +170,7 @@ class TestModule:
         self._module.configure(binder)
 
 
-def pytest_container_fixture():
+def pytest_container_fixture() -> Callable[[], Any]:
     """Pytest fixture factory for creating test containers.
 
     Returns:
@@ -188,10 +188,10 @@ def pytest_container_fixture():
             container.bind(Database, MockDatabase)
             # Use container in test
     """
-    import pytest
+    import pytest  # noqa: PLC0415
 
     @pytest.fixture
-    def container():
+    def container() -> Any:
         with test_container() as test_cont:
             yield test_cont
 

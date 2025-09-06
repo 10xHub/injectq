@@ -1,9 +1,8 @@
 import pytest
-
 from taskiq.state import TaskiqState
 
-from injectq.integrations import taskiq as taskiq_integ
 from injectq.core.container import InjectQ
+from injectq.integrations import taskiq as taskiq_integ
 
 
 class Service:

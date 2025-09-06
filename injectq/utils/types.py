@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, get_origin
+import types
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, Union, get_args, get_origin
 
 
 # Type variables
@@ -56,6 +57,8 @@ def is_concrete_type(type_hint: type[Any]) -> bool:
 def normalize_type(type_hint: object) -> type[Any] | str:
     """Normalize a type hint to a consistent form.
 
+    Handles Union[T, None] by extracting the non-None type for dependency injection.
+
     Returns either a type or a string for forward references.
     """
     # Handle string type annotations (forward references)
@@ -63,10 +66,27 @@ def normalize_type(type_hint: object) -> type[Any] | str:
         # For forward references, return as-is and handle resolution at injection time
         return type_hint
 
-    # Handle generic types by getting the origin
+    # Handle both Python 3.10+ UnionType and typing.Union
+    if (hasattr(types, "UnionType") and isinstance(type_hint, types.UnionType)) or (
+        get_origin(type_hint) is Union
+    ):
+        args = get_args(type_hint)
+        # Filter out NoneType to get the actual type for injection
+        non_none_args = [arg for arg in args if arg is not type(None)]
+        if len(non_none_args) == 1:
+            # This is Union[T, None] - return T for injection
+            return normalize_type(non_none_args[0])
+        # Multiple non-None types, return first one for simplicity
+        if len(non_none_args) > 1:
+            return normalize_type(non_none_args[0])
+        # Only None type, return None
+        return type(None)
+
+    # Handle other generic types by getting the origin
     origin = get_origin(type_hint)
     if origin is not None:
-        return origin
+        # Return origin for other generic types
+        return origin  # type: ignore[return-value]
 
     # Return the type as-is if it's already a proper type
     if isinstance(type_hint, type):

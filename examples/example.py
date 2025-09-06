@@ -4,11 +4,16 @@ Example usage of InjectQ dependency injection library.
 This example demonstrates the key features and API styles of InjectQ.
 """
 
-from injectq import InjectQ, inject, singleton, transient
+import asyncio
+import uuid
+from datetime import datetime
+
+from injectq import injectq, inject, singleton, transient
+
 
 # Example 1: Simple dict-like interface
 print("=== Example 1: Dict-like Interface ===")
-container = InjectQ.get_instance()
+container = injectq
 
 # Simple value binding
 container[str] = "postgresql://localhost:5432/mydb"
@@ -22,12 +27,12 @@ print("\n=== Example 2: Class Dependencies ===")
 
 
 class DatabaseConfig:
-    def __init__(self, url: str):
+    def __init__(self, url: str) -> None:
         self.url = url
 
 
 class Database:
-    def __init__(self, config: DatabaseConfig):
+    def __init__(self, config: DatabaseConfig) -> None:
         self.config = config
         print(f"Database connected to: {config.url}")
 
@@ -36,7 +41,7 @@ class Database:
 
 
 class UserRepository:
-    def __init__(self, db: Database):
+    def __init__(self, db: Database) -> None:
         self.db = db
 
     def find_user(self, user_id: int) -> dict:
@@ -71,13 +76,11 @@ async def async_user_service(repo: UserRepository) -> str:
 
 
 # Call functions - dependencies automatically injected
-result = get_user_service()  # type: ignore
+result = get_user_service()  # type: ignore[attr-defined]
 print(result)
 
 # Async example
-import asyncio
-
-async_result = asyncio.run(async_user_service())  # type: ignore
+async_result = asyncio.run(async_user_service())  # type: ignore[attr-defined]
 print(async_result)
 
 # Example 4: Singleton and Transient scopes
@@ -86,7 +89,7 @@ print("\n=== Example 4: Scopes ===")
 
 @singleton
 class CacheService:
-    def __init__(self):
+    def __init__(self) -> None:
         self.data = {}
         self.instance_id = id(self)
         print(f"CacheService created with ID: {self.instance_id}")
@@ -100,7 +103,7 @@ class CacheService:
 
 @transient
 class RequestProcessor:
-    def __init__(self, cache: CacheService):
+    def __init__(self, cache: CacheService) -> None:
         self.cache = cache
         self.instance_id = id(self)
         print(f"RequestProcessor created with ID: {self.instance_id}")
@@ -123,9 +126,6 @@ print(f"Same cache in both processors? {processor1.cache is processor2.cache}")
 
 # Example 5: Factory functions
 print("\n=== Example 5: Factory Functions ===")
-
-import uuid
-from datetime import datetime
 
 
 def create_request_id() -> str:

@@ -1,10 +1,10 @@
 """Test basic functionality of InjectQ container."""
 
-import pytest
-from typing import Protocol
 
-from injectq import InjectQ, inject_into, singleton, transient
-from injectq.utils import DependencyNotFoundError, CircularDependencyError
+import pytest
+
+from injectq import InjectQ, inject, singleton, transient
+from injectq.utils import CircularDependencyError, DependencyNotFoundError
 
 
 class Database:
@@ -114,7 +114,7 @@ def test_inject_decorator():
     container[str] = "test://connection"
     container.bind(UserService, UserService)
 
-    @inject_into(container)
+    @inject(container=container)
     def process_user(user_id: int, service: UserService) -> str:
         return service.get_user_name(user_id)
 
@@ -130,7 +130,7 @@ def test_inject_with_args():
     container[str] = "test://connection"
     container.bind(UserService, UserService)
 
-    @inject_into(container)
+    @inject(container=container)
     def process_user(user_id: int, message: str, service: UserService) -> str:
         return f"{message}: {service.get_user_name(user_id)}"
 

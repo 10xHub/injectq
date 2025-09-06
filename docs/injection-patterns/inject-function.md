@@ -7,10 +7,10 @@ The **`Inject()` function** provides explicit dependency injection for specific 
 Use `Inject()` to specify which parameters should be injected:
 
 ```python
-from injectq import InjectQ, Inject
+from injectq import injectq, Inject
 
 # Set up container
-container = InjectQ.get_instance()
+container = injectq
 container[Database] = Database
 container[UserService] = UserService
 

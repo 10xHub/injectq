@@ -1,11 +1,11 @@
 """Test inject decorator functionality."""
 
-import pytest
 import asyncio
-from typing import Optional
 
-from injectq import InjectQ, inject, inject_into
-from injectq.utils import DependencyNotFoundError, InjectionError
+import pytest
+
+from injectq import InjectQ, inject
+from injectq.utils import InjectionError
 
 
 class MockService:
@@ -44,7 +44,7 @@ def test_inject_single_dependency():
     container = InjectQ()
     container.bind_instance(MockService, MockService("test_value"))
 
-    @inject_into(container)
+    @inject(container=container)
     def function_with_dependency(service: MockService) -> str:
         return service.get_value()
 
@@ -58,7 +58,7 @@ def test_inject_multiple_dependencies():
     container.bind_instance(str, "test_string")
     container.bind_instance(int, 42)
 
-    @inject_into(container)
+    @inject(container=container)
     def function_with_multiple_deps(text: str, number: int) -> str:
         return f"{text}: {number}"
 
@@ -71,7 +71,7 @@ def test_inject_mixed_args():
     container = InjectQ()
     container.bind_instance(MockService, MockService("injected_value"))
 
-    @inject_into(container)
+    @inject(container=container)
     def mixed_function(prefix: str, service: MockService, suffix: str = "!") -> str:
         return f"{prefix} {service.get_value()} {suffix}"
 
@@ -84,7 +84,7 @@ def test_inject_with_kwargs():
     container = InjectQ()
     container.bind_instance(MockService, MockService("kwarg_value"))
 
-    @inject_into(container)
+    @inject(container=container)
     def kwarg_function(service: MockService, multiplier: int = 1) -> str:
         return service.get_value() * multiplier
 
@@ -97,7 +97,7 @@ def test_inject_missing_dependency():
     container = InjectQ()
     # Don't bind MockService
 
-    @inject_into(container)
+    @inject(container=container)
     def function_missing_dep(service: MockService) -> str:
         return service.get_value()
 
@@ -110,7 +110,7 @@ def test_inject_with_default_values():
     container = InjectQ()
     # Don't bind str - should use default
 
-    @inject_into(container)
+    @inject(container=container)
     def function_with_default(message: str = "default_message") -> str:
         return message
 
@@ -125,7 +125,7 @@ def test_inject_dependency_chain():
     container.bind(MockService, MockService)
     container.bind(DependentService, DependentService)
 
-    @inject_into(container)
+    @inject(container=container)
     def chain_function(service: DependentService) -> str:
         return service.get_processed_value()
 
@@ -145,7 +145,7 @@ async def test_inject_async_function():
     container = InjectQ()
     container.bind_instance(MockService, MockService("async_value"))
 
-    @inject_into(container)
+    @inject(container=container)
     async def async_function(service: MockService) -> str:
         await asyncio.sleep(0.01)  # Simulate async work
         return f"Async: {service.get_value()}"
@@ -160,7 +160,7 @@ async def test_inject_async_with_args():
     container = InjectQ()
     container.bind_instance(MockService, MockService("async_mixed"))
 
-    @inject_into(container)
+    @inject(container=container)
     async def async_mixed_function(prefix: str, service: MockService) -> str:
         await asyncio.sleep(0.01)
         return f"{prefix}: {service.get_value()}"
@@ -175,17 +175,17 @@ def test_inject_class_method():
     container.bind_instance(MockService, MockService("method_value"))
 
     class TestClass:
-        @inject_into(container)
+        @inject(container=container)
         def instance_method(self, service: MockService) -> str:
             return f"Instance: {service.get_value()}"
 
         @classmethod
-        @inject_into(container)
+        @inject(container=container)
         def class_method(cls, service: MockService) -> str:
             return f"Class: {service.get_value()}"
 
         @staticmethod
-        @inject_into(container)
+        @inject(container=container)
         def static_method(service: MockService) -> str:
             return f"Static: {service.get_value()}"
 

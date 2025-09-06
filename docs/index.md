@@ -3,30 +3,18 @@
 [![PyPI version](https://badge.fury.io/py/injectq.svg)](https://pypi.org/project/injectq/)
 [![Python versions](https://img.shields.io/pypi/pyversions/injectq.svg)](https://pypi.org/project/injectq/)
 [![License](https://img.shields.io/github/license/Iamsdt/injectq.svg)](https://github.com/Iamsdt/injectq/blob/main/LICENSE)
+[![Coverage](https://img.shields.io/badge/coverage-73%25-yellow.svg)](#)
 
-**InjectQ** is a modern Python dependency injection library that combines the simplicity of kink, the power of python-injector, and the advanced features of modern DI frameworks like dishka and wireup.
 
-## 🚀 What Makes InjectQ Special
+InjectQ is a lightweight, type-friendly dependency injection library for Python focused on clarity and pragmatic integrations.
 
-- **Simplicity First**: Start with simple dict-like interface, grow into advanced features
-- **Multiple API Styles**: Choose between `@inject` decorators and `Inject()` functions
-- **Type Safe**: Full mypy compliance with early error detection
-- **Performance Optimized**: Compile-time dependency resolution with caching
-- **Modern Framework Native**: Built-in support for FastAPI, Taskiq, and FastMCP
-- **Resource Management**: Automatic cleanup and finalization
-
-## 📖 Quick Example
+## Quick example (recommended)
 
 ```python
-from injectq import InjectQ, inject, singleton
+from injectq import injectq, inject, singleton
 
-# Create container
-container = InjectQ.get_instance()
+injectq[str] = "Hello, World!"
 
-# Simple dict-like binding
-container[str] = "Hello, World!"
-
-# Class binding
 @singleton
 class UserService:
     def __init__(self, message: str):
@@ -35,123 +23,77 @@ class UserService:
     def greet(self) -> str:
         return f"Service says: {self.message}"
 
-# Automatic dependency injection
 @inject
 def main(service: UserService) -> None:
     print(service.greet())
 
 if __name__ == "__main__":
-    main()  # Prints: Service says: Hello, World!
+    main()
 ```
 
-## 🎯 Key Features
+## Highlights
 
-### Multiple API Styles
+- Dict-like bindings and simple APIs for small projects
+- Decorator and type-based injection (`@inject`, `Inject[T]`) for typed code
+- Optional integrations for FastAPI and Taskiq (install extras as needed)
+- Async factory support and request-scoped lifetimes
 
-InjectQ supports several ways to inject dependencies:
+## API patterns
 
-=== "Dict-like Interface"
-    ```python
-    container = InjectQ.get_instance()
-    container[str] = "config_value"
-    container[Database] = Database()
-    ```
-
-=== "@inject Decorator"
-    ```python
-    @inject
-    def process_data(service: UserService, config: str):
-        # Dependencies automatically injected
-        pass
-    ```
-
-=== "Inject() Function"
-    ```python
-    def process_data(service=Inject(UserService)):
-        # Explicit injection for specific parameters
-        pass
-    ```
-
-### Powerful Scoping
-
-Control how long your services live:
+### Dict-like interface
 
 ```python
-from injectq import singleton, transient, scoped
-
-@singleton  # One instance for entire application
-class DatabaseConnection:
-    pass
-
-@transient  # New instance every time
-class RequestProcessor:
-    pass
-
-@scoped("request")  # One instance per request scope
-class UserContext:
-    pass
+from injectq import injectq
+injectq[str] = "config_value"
+injectq[Database] = Database()
 ```
 
-### Module System
-
-Organize your dependencies with modules:
+### Function/class injection
 
 ```python
-from injectq import Module, provider
-
-class DatabaseModule(Module):
-    @provider
-    def provide_connection(self) -> DatabaseConnection:
-        return create_connection()
-
-# Use modules
-container = InjectQ([DatabaseModule()])
+@inject
+def process(service: UserService):
+    ...
 ```
 
-### Framework Integrations
+### FastAPI integration (example)
 
-Seamlessly integrate with popular frameworks:
+```python
+from injectq import injectq
+from injectq.integrations.fastapi import setup_fastapi, InjectAPI
 
-=== "FastAPI"
-    ```python
-    from injectq.integrations.fastapi import Injected
+setup_fastapi(injectq, app)
 
-    @app.get("/users")
-    async def get_users(service: Injected[UserService]):
-        return await service.get_all()
-    ```
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, user_service: IUserService = InjectAPI[IUserService]):
+    return user_service.get_user(user_id)
+```
 
-=== "Taskiq"
-    ```python
-    from injectq.integrations.taskiq import setup_injectq
+### Taskiq integration (example)
 
-    @broker.task
-    @inject
-    async def process_task(service: UserService):
-        await service.process()
-    ```
+```python
+from injectq import injectq
+from injectq.integrations.taskiq import setup_taskiq, InjectTask
 
-## 📚 Documentation Sections
+setup_taskiq(injectq, broker)
 
-- **[Getting Started](getting-started/installation.md)**: Installation and basic usage
-- **[Core Concepts](core-concepts/what-is-di.md)**: Understanding dependency injection
-- **[Injection Patterns](injection-patterns/dict-interface.md)**: Different ways to inject dependencies
-- **[Scopes](scopes/understanding-scopes.md)**: Service lifetime management
-- **[Modules & Providers](modules/module-system.md)**: Organizing dependencies
-- **[Framework Integrations](integrations/fastapi.md)**: FastAPI, Taskiq, FastMCP
-- **[Testing](testing/testing-overview.md)**: Testing utilities and mocking
-- **[Advanced Features](advanced/resource-management.md)**: Performance, diagnostics, resources
-- **[Migration Guides](migration/from-kink.md)**: Migrating from other DI libraries
-- **[API Reference](api-reference/index.md)**: Complete API documentation
+@broker.task()
+async def save_data(data: dict, service: RankingService = InjectTask[RankingService]):
+    await service.save(data)
+```
 
-## 🏁 Getting Started
+## Documentation sections
 
-Ready to get started? Let's begin with [installation](getting-started/installation.md)!
+- Getting started (installation & quick-start)
+- Injection patterns (dict-style, decorator, Inject[T])
+- Scopes and lifecycle (singleton, transient, request)
+- Modules and providers
+- Integrations (FastAPI, Taskiq)
+- Testing utilities and examples
+- API reference and migration guides
 
-## 🤝 Contributing
+## Contributing & License
 
-We welcome contributions! Please see our [contributing guide](contributing.md) for details.
+See `CONTRIBUTING.md` and `LICENSE` for contribution rules and licensing.
 
-## 📄 License
-
-InjectQ is licensed under the MIT License. See [LICENSE](https://github.com/Iamsdt/injectq/blob/main/LICENSE) for details.
+Note: This repository maintains a test coverage floor of 73% enforced by CI and pytest configuration.

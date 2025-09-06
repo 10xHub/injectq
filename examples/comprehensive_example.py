@@ -8,16 +8,18 @@ This example shows:
 - Different scopes and lifecycles
 """
 
+from typing import Any
+
 from injectq import (
+    ConfigurationModule,
     InjectQ,
+    Module,
+    SimpleModule,
     inject,
     singleton,
     transient,
-    Module,
-    SimpleModule,
-    ConfigurationModule,
 )
-from injectq.testing import test_container, override_dependency, TestModule
+from injectq.testing import TestModule, override_dependency, test_container
 
 
 # === Domain Model ===
@@ -58,10 +60,10 @@ class CacheService:
         self.cache = {}
         print("🗄️  Cache service initialized")
 
-    def get(self, key: str) -> any:
+    def get(self, key: str) -> Any:
         return self.cache.get(key)
 
-    def set(self, key: str, value: any) -> None:
+    def set(self, key: str, value: Any) -> None:
         self.cache[key] = value
 
 
@@ -133,6 +135,7 @@ def create_production_container() -> InjectQ:
         {
             "connection_string": "postgresql://localhost:5432/production_db",
             "request_id": "prod_request_001",
+            str: "prod_request_001",  # Bind str type to request_id value
         }
     )
 
@@ -179,8 +182,9 @@ def main():
     print(f"User cached: {user_cached['name']} (source: {user_cached['source']})")
 
     # Function with dependency injection
+    container.activate()  # Set this container as the active context
     result = handle_user_request(456)  # type: ignore
-    print(f"Processed request: {result['request_id']}")
+    print(f"Processed request: {result['request_id']}")  # type: ignore
 
     # === Testing Usage ===
     print("\n🧪 Testing Demo:")
@@ -236,10 +240,13 @@ def main():
     print("\n🏗️  Module Composition Demo:")
 
     # Create a custom module
+    def create_logger(log_level: str) -> str:
+        return f"Logger[{log_level}]"
+
     logging_module = (
         SimpleModule()
         .bind_instance("log_level", "INFO")
-        .bind_factory("logger", lambda log_level: f"Logger[{log_level}]")
+        .bind_factory("logger", create_logger)
     )
 
     # Add to existing container

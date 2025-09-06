@@ -11,6 +11,44 @@ from typing import Any, Generic, TypeVar, cast
 T = TypeVar("T")
 
 
+class ReentrantAsyncLock:
+    """A reentrant asyncio lock that allows the same task to acquire it multiple times."""
+
+    def __init__(self) -> None:
+        self._lock = asyncio.Lock()
+        self._owner: asyncio.Task | None = None
+        self._count = 0
+
+    async def acquire(self) -> bool:
+        """Acquire the lock."""
+        current_task = asyncio.current_task()
+        if self._owner is current_task:
+            self._count += 1
+            return True
+
+        await self._lock.acquire()
+        self._owner = current_task
+        self._count = 1
+        return True
+
+    def release(self) -> None:
+        """Release the lock."""
+        if self._owner is not asyncio.current_task():
+            raise RuntimeError("Lock not owned by current task")
+
+        self._count -= 1
+        if self._count == 0:
+            self._owner = None
+            self._lock.release()
+
+    async def __aenter__(self) -> "ReentrantAsyncLock":
+        await self.acquire()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
+        self.release()
+
+
 class HybridLock:
     """A lock that works with both threading and asyncio contexts.
 
@@ -45,6 +83,21 @@ class HybridLock:
 
         return getattr(self._thread_local, "async_lock", None)
 
+    def _get_reentrant_async_lock(self) -> "ReentrantAsyncLock | None":
+        """Get or create a reentrant asyncio lock for the current thread."""
+        if not hasattr(self._thread_local, "reentrant_lock"):
+            try:
+                # Only create asyncio lock if we're in an asyncio context
+                asyncio.current_task()
+                lock = ReentrantAsyncLock()
+                self._thread_local.reentrant_lock = lock
+                self._active_locks.add(lock)
+            except RuntimeError:
+                # Not in asyncio context, will use thread lock
+                self._thread_local.reentrant_lock = None
+
+        return getattr(self._thread_local, "reentrant_lock", None)
+
     @contextmanager
     def sync_lock(self) -> Iterator[None]:
         """Context manager for synchronous locking."""
@@ -54,11 +107,11 @@ class HybridLock:
     @asynccontextmanager
     async def async_lock(self) -> AsyncIterator[None]:
         """Context manager for asynchronous locking."""
-        async_lock = self._get_async_lock()
+        reentrant_lock = self._get_reentrant_async_lock()
 
-        if async_lock is not None:
-            # Use asyncio lock if we're in an async context
-            async with async_lock:
+        if reentrant_lock is not None:
+            # Use reentrant asyncio lock if we're in an async context
+            async with reentrant_lock:
                 yield
         else:
             # Fall back to thread lock for mixed contexts
@@ -75,26 +128,27 @@ class HybridLock:
         self._thread_lock.__enter__()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
         """Support for sync 'with' statement."""
         return self._thread_lock.__exit__(exc_type, exc_val, exc_tb)
 
     async def __aenter__(self) -> "HybridLock":
         """Support for async 'async with' statement."""
-        async_lock = self._get_async_lock()
-        if async_lock is not None:
-            await async_lock.__aenter__()
+        reentrant_lock = self._get_reentrant_async_lock()
+        if reentrant_lock is not None:
+            await reentrant_lock.acquire()
         else:
             # For mixed contexts, acquire thread lock
             self._thread_lock.__enter__()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
         """Support for async 'async with' statement."""
-        async_lock = self._get_async_lock()
-        if async_lock is not None:
-            return await async_lock.__aexit__(exc_type, exc_val, exc_tb)
-        return self._thread_lock.__exit__(exc_type, exc_val, exc_tb)
+        reentrant_lock = self._get_reentrant_async_lock()
+        if reentrant_lock is not None:
+            reentrant_lock.release()
+        else:
+            self._thread_lock.__exit__(exc_type, exc_val, exc_tb)
 
 
 class ThreadSafeDict(Generic[T]):
@@ -257,9 +311,10 @@ def detect_async_context() -> bool:
     """Detect if we're currently in an asyncio context."""
     try:
         asyncio.current_task()
-        return True
     except RuntimeError:
         return False
+    else:
+        return True
 
 
 def is_main_thread() -> bool:
@@ -300,13 +355,13 @@ def thread_safe(
 
     if asyncio.iscoroutinefunction(func):
 
-        async def async_wrapper(*args, **kwargs):
+        async def async_wrapper(*args, **kwargs) -> Any:
             async with lock.async_lock():
                 return await func(*args, **kwargs)
 
-        return async_wrapper
+        return async_wrapper  # type: ignore  # noqa: PGH003
 
-    def sync_wrapper(*args, **kwargs):
+    def sync_wrapper(*args, **kwargs) -> Any:
         with lock.sync_lock():
             return func(*args, **kwargs)
 

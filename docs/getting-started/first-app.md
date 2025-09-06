@@ -275,20 +275,22 @@ from .repository import UserRepository
 from .service import UserService
 from .models import CreateUserRequest, UpdateUserRequest
 
-async def setup_container() -> InjectQ:
-    """Set up the dependency injection container."""
-    container = InjectQ.get_instance()
+async def setup_container() -> None:
+    """Set up the dependency injection container using the public convenience container."""
+    from injectq import injectq
+
+    # use the global convenience container directly
+    # use `injectq` directly instead of assigning it to a new variable
 
     # Bind configurations
-    container.bind(DatabaseConfig, DatabaseConfig)
-    container.bind(AppConfig, AppConfig)
+    injectq[DatabaseConfig] = DatabaseConfig
+    injectq[AppConfig] = AppConfig
 
     # Bind services (automatically resolved)
-    container.bind(Database, Database)
-    container.bind(UserRepository, UserRepository)
-    container.bind(UserService, UserService)
+    injectq[Database] = Database
+    injectq[UserRepository] = UserRepository
+    injectq[UserService] = UserService
 
-    return container
 
 @inject
 async def demo_user_operations(service: UserService, config: AppConfig):
@@ -347,7 +349,7 @@ async def demo_user_operations(service: UserService, config: AppConfig):
 async def main():
     """Main application entry point."""
     # Set up container
-    container = await setup_container()
+    await setup_container()
 
     # Run demo
     await demo_user_operations()

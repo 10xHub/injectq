@@ -56,9 +56,7 @@ class ServiceRegistry:
                 implementation = service_type
             else:
                 msg = f"Must provide implementation for non-class service key: {service_type}"
-                raise BindingError(
-                    msg
-                )
+                raise BindingError(msg)
 
         # Normalize scope
         scope_name = scope.value if isinstance(scope, ScopeType) else str(scope)
@@ -137,7 +135,7 @@ class ServiceRegistry:
                 # Validate that implementation is reasonable
                 if binding.implementation is None:
                     msg = f"Binding for {service_type} has None implementation"
-                    raise BindingError(
+                    raise BindingError(  # noqa: TRY301
                         msg
                     )
 
@@ -147,18 +145,14 @@ class ServiceRegistry:
                         # Check if class has __init__ method
                         if not hasattr(binding.implementation, "__init__"):
                             msg = f"Implementation {binding.implementation} is not instantiable"
-                            raise BindingError(
-                                msg
-                            )
+                            raise BindingError(msg)
                     except (TypeError, AttributeError) as e:
                         msg = f"Invalid implementation for {service_type}: {e}"
-                        raise BindingError(
-                            msg
-                        )
+                        raise BindingError(msg) from e
 
-            except Exception as e:
+            except Exception as e:  # noqa: PERF203
                 msg = f"Validation failed for {service_type}: {e}"
-                raise BindingError(msg)
+                raise BindingError(msg) from e
 
     def __contains__(self, service_type: ServiceKey) -> bool:
         """Check if service type is registered."""

@@ -1,6 +1,6 @@
 """Decorators for InjectQ dependency injection library."""
 
-from .inject import Inject, inject, inject_into
+from .inject import Inject, inject
 from .resource import (
     async_managed_resource,
     get_resource_manager,
@@ -16,7 +16,6 @@ __all__ = [
     "get_resource_manager",
     # Injection decorators
     "inject",
-    "inject_into",
     "managed_resource",
     "register_as",
     # Resource management

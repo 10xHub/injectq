@@ -1,107 +1,61 @@
 # Installation
 
-This guide will help you install InjectQ and get it running on your system.
+This guide helps you install InjectQ and verify a minimal setup.
 
-## 📦 Basic Installation
-
-Install InjectQ using pip:
+## Basic installation
 
 ```bash
 pip install injectq
 ```
 
-## 🔧 Optional Dependencies
+## Optional integrations (install only what you need)
 
-InjectQ supports optional integrations with popular frameworks. Install them as needed:
+- FastAPI integration: `pip install injectq[fastapi]`
+- Taskiq integration: `pip install injectq[taskiq]`
+- Developer extras (mypy, pytest, black, ...): `pip install injectq[dev]`
 
-### FastAPI Integration
-
-```bash
-pip install injectq[fastapi]
-```
-
-### Taskiq Integration
+Example combined install:
 
 ```bash
-pip install injectq[taskiq]
+pip install "injectq[fastapi,taskiq]"
 ```
 
-### FastMCP Integration
+## Supported Python versions
 
-```bash
-pip install injectq[fastmcp]
-```
+InjectQ supports Python 3.10 and above. Using 3.11+ is recommended for best runtime performance.
 
-### All Integrations
+## Quick verification
 
-```bash
-pip install injectq[fastapi,taskiq,fastmcp]
-```
-
-### Development Dependencies
-
-For development and testing:
-
-```bash
-pip install injectq[dev]
-```
-
-This includes tools like mypy, pytest, black, and other development utilities.
-
-## 🐍 Python Version Support
-
-InjectQ supports Python 3.10 and above:
-
-- ✅ Python 3.10
-- ✅ Python 3.11
-- ✅ Python 3.12
-- ✅ Python 3.13
-
-## 🔍 Verifying Installation
-
-After installation, verify that InjectQ is working correctly:
+After installation, verify the library behaves as expected. Use the exported `injectq` global (recommended):
 
 ```python
-import injectq
+from injectq import injectq
 
-print(f"InjectQ version: {injectq.__version__}")
+print(f"InjectQ available: {injectq is not None}")
 
-# Create a simple container
-container = injectq.InjectQ.get_instance()
-container[str] = "Hello, InjectQ!"
+class A:
+    pass
 
-print(container[str])  # Should print: Hello, InjectQ!
+# Bind a simple instance
+injectq[A] = A()
+
+assert injectq[A] is not None
+assert injectq.get(A) is injectq[A]
+assert injectq.try_get(A, None) is injectq[A]
+
+print("InjectQ appears to be working")
 ```
 
-## 🛠️ Development Installation
+## Development installation
 
-If you want to contribute to InjectQ or run the latest development version:
+To work on the repository locally:
 
 ```bash
-# Clone the repository
 git clone https://github.com/Iamsdt/injectq.git
 cd injectq
-
-# Install in development mode
-pip install -e .
-
-# Or with development dependencies
 pip install -e .[dev]
 ```
 
-## 📋 System Requirements
+## Next steps
 
-### Minimum Requirements
-
-- Python 3.10+
-- pip (latest version recommended)
-
-### Recommended Setup
-
-- Python 3.11+ for best performance
-- Virtual environment (venv, conda, or pipenv)
-- IDE with type checking support (PyCharm, VS Code with Pylance)
-
-## 🚀 Next Steps
-
-Now that you have InjectQ installed, let's create your [first application](quick-start.md)!
+Now explore the [Quick Start](../examples) and the `docs/` pages for patterns like the dict-like interface, `@inject` usage, and integrations.

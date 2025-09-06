@@ -10,7 +10,9 @@ from .types import normalize_type
 
 
 def get_function_dependencies(func: Callable[..., Any]) -> dict[str, type[Any]]:
-    """Extract dependency types from function signature type hints."""
+    """Extract dependency types from function signature
+    type hints and Inject markers.
+    """
     try:
         # Get type hints for the function
         hints = get_type_hints(func)
@@ -31,6 +33,21 @@ def get_function_dependencies(func: Callable[..., Any]) -> dict[str, type[Any]]:
                 inspect.Parameter.VAR_KEYWORD,
             ):
                 continue
+
+            # Check if parameter has an Inject marker as default value
+            if param.default is not inspect.Parameter.empty:
+                # Import here to avoid circular import
+                try:
+                    from injectq.decorators.inject import (  # noqa: PLC0415
+                        Inject,
+                        InjectType,
+                    )
+
+                    if isinstance(param.default, Inject | InjectType):
+                        dependencies[param_name] = param.default.service_type
+                        continue
+                except ImportError:
+                    pass
 
             # Check if parameter has a type hint
             if param_name in hints:
@@ -103,11 +120,11 @@ class ThreadLocalStorage:
     def __init__(self) -> None:
         self._storage = threading.local()
 
-    def get(self, key: str, default: object = None) -> Any:  # noqa: ANN401
+    def get(self, key: str, default: object = None) -> Any:
         """Get a value from thread-local storage."""
         return getattr(self._storage, key, default)
 
-    def set(self, key: str, value: Any) -> None:  # noqa: ANN401
+    def set(self, key: str, value: Any) -> None:
         """Set a value in thread-local storage."""
         setattr(self._storage, key, value)
 
@@ -122,7 +139,7 @@ class ThreadLocalStorage:
             self._storage.__dict__.clear()
 
 
-def safe_issubclass(obj: Any, class_or_tuple: type[Any]) -> bool:  # noqa: ANN401
+def safe_issubclass(obj: Any, class_or_tuple: type[Any]) -> bool:
     """Safely check if obj is a subclass of class_or_tuple."""
     try:
         return inspect.isclass(obj) and issubclass(obj, class_or_tuple)

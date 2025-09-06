@@ -11,7 +11,6 @@ class VisualizationError(InjectQError):
     """Errors related to dependency visualization."""
 
 
-
 class DependencyVisualizer:
     """Visualizes dependency graphs and provides analysis tools.
 

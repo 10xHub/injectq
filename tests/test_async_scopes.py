@@ -1,14 +1,15 @@
 """Tests for async context variable scopes."""
 
 import asyncio
+
 from injectq import InjectQ
 from injectq.core.async_scopes import (
     AsyncRequestScope,
     HybridRequestScope,
-    set_request_id,
+    async_request_context,
     get_request_id,
     request_context,
-    async_request_context,
+    set_request_id,
 )
 
 

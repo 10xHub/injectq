@@ -7,6 +7,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from typing import Any
 
 from injectq.utils.exceptions import InjectQError
 from injectq.utils.types import ServiceKey
@@ -14,7 +15,6 @@ from injectq.utils.types import ServiceKey
 
 class ProfilingError(InjectQError):
     """Errors related to profiling operations."""
-
 
 
 @dataclass
@@ -96,7 +96,7 @@ class DependencyProfiler:
         )  # thread_id -> stack
         self._enable_stack_tracing = enable_stack_tracing
         self._is_active = False
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def __enter__(self) -> "DependencyProfiler":
         """Enter profiling context."""
@@ -176,7 +176,11 @@ class DependencyProfiler:
             self._aggregated[service_type].update(metrics)
 
     @contextmanager
-    def profile_resolution(self, service_type: ServiceKey, cache_hit: bool = False):
+    def profile_resolution(
+        self,
+        service_type: ServiceKey,
+        cache_hit: bool = False,
+    ) -> Any:
         """Context manager for profiling a single resolution."""
         self.begin_resolution(service_type)
         try:
@@ -187,7 +191,7 @@ class DependencyProfiler:
     def profile_method(self, func: Callable) -> Callable:
         """Decorator for profiling method calls."""
 
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> Any:
             method_name = f"{func.__module__}.{func.__qualname__}"
             with self.profile_resolution(method_name):
                 return func(*args, **kwargs)
@@ -317,9 +321,10 @@ class DependencyProfiler:
 
     def export_csv(self, filename: str) -> None:
         """Export metrics to CSV file."""
-        import csv
+        import csv  # noqa: PLC0415
+        from pathlib import Path  # noqa: PLC0415
 
-        with open(filename, "w", newline="") as csvfile:
+        with Path(filename).open("w", newline="") as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(
                 [

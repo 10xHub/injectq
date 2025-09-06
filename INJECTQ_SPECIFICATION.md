@@ -18,10 +18,10 @@ InjectQ is a modern Python dependency injection library that combines the simpli
 ### 1. Core Container API
 
 ```python
-from injectq import InjectQ, singleton, inject, Injectable, Inject
+from injectq import InjectQ, singleton, inject, Injectable, Inject, injectq
 
 # Default container (singleton pattern)
-container = InjectQ.get_instance()
+injectq.get("hello")
 
 # Custom container (when needed)
 custom_container = InjectQ()
@@ -376,10 +376,8 @@ def handler(service: MyService):
     pass
 
 # InjectQ equivalent (seamless migration)
-from injectq import InjectQ, inject
-
-container = InjectQ.get_instance()
-container["service"] = MyService()
+from injectq import InjectQ, inject, injectq
+injectq["service"] = MyService()
 
 @inject
 def handler(service: MyService):

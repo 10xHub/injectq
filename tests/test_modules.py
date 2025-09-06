@@ -1,14 +1,15 @@
 """Test module system functionality."""
 
 import pytest
+
 from injectq import (
+    ConfigurationModule,
     InjectQ,
     Module,
-    SimpleModule,
     ProviderModule,
-    ConfigurationModule,
-    provider,
+    SimpleModule,
     inject,
+    provider,
 )
 
 
@@ -155,7 +156,7 @@ def test_module_with_injection():
 
 def test_module_override_in_testing():
     """Test overriding module bindings for testing."""
-    from injectq.testing import test_container, TestModule
+    from injectq.testing import TestModule, test_container
 
     # Production module
     class ProductionModule(Module):

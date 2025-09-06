@@ -1,39 +1,37 @@
 # InjectQ
 
-A modern Python dependency injection library that combines simplicity, power, and the advanced features of modern DI frameworks.
+InjectQ is a modern, lightweight Python dependency injection library focused on clarity, type-safety, and seamless framework integration.
 
 ## Documentation
-Online documentation is hosted at [https://iamsdt.github.io/injectq/](https://iamsdt.github.io/injectq/).
+Full documentation is hosted at https://iamsdt.github.io/injectq/ and the repository `docs/` contains the source.
 
+## Key features
 
-## Features
+- Simplicity-first dict-like API for quick starts
+- Flexible decorator- and type-based injection (`@inject`, `Inject[T]`)
+- Type-friendly: designed to work with static type checkers
+- Built-in integrations for frameworks (FastAPI, Taskiq) as optional extras
+- Factory and async factory support
+- Scope management and testing utilities
 
-- **Simplicity First**: Start with simple dict-like interface, grow into advanced features
-- **Multiple API Styles**: Choose between `@inject` decorators and `Inject()` functions  
-- **Type Safe**: Full mypy compliance with early error detection
-- **Performance Optimized**: Compile-time dependency resolution with caching
-- **Modern Framework Native**: Built-in support for FastAPI, Taskiq, and FastMCP
-- **Resource Management**: Automatic cleanup and finalization
+## Quick Start (recommended pattern)
 
-## Quick Start
+Prefer the exported global `injectq` container in examples and application code. It uses the active context container when present, otherwise falls back to a global singleton.
 
 ```python
-from injectq import InjectQ, inject, singleton
+from injectq import injectq, inject, singleton
 
-# Create container
-container = InjectQ.get_instance()
+# Basic value binding
+injectq[str] = "Hello, World!"
 
-
-# Class binding
 @singleton
 class UserService:
     def __init__(self, message: str):
         self.message = message
-    
+
     def greet(self) -> str:
         return f"Service says: {self.message}"
 
-# Automatic dependency injection
 @inject
 def main(service: UserService) -> None:
     print(service.greet())
@@ -42,25 +40,43 @@ if __name__ == "__main__":
     main()  # Prints: Service says: Hello, World!
 ```
 
+Notes:
+- Use `injectq[...]` for simple bindings and values.
+- Use `@inject` and `Inject[T]` for function/class injection.
+
 ## Installation
+
+Install from PyPI:
 
 ```bash
 pip install injectq
 ```
 
-With optional framework integrations:
+Optional framework integrations (install only what you need):
 
 ```bash
-pip install injectq[fastapi]   # FastAPI integration
-pip install injectq[taskiq]    # Taskiq integration  
+pip install injectq[fastapi]   # FastAPI integration (optional)
+pip install injectq[taskiq]    # Taskiq integration (optional)
 ```
 
-## Documentation
+## Where to look next
 
-See the [complete specification](INJECTQ_SPECIFICATION.md) for detailed API documentation and examples.
-
-Online documentation is hosted at [https://iamsdt.github.io/injectq/](https://iamsdt.github.io/injectq/).
+- `docs/getting-started/installation.md` — installation and verification
+- `docs/injection-patterns/dict-interface.md` — dict-like API
+- `docs/injection-patterns/inject-decorator.md` — `@inject` usage
+- `docs/integrations/` — integration guides for FastAPI and Taskiq
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT — see the `LICENSE` file.
+
+## Run tests with coverage
+
+Activate the project's virtualenv and run pytest (coverage threshold is configured to 73%):
+
+```bash
+source .venv/bin/activate
+python -m pytest
+```
+
+Coverage reports are written to `htmlcov/` and `coverage.xml`.

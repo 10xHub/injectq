@@ -4,13 +4,14 @@ from collections.abc import Callable
 from typing import TypeVar
 
 from injectq.core import InjectQ, ScopeType
+from injectq.core.context import ContainerContext
 from injectq.utils import BindingError
 
 
 T = TypeVar("T", bound=type)
 
 
-def singleton(cls: T) -> T:
+def singleton(cls: T, container: InjectQ | None = None) -> T:
     """Decorator to automatically register a class as a singleton service.
 
     The decorated class will be automatically bound to itself in the
@@ -18,6 +19,7 @@ def singleton(cls: T) -> T:
 
     Args:
         cls: Class to register as singleton
+        container: Optional container to use (defaults to global or context container)
 
     Returns:
         The same class (unmodified)
@@ -33,15 +35,19 @@ def singleton(cls: T) -> T:
         raise BindingError(msg)
 
     # Get the global container
-    container = InjectQ.get_instance()
+    target_container = container
+    if not target_container:
+        target_container = ContainerContext.get_current() if ContainerContext else None
+    if not target_container:
+        target_container = InjectQ.get_instance()
 
     # Register the class as a singleton binding to itself
-    container.bind(cls, cls, scope=ScopeType.SINGLETON)
+    target_container.bind(cls, cls, scope=ScopeType.SINGLETON)
 
     return cls
 
 
-def transient(cls: T) -> T:
+def transient(cls: T, container: InjectQ | None = None) -> T:
     """Decorator to automatically register a class as a transient service.
 
     The decorated class will be automatically bound to itself in the
@@ -49,6 +55,7 @@ def transient(cls: T) -> T:
 
     Args:
         cls: Class to register as transient
+        container: Optional container to use (defaults to global or context container)
 
     Returns:
         The same class (unmodified)
@@ -63,20 +70,24 @@ def transient(cls: T) -> T:
         msg = "@transient can only be applied to classes"
         raise BindingError(msg)
 
-    # Get the global container
-    container = InjectQ.get_instance()
+    target_container = container
+    if not target_container:
+        target_container = ContainerContext.get_current() if ContainerContext else None
+    if not target_container:
+        target_container = InjectQ.get_instance()
 
     # Register the class as a transient binding to itself
-    container.bind(cls, cls, scope=ScopeType.TRANSIENT)
+    target_container.bind(cls, cls, scope=ScopeType.TRANSIENT)
 
     return cls
 
 
-def scoped(scope_name: str) -> Callable:
+def scoped(scope_name: str, container: InjectQ | None = None) -> Callable:
     """Decorator factory to register a class with a specific scope.
 
     Args:
         scope_name: Name of the scope to use
+        container: Optional container to use (defaults to global or context container)
 
     Returns:
         Decorator function
@@ -91,27 +102,36 @@ def scoped(scope_name: str) -> Callable:
     def decorator(cls: T) -> T:
         if not isinstance(cls, type):
             msg = f"@scoped('{scope_name}') can only be applied to classes"
-            raise BindingError(
-                msg
-            )
+            raise BindingError(msg)
 
         # Get the global container
-        container = InjectQ.get_instance()
+        target_container = container
+        if not target_container:
+            target_container = (
+                ContainerContext.get_current() if ContainerContext else None
+            )
+        if not target_container:
+            target_container = InjectQ.get_instance()
 
         # Register the class with the specified scope
-        container.bind(cls, cls, scope=scope_name)
+        target_container.bind(cls, cls, scope=scope_name)
 
         return cls
 
     return decorator
 
 
-def register_as(service_type: type, scope: str = "singleton") -> Callable:
+def register_as(
+    service_type: type,
+    scope: str = "singleton",
+    container: InjectQ | None = None,
+) -> Callable:
     """Decorator factory to register a class as an implementation of a service type.
 
     Args:
         service_type: The service type/interface to register as
         scope: The scope to use for the service
+        container: Optional container to use (defaults to global or context container)
 
     Returns:
         Decorator function
@@ -126,15 +146,19 @@ def register_as(service_type: type, scope: str = "singleton") -> Callable:
     def decorator(cls: T) -> T:
         if not isinstance(cls, type):
             msg = f"@register_as({service_type}) can only be applied to classes"
-            raise BindingError(
-                msg
-            )
+            raise BindingError(msg)
 
         # Get the global container
-        container = InjectQ.get_instance()
+        target_container = container
+        if not target_container:
+            target_container = (
+                ContainerContext.get_current() if ContainerContext else None
+            )
+        if not target_container:
+            target_container = InjectQ.get_instance()
 
         # Register the class as implementation of service_type
-        container.bind(service_type, cls, scope=scope)
+        target_container.bind(service_type, cls, scope=scope)
 
         return cls
 

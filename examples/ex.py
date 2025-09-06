@@ -1,6 +1,5 @@
-from typing import cast
 
-from injectq import Inject, inject, injectq, singleton
+from injectq import inject, injectq, singleton
 
 
 # class A:
