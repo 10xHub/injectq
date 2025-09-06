@@ -9,9 +9,27 @@ why this, because InjectQ is a singleton by default, so user don't need to creat
 It will return the instance from the current context if exists otherwise it will return the global instance.
 All the docs using InjectQ.get_instance() should be updated to use above code, Please update all the docs.
 
+Now few tricks
+1. what if that service not exists, then how can you handle that, so we will raise error if service not found or you can accept as null
+```python
+from typing import Optional
+from injectq import injectq
+injectq[Optional[Service]] = None  # this will not raise error
+
+def func(service: Optional[Service] = injectq[Optional[Service]]):
+ pass
+
+or
+
+@inject
+def func(service:Service|None = None)
+
+```
+Note: this will handle if service is null itself, so user don't need to check it again, Update that in docs
+
+
 3. We updated inject and Inject decorator, and allow to pass container or it will be used from context or golabl instance
-4. We removed inject_into
-5. 
+4. We removed inject_into decorator, so remove it from docs
 
 
 # Asny support

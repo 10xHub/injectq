@@ -239,14 +239,14 @@ class DependencyResolver:
                     else:
                         # Fall back to type-based resolution
                         resolved_args[param_name] = self.resolve(param_type)
-                except DependencyNotFoundError as e:  # noqa: PERF203
+                except DependencyNotFoundError:  # noqa: PERF203
                     # Check if parameter has a default value
                     sig = inspect.signature(cls.__init__)
                     param = sig.parameters.get(param_name)
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    raise Exception from e  # noqa: TRY002
+                    raise
 
             # Create instance
             return cls(**resolved_args)
@@ -275,14 +275,14 @@ class DependencyResolver:
                     else:
                         # Fall back to type-based resolution
                         resolved_args[param_name] = self.resolve(param_type)
-                except DependencyNotFoundError as e:  # noqa: PERF203
+                except DependencyNotFoundError:  # noqa: PERF203
                     # Check if parameter has a default value
                     sig = inspect.signature(factory)
                     param = sig.parameters.get(param_name)
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    raise Exception from e  # noqa: TRY002
+                    raise
 
             # Invoke factory
             return factory(**resolved_args)
@@ -311,14 +311,14 @@ class DependencyResolver:
                     else:
                         # Fall back to type-based resolution
                         resolved_args[param_name] = await self.resolve_async(param_type)
-                except DependencyNotFoundError as e:  # noqa: PERF203
+                except DependencyNotFoundError:  # noqa: PERF203
                     # Check if parameter has a default value
                     sig = inspect.signature(cls.__init__)
                     param = sig.parameters.get(param_name)
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    raise Exception from e  # noqa: TRY002
+                    raise
 
             # Create instance
             return cls(**resolved_args)
@@ -347,14 +347,14 @@ class DependencyResolver:
                     else:
                         # Fall back to type-based resolution
                         resolved_args[param_name] = await self.resolve_async(param_type)
-                except DependencyNotFoundError as e:  # noqa: PERF203
+                except DependencyNotFoundError:  # noqa: PERF203
                     # Check if parameter has a default value
                     sig = inspect.signature(factory)
                     param = sig.parameters.get(param_name)
                     if param and param.default is not inspect.Parameter.empty:
                         # Skip parameters with default values
                         continue
-                    raise Exception from e  # noqa: TRY002
+                    raise
 
             # Invoke factory
             return await factory(**resolved_args)

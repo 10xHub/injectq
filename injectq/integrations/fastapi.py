@@ -49,7 +49,7 @@ class InjectAPI(_InjectAPIBase[T]):
             )
             raise RuntimeError(msg) from exc
 
-        def _get_service(request: Any) -> Any:
+        def _get_service(request: Any) -> Any:  # type: ignore  # noqa: PGH003
             container = getattr(request.state, "injectq_container", None)
             if container is None:
                 msg = "No InjectQ container found in request state."

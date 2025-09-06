@@ -39,6 +39,22 @@ class AsyncScope(Scope):
 
         return instances[key]
 
+    async def aget(self, key: Any, factory: Callable[[], Any]) -> Any:
+        """Async get or create an instance in async context."""
+        instances = self._instances_var.get()
+
+        if key not in instances:
+            # Create new dict to avoid mutating the default
+            new_instances = instances.copy()
+            result = factory()
+            if asyncio.iscoroutine(result):
+                result = await result
+            new_instances[key] = result
+            self._instances_var.set(new_instances)
+            return new_instances[key]
+
+        return instances[key]
+
     def clear(self) -> None:
         """Clear instances in current async context."""
         self._instances_var.set({})
@@ -94,6 +110,13 @@ class HybridScope(Scope):
         """Get or create an instance using appropriate storage."""
         if self._is_async_context():
             return self._async_scope.get(key, factory)
+        return self._sync_scope.get(key, factory)
+
+    async def aget(self, key: Any, factory: Callable[[], Any]) -> Any:
+        """Async get or create an instance using appropriate storage."""
+        if self._is_async_context():
+            return await self._async_scope.aget(key, factory)
+        # For sync context in async method, still use sync scope
         return self._sync_scope.get(key, factory)
 
     def clear(self) -> None:
@@ -233,6 +256,13 @@ class AsyncScopeManager(BaseScopeManager):
         """Get an instance from the specified scope."""
         scope = self.get_scope(scope_name)
         return scope.get(key, factory)
+
+    async def aget_instance(
+        self, key: Any, factory: Callable[[], Any], scope_name: str = "singleton"
+    ) -> Any:
+        """Async get an instance from the specified scope."""
+        scope = self.get_scope(scope_name)
+        return await scope.aget(key, factory)
 
     def clear_scope(self, scope_name: str) -> None:
         """Clear all instances in a scope."""

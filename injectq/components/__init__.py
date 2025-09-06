@@ -11,6 +11,7 @@ Key Features:
 - Component composition and hierarchies
 """
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
@@ -109,6 +110,15 @@ class ComponentScope(Scope):
         """Get or create a component-scoped instance."""
         if key not in self._instances:
             self._instances[key] = factory()
+        return self._instances[key]
+
+    async def aget(self, key: str, factory: Callable[[], Any]) -> Any:
+        """Async get or create a component-scoped instance."""
+        if key not in self._instances:
+            result = factory()
+            if asyncio.iscoroutine(result):
+                result = await result
+            self._instances[key] = result
         return self._instances[key]
 
     def clear(self) -> None:

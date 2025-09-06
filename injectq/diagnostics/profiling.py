@@ -96,7 +96,7 @@ class DependencyProfiler:
         )  # thread_id -> stack
         self._enable_stack_tracing = enable_stack_tracing
         self._is_active = False
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def __enter__(self) -> "DependencyProfiler":
         """Enter profiling context."""

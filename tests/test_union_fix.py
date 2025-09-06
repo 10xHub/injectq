@@ -13,7 +13,7 @@ class Service:
 
 
 @inject
-def test_optional_injection(service: Service | None = None) -> str:
+def optional_injection(service: Service | None = None) -> str:
     """Test function with optional Service parameter."""
     if service is None:
         return "No service available"
@@ -21,7 +21,7 @@ def test_optional_injection(service: Service | None = None) -> str:
 
 
 @inject
-def test_mixed_optional(
+def mixed_optional(
     message: str, service: Service | None = None, fallback: str = "default"
 ) -> str:
     """Test function with mixed optional and required parameters."""
@@ -35,7 +35,7 @@ def main():
     container = InjectQ()
 
     print("=== Test 1: No service bound ===")
-    result1 = test_optional_injection()
+    result1 = optional_injection()
     print(f"Result: {result1}")
 
     print("\n=== Test 2: Service bound ===")
@@ -47,14 +47,14 @@ def main():
     from injectq.core.context import ContainerContext
 
     with ContainerContext.use(container):
-        result2 = test_optional_injection()
+        result2 = optional_injection()
         print(f"Result: {result2}")
 
-        result3 = test_mixed_optional("Hello")
+        result3 = mixed_optional("Hello")
         print(f"Mixed result: {result3}")
 
     print("\n=== Test 3: Back to no context ===")
-    result4 = test_optional_injection()
+    result4 = optional_injection()
     print(f"Result: {result4}")
 
 
