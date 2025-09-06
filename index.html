@@ -421,7 +421,7 @@
   
     
   
-  Advanced Features
+  Advanced
 
         </a>
       </li>
@@ -437,7 +437,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="migration/from-kink.md" class="md-tabs__link">
+        <a href="migration/from-python-injector.md" class="md-tabs__link">
           
   
   
@@ -665,64 +665,64 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-makes-injectq-special" class="md-nav__link">
+  <a href="#quick-example-recommended" class="md-nav__link">
     <span class="md-ellipsis">
-      🚀 What Makes InjectQ Special
+      Quick example (recommended)
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#quick-example" class="md-nav__link">
+  <a href="#highlights" class="md-nav__link">
     <span class="md-ellipsis">
-      📖 Quick Example
+      Highlights
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
+  <a href="#api-patterns" class="md-nav__link">
     <span class="md-ellipsis">
-      🎯 Key Features
+      API patterns
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="🎯 Key Features">
+    <nav class="md-nav" aria-label="API patterns">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#multiple-api-styles" class="md-nav__link">
+  <a href="#dict-like-interface" class="md-nav__link">
     <span class="md-ellipsis">
-      Multiple API Styles
+      Dict-like interface
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#powerful-scoping" class="md-nav__link">
+  <a href="#functionclass-injection" class="md-nav__link">
     <span class="md-ellipsis">
-      Powerful Scoping
+      Function/class injection
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#module-system" class="md-nav__link">
+  <a href="#fastapi-integration-example" class="md-nav__link">
     <span class="md-ellipsis">
-      Module System
+      FastAPI integration (example)
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#framework-integrations" class="md-nav__link">
+  <a href="#taskiq-integration-example" class="md-nav__link">
     <span class="md-ellipsis">
-      Framework Integrations
+      Taskiq integration (example)
     </span>
   </a>
   
@@ -736,34 +736,16 @@
         <li class="md-nav__item">
   <a href="#documentation-sections" class="md-nav__link">
     <span class="md-ellipsis">
-      📚 Documentation Sections
+      Documentation sections
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
+  <a href="#contributing-license" class="md-nav__link">
     <span class="md-ellipsis">
-      🏁 Getting Started
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#contributing" class="md-nav__link">
-    <span class="md-ellipsis">
-      🤝 Contributing
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#license" class="md-nav__link">
-    <span class="md-ellipsis">
-      📄 License
+      Contributing &amp; License
     </span>
   </a>
   
@@ -1239,7 +1221,7 @@
   
   
   <span class="md-ellipsis">
-    Advanced Features
+    Advanced
     
   </span>
   
@@ -1290,7 +1272,7 @@
   
   
   
-    <a href="migration/from-kink.md" class="md-nav__link">
+    <a href="migration/from-python-injector.md" class="md-nav__link">
       
   
   
@@ -1586,139 +1568,80 @@
 <h1 id="injectq-documentation">InjectQ Documentation<a class="headerlink" href="#injectq-documentation" title="Anchor link to this section for reference">&para;</a></h1>
 <p><a href="https://pypi.org/project/injectq/"><img alt="PyPI version" src="https://badge.fury.io/py/injectq.svg" /></a>
 <a href="https://pypi.org/project/injectq/"><img alt="Python versions" src="https://img.shields.io/pypi/pyversions/injectq.svg" /></a>
-<a href="https://github.com/Iamsdt/injectq/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/Iamsdt/injectq.svg" /></a></p>
-<p><strong>InjectQ</strong> is a modern Python dependency injection library that combines the simplicity of kink, the power of python-injector, and the advanced features of modern DI frameworks like dishka and wireup.</p>
-<h2 id="what-makes-injectq-special">🚀 What Makes InjectQ Special<a class="headerlink" href="#what-makes-injectq-special" title="Anchor link to this section for reference">&para;</a></h2>
-<ul>
-<li><strong>Simplicity First</strong>: Start with simple dict-like interface, grow into advanced features</li>
-<li><strong>Multiple API Styles</strong>: Choose between <code>@inject</code> decorators and <code>Inject()</code> functions</li>
-<li><strong>Type Safe</strong>: Full mypy compliance with early error detection</li>
-<li><strong>Performance Optimized</strong>: Compile-time dependency resolution with caching</li>
-<li><strong>Modern Framework Native</strong>: Built-in support for FastAPI, Taskiq, and FastMCP</li>
-<li><strong>Resource Management</strong>: Automatic cleanup and finalization</li>
-</ul>
-<h2 id="quick-example">📖 Quick Example<a class="headerlink" href="#quick-example" title="Anchor link to this section for reference">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">InjectQ</span><span class="p">,</span> <span class="n">inject</span><span class="p">,</span> <span class="n">singleton</span>
+<a href="https://github.com/Iamsdt/injectq/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/Iamsdt/injectq.svg" /></a>
+<a href="#"><img alt="Coverage" src="https://img.shields.io/badge/coverage-73%25-yellow.svg" /></a></p>
+<p>InjectQ is a lightweight, type-friendly dependency injection library for Python focused on clarity and pragmatic integrations.</p>
+<h2 id="quick-example-recommended">Quick example (recommended)<a class="headerlink" href="#quick-example-recommended" title="Anchor link to this section for reference">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">injectq</span><span class="p">,</span> <span class="n">inject</span><span class="p">,</span> <span class="n">singleton</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Create container</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">container</span> <span class="o">=</span> <span class="n">InjectQ</span><span class="o">.</span><span class="n">get_instance</span><span class="p">()</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># Simple dict-like binding</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">container</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Hello, World!&quot;</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># Class binding</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="nd">@singleton</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">greet</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Service says: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="c1"># Automatic dependency injection</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="nd">@inject</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">service</span><span class="p">:</span> <span class="n">UserService</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">service</span><span class="o">.</span><span class="n">greet</span><span class="p">())</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    <span class="n">main</span><span class="p">()</span>  <span class="c1"># Prints: Service says: Hello, World!</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">injectq</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Hello, World!&quot;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nd">@singleton</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">greet</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Service says: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="nd">@inject</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">service</span><span class="p">:</span> <span class="n">UserService</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">service</span><span class="o">.</span><span class="n">greet</span><span class="p">())</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    <span class="n">main</span><span class="p">()</span>
 </span></code></pre></div>
-<h2 id="key-features">🎯 Key Features<a class="headerlink" href="#key-features" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="multiple-api-styles">Multiple API Styles<a class="headerlink" href="#multiple-api-styles" title="Anchor link to this section for reference">&para;</a></h3>
-<p>InjectQ supports several ways to inject dependencies:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Dict-like Interface</label><label for="__tabbed_1_2">@inject Decorator</label><label for="__tabbed_1_3">Inject() Function</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">container</span> <span class="o">=</span> <span class="n">InjectQ</span><span class="o">.</span><span class="n">get_instance</span><span class="p">()</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">container</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;config_value&quot;</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">container</span><span class="p">[</span><span class="n">Database</span><span class="p">]</span> <span class="o">=</span> <span class="n">Database</span><span class="p">()</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@inject</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_data</span><span class="p">(</span><span class="n">service</span><span class="p">:</span> <span class="n">UserService</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="c1"># Dependencies automatically injected</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="k">pass</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_data</span><span class="p">(</span><span class="n">service</span><span class="o">=</span><span class="n">Inject</span><span class="p">(</span><span class="n">UserService</span><span class="p">)):</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="c1"># Explicit injection for specific parameters</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">pass</span>
-</span></code></pre></div>
-</div>
-</div>
-</div>
-<h3 id="powerful-scoping">Powerful Scoping<a class="headerlink" href="#powerful-scoping" title="Anchor link to this section for reference">&para;</a></h3>
-<p>Control how long your services live:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">singleton</span><span class="p">,</span> <span class="n">transient</span><span class="p">,</span> <span class="n">scoped</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nd">@singleton</span>  <span class="c1"># One instance for entire application</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">DatabaseConnection</span><span class="p">:</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="k">pass</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nd">@transient</span>  <span class="c1"># New instance every time</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="k">class</span><span class="w"> </span><span class="nc">RequestProcessor</span><span class="p">:</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="k">pass</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nd">@scoped</span><span class="p">(</span><span class="s2">&quot;request&quot;</span><span class="p">)</span>  <span class="c1"># One instance per request scope</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserContext</span><span class="p">:</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="k">pass</span>
-</span></code></pre></div>
-<h3 id="module-system">Module System<a class="headerlink" href="#module-system" title="Anchor link to this section for reference">&para;</a></h3>
-<p>Organize your dependencies with modules:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Module</span><span class="p">,</span> <span class="n">provider</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">DatabaseModule</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="nd">@provider</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">provide_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DatabaseConnection</span><span class="p">:</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        <span class="k">return</span> <span class="n">create_connection</span><span class="p">()</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="c1"># Use modules</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="n">container</span> <span class="o">=</span> <span class="n">InjectQ</span><span class="p">([</span><span class="n">DatabaseModule</span><span class="p">()])</span>
-</span></code></pre></div>
-<h3 id="framework-integrations">Framework Integrations<a class="headerlink" href="#framework-integrations" title="Anchor link to this section for reference">&para;</a></h3>
-<p>Seamlessly integrate with popular frameworks:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">FastAPI</label><label for="__tabbed_2_2">Taskiq</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.integrations.fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Injected</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/users&quot;</span><span class="p">)</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_users</span><span class="p">(</span><span class="n">service</span><span class="p">:</span> <span class="n">Injected</span><span class="p">[</span><span class="n">UserService</span><span class="p">]):</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="k">return</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">get_all</span><span class="p">()</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.integrations.taskiq</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_injectq</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nd">@broker</span><span class="o">.</span><span class="n">task</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nd">@inject</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">process_task</span><span class="p">(</span><span class="n">service</span><span class="p">:</span> <span class="n">UserService</span><span class="p">):</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
-</span></code></pre></div>
-</div>
-</div>
-</div>
-<h2 id="documentation-sections">📚 Documentation Sections<a class="headerlink" href="#documentation-sections" title="Anchor link to this section for reference">&para;</a></h2>
+<h2 id="highlights">Highlights<a class="headerlink" href="#highlights" title="Anchor link to this section for reference">&para;</a></h2>
 <ul>
-<li><strong><a href="getting-started/installation/">Getting Started</a></strong>: Installation and basic usage</li>
-<li><strong><a href="core-concepts/what-is-di/">Core Concepts</a></strong>: Understanding dependency injection</li>
-<li><strong><a href="injection-patterns/dict-interface/">Injection Patterns</a></strong>: Different ways to inject dependencies</li>
-<li><strong><a href="scopes/understanding-scopes/">Scopes</a></strong>: Service lifetime management</li>
-<li><strong><a href="modules/module-system.md">Modules &amp; Providers</a></strong>: Organizing dependencies</li>
-<li><strong><a href="integrations/fastapi.md">Framework Integrations</a></strong>: FastAPI, Taskiq, FastMCP</li>
-<li><strong><a href="testing/testing-overview.md">Testing</a></strong>: Testing utilities and mocking</li>
-<li><strong><a href="advanced/resource-management/">Advanced Features</a></strong>: Performance, diagnostics, resources</li>
-<li><strong><a href="migration/from-kink.md">Migration Guides</a></strong>: Migrating from other DI libraries</li>
-<li><strong><a href="api-reference/">API Reference</a></strong>: Complete API documentation</li>
+<li>Dict-like bindings and simple APIs for small projects</li>
+<li>Decorator and type-based injection (<code>@inject</code>, <code>Inject[T]</code>) for typed code</li>
+<li>Optional integrations for FastAPI and Taskiq (install extras as needed)</li>
+<li>Async factory support and request-scoped lifetimes</li>
 </ul>
-<h2 id="getting-started">🏁 Getting Started<a class="headerlink" href="#getting-started" title="Anchor link to this section for reference">&para;</a></h2>
-<p>Ready to get started? Let's begin with <a href="getting-started/installation/">installation</a>!</p>
-<h2 id="contributing">🤝 Contributing<a class="headerlink" href="#contributing" title="Anchor link to this section for reference">&para;</a></h2>
-<p>We welcome contributions! Please see our <a href="contributing/">contributing guide</a> for details.</p>
-<h2 id="license">📄 License<a class="headerlink" href="#license" title="Anchor link to this section for reference">&para;</a></h2>
-<p>InjectQ is licensed under the MIT License. See <a href="https://github.com/Iamsdt/injectq/blob/main/LICENSE">LICENSE</a> for details.</p>
+<h2 id="api-patterns">API patterns<a class="headerlink" href="#api-patterns" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="dict-like-interface">Dict-like interface<a class="headerlink" href="#dict-like-interface" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">injectq</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">injectq</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;config_value&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">injectq</span><span class="p">[</span><span class="n">Database</span><span class="p">]</span> <span class="o">=</span> <span class="n">Database</span><span class="p">()</span>
+</span></code></pre></div>
+<h3 id="functionclass-injection">Function/class injection<a class="headerlink" href="#functionclass-injection" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@inject</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="n">service</span><span class="p">:</span> <span class="n">UserService</span><span class="p">):</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="o">...</span>
+</span></code></pre></div>
+<h3 id="fastapi-integration-example">FastAPI integration (example)<a class="headerlink" href="#fastapi-integration-example" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">injectq</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.integrations.fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_fastapi</span><span class="p">,</span> <span class="n">InjectAPI</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">setup_fastapi</span><span class="p">(</span><span class="n">injectq</span><span class="p">,</span> <span class="n">app</span><span class="p">)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/users/</span><span class="si">{user_id}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_service</span><span class="p">:</span> <span class="n">IUserService</span> <span class="o">=</span> <span class="n">InjectAPI</span><span class="p">[</span><span class="n">IUserService</span><span class="p">]):</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="k">return</span> <span class="n">user_service</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="taskiq-integration-example">Taskiq integration (example)<a class="headerlink" href="#taskiq-integration-example" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">injectq</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.integrations.taskiq</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_taskiq</span><span class="p">,</span> <span class="n">InjectTask</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">setup_taskiq</span><span class="p">(</span><span class="n">injectq</span><span class="p">,</span> <span class="n">broker</span><span class="p">)</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nd">@broker</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">save_data</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">service</span><span class="p">:</span> <span class="n">RankingService</span> <span class="o">=</span> <span class="n">InjectTask</span><span class="p">[</span><span class="n">RankingService</span><span class="p">]):</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="documentation-sections">Documentation sections<a class="headerlink" href="#documentation-sections" title="Anchor link to this section for reference">&para;</a></h2>
+<ul>
+<li>Getting started (installation &amp; quick-start)</li>
+<li>Injection patterns (dict-style, decorator, Inject[T])</li>
+<li>Scopes and lifecycle (singleton, transient, request)</li>
+<li>Modules and providers</li>
+<li>Integrations (FastAPI, Taskiq)</li>
+<li>Testing utilities and examples</li>
+<li>API reference and migration guides</li>
+</ul>
+<h2 id="contributing-license">Contributing &amp; License<a class="headerlink" href="#contributing-license" title="Anchor link to this section for reference">&para;</a></h2>
+<p>See <code>CONTRIBUTING.md</code> and <code>LICENSE</code> for contribution rules and licensing.</p>
+<p>Note: This repository maintains a test coverage floor of 73% enforced by CI and pytest configuration.</p>
 
 
 
