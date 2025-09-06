@@ -131,17 +131,15 @@ async def _inject_and_call_async(
                     # If an explicit Inject(...) marker is provided as default, honor it
                     param = sig.parameters.get(param_name)
                     if param and isinstance(param.default, Inject | InjectType):
-                        dependency = await container.get_async(
-                            param.default.service_type
-                        )
+                        dependency = await container.aget(param.default.service_type)
                         bound_args.arguments[param_name] = dependency
                         continue
                     # First try to resolve by parameter name (string key)
                     if container.has(param_name):
-                        dependency = await container.get_async(param_name)
+                        dependency = await container.aget(param_name)
                     else:
                         # Fall back to type-based resolution
-                        dependency = await container.get_async(param_type)
+                        dependency = await container.aget(param_type)
                     bound_args.arguments[param_name] = dependency
                 except DependencyNotFoundError:
                     # Check if parameter has a default value

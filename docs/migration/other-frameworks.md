@@ -269,7 +269,7 @@ async def main():
 
 # ✅ InjectQ
 async def main():
-    service = await container.get_async(AsyncUserService)
+    service = await container.aget(AsyncUserService)
     result = await service.process()
     
     # Or use async context

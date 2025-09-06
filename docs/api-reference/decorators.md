@@ -278,9 +278,9 @@ def async_inject(func):
             if param_name not in bound_args.arguments:
                 if hasattr(param.annotation, '__origin__'):
                     # Handle generic types
-                    dependency = await container.get_async(param.annotation)
+                    dependency = await container.aget(param.annotation)
                 else:
-                    dependency = await container.get_async(param.annotation)
+                    dependency = await container.aget(param.annotation)
                 bound_args.arguments[param_name] = dependency
         
         return await func(**bound_args.arguments)

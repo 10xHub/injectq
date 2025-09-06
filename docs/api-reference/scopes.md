@@ -64,7 +64,7 @@ with container.create_scope() as scope2:
 ```python
 # Async scope context manager
 async with container.create_async_scope() as scope:
-    service = await scope.get_async(AsyncService)
+    service = await scope.aget(AsyncService)
     await service.do_work()
     # Scope automatically disposed when exiting context
 ```
@@ -75,7 +75,7 @@ async with container.create_async_scope() as scope:
 # Manual async scope creation and disposal
 scope = container.create_async_scope()
 try:
-    service = await scope.get_async(AsyncService)
+    service = await scope.aget(AsyncService)
     await service.do_work()
 finally:
     await scope.dispose()
@@ -96,7 +96,7 @@ class DatabaseConnection:
 # Usage in async scope
 async with container.create_async_scope() as scope:
     # Resource is automatically managed
-    db = await scope.get_async(DatabaseConnection)
+    db = await scope.aget(DatabaseConnection)
     await db.execute("SELECT * FROM users")
     # Connection automatically closed when scope exits
 ```

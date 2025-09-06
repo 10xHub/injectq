@@ -840,7 +840,7 @@ async def test_async_concurrent_factory_calls():
 
     async def worker():
         # Use the container async API to resolve async factories
-        service = await container.get_async(CounterService)
+        service = await container.aget(CounterService)
         results.append(service.value)
 
     # Run multiple requests (serialized to avoid resolver shared-stack false
@@ -1208,7 +1208,7 @@ async def test_async_timeout_handling():
         try:
             # Use async resolver to respect async factory semantics
             service = await asyncio.wait_for(
-                container.get_async(CounterService), timeout=0.1
+                container.aget(CounterService), timeout=0.1
             )
             results.append(service)
         except asyncio.TimeoutError:
@@ -1239,7 +1239,7 @@ async def test_async_task_cancellation():
         nonlocal cancelled_count, completed_count
         try:
             # Use async API so cancellation can propagate into async factory
-            await container.get_async(CounterService)
+            await container.aget(CounterService)
             completed_count += 1
         except asyncio.CancelledError:
             cancelled_count += 1
@@ -1314,7 +1314,7 @@ async def test_async_semaphore_integration():
 
     async def worker():
         # Use async resolver because the bound factory is async
-        return await container.get_async(CounterService)
+        return await container.aget(CounterService)
 
     # Run requests serially to avoid false circular dependency reports
     services = []

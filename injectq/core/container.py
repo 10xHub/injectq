@@ -199,22 +199,33 @@ class InjectQ:
         """Get a service instance."""
         return self._ensure_thread_safe(lambda: self._resolver.resolve(service_type))
 
-    async def get_async(self, service_type: ServiceKey) -> Any:
+    async def aget(self, service_type: ServiceKey) -> Any:
         """Get a service instance asynchronously."""
         return await self._ensure_thread_safe(
             lambda: self._resolver.resolve_async(service_type)
         )
+
+    async def atry_get(self, service_type: ServiceKey, default: Any = None) -> Any:
+        """Try to get a service instance, returning default if not found."""
+
+        async def try_resolve() -> Any:
+            try:
+                return await self.aget(service_type)
+            except DependencyNotFoundError:
+                return default
+
+        return await try_resolve()
 
     def try_get(self, service_type: ServiceKey, default: Any = None) -> Any:
         """Try to get a service instance, returning default if not found."""
 
         def try_resolve() -> Any:
             try:
-                return self._resolver.resolve(service_type)
+                return self.get(service_type)
             except DependencyNotFoundError:
                 return default
 
-        return self._ensure_thread_safe(try_resolve)
+        return try_resolve()
 
     def has(self, service_type: ServiceKey) -> bool:
         """Check if a service type can be resolved."""

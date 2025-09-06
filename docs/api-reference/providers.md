@@ -267,7 +267,7 @@ from typing import Awaitable
 class AsyncProvider:
     """Async provider interface."""
     
-    async def get_async(self) -> Awaitable[Any]:
+    async def aget(self) -> Awaitable[Any]:
         """Asynchronously get service instance."""
         raise NotImplementedError
 
@@ -277,7 +277,7 @@ class AsyncFactoryProvider(AsyncProvider):
     def __init__(self, async_factory_func):
         self.async_factory_func = async_factory_func
     
-    async def get_async(self):
+    async def aget(self):
         """Get instance from async factory."""
         return await self.async_factory_func()
 
@@ -306,7 +306,7 @@ class AsyncCachingProvider(AsyncProvider):
         self.cache_time = None
         self.lock = asyncio.Lock()
     
-    async def get_async(self):
+    async def aget(self):
         """Get cached instance or create new one asynchronously."""
         async with self.lock:
             current_time = time.time()
@@ -318,7 +318,7 @@ class AsyncCachingProvider(AsyncProvider):
                 return self.cached_instance
             
             # Create new instance
-            self.cached_instance = await self.base_provider.get_async()
+            self.cached_instance = await self.base_provider.aget()
             self.cache_time = current_time
             
             return self.cached_instance

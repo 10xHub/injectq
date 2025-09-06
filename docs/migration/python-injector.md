@@ -526,7 +526,7 @@ async def main():
     container.install(AppModule())
     
     # Async resolution
-    service = await container.get_async(AsyncService)
+    service = await container.aget(AsyncService)
     result = await service.process_data()
     
     # Async context managers
