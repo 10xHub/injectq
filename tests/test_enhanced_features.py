@@ -275,16 +275,9 @@ class TestAbstractClassValidation:
         """Test dict-style binding of abstract class fails."""
         container = InjectQ()
 
-        # Dict-style binding uses bind_instance which doesn't validate abstract classes
-        # This is a limitation of the current dict-style interface
-        # The validation only happens in the bind() method
-        container[AbstractBaseService] = AbstractBaseService
-
-        # The error will occur at resolution time, not binding time
-        with pytest.raises(InjectionError, match="Failed to instantiate"):
-            container.get(AbstractBaseService)
-
-
+        # Dict-style binding should now validate abstract classes at binding time
+        with pytest.raises(BindingError, match="Cannot bind abstract class"):
+            container[AbstractBaseService] = AbstractBaseService
 class TestSentinelObjectBehavior:
     """Test cases for sentinel object (_UNSET) behavior."""
 
