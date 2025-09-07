@@ -26,22 +26,23 @@ InjectQ supports Python 3.10 and above. Using 3.11+ is recommended for best runt
 
 ## Quick verification
 
-After installation, verify the library behaves as expected. Use the exported `injectq` global (recommended):
+After installation, verify the library behaves as expected. Use `InjectQ.get_instance()` (recommended):
 
 ```python
-from injectq import injectq
+from injectq import InjectQ
 
-print(f"InjectQ available: {injectq is not None}")
+container = InjectQ.get_instance()
+print(f"InjectQ available: {container is not None}")
 
 class A:
     pass
 
 # Bind a simple instance
-injectq[A] = A()
+container[A] = A()
 
-assert injectq[A] is not None
-assert injectq.get(A) is injectq[A]
-assert injectq.try_get(A, None) is injectq[A]
+assert container[A] is not None
+assert container.get(A) is container[A]
+assert container.try_get(A, None) is container[A]
 
 print("InjectQ appears to be working")
 ```

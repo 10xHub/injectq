@@ -11,9 +11,9 @@ InjectQ is a lightweight, type-friendly dependency injection library for Python 
 ## Quick example (recommended)
 
 ```python
-from injectq import injectq, inject, singleton
+from injectq import InjectQ, inject, singleton
 
-injectq[str] = "Hello, World!"
+container = InjectQ.get_instance()
 
 @singleton
 class UserService:
@@ -43,9 +43,11 @@ if __name__ == "__main__":
 ### Dict-like interface
 
 ```python
-from injectq import injectq
-injectq[str] = "config_value"
-injectq[Database] = Database()
+from injectq import InjectQ
+
+container = InjectQ.get_instance()
+container[str] = "config_value"
+container[Database] = Database()
 ```
 
 ### Function/class injection
@@ -59,10 +61,11 @@ def process(service: UserService):
 ### FastAPI integration (example)
 
 ```python
-from injectq import injectq
+from injectq import InjectQ
 from injectq.integrations.fastapi import setup_fastapi, InjectAPI
 
-setup_fastapi(injectq, app)
+container = InjectQ.get_instance()
+setup_fastapi(container, app)
 
 @app.get("/users/{user_id}")
 async def get_user(user_id: int, user_service: IUserService = InjectAPI[IUserService]):
@@ -72,10 +75,11 @@ async def get_user(user_id: int, user_service: IUserService = InjectAPI[IUserSer
 ### Taskiq integration (example)
 
 ```python
-from injectq import injectq
+from injectq import InjectQ
 from injectq.integrations.taskiq import setup_taskiq, InjectTask
 
-setup_taskiq(injectq, broker)
+container = InjectQ.get_instance()
+setup_taskiq(container, broker)
 
 @broker.task()
 async def save_data(data: dict, service: RankingService = InjectTask[RankingService]):
