@@ -12,26 +12,28 @@
         <meta name="author" content="InjectQ Contributors">
       
       
-        <link rel="canonical" href="https://iamsdt.github.io/injectq/">
+        <link rel="canonical" href="https://iamsdt.github.io/injectq/testing/THREADING_TESTS_SUMMARY/">
       
       
+        <link rel="prev" href="../testing-best-practices/">
       
-        <link rel="next" href="getting-started/installation/">
+      
+        <link rel="next" href="../../advanced/overview/">
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
     
     
       
-        <title>InjectQ Documentation</title>
+        <title>Threading Test Summary - InjectQ Documentation</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.7e37652d.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e37652d.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -50,7 +52,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -76,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#injectq-documentation" class="md-skip">
+        <a href="#comprehensive-threading-test-suite-for-injectq" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +98,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="InjectQ Documentation" class="md-header__button md-logo" aria-label="InjectQ Documentation" data-md-component="logo">
+    <a href="../.." title="InjectQ Documentation" class="md-header__button md-logo" aria-label="InjectQ Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -116,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              Threading Test Summary
             
           </span>
         </div>
@@ -251,7 +253,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="InjectQ Documentation" class="md-nav__button md-logo" aria-label="InjectQ Documentation" data-md-component="logo">
+    <a href="../.." title="InjectQ Documentation" class="md-nav__button md-logo" aria-label="InjectQ Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -278,32 +280,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Home
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -314,113 +294,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#quick-example-recommended" class="md-nav__link">
-    <span class="md-ellipsis">
-      Quick example (recommended)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#highlights" class="md-nav__link">
-    <span class="md-ellipsis">
-      Highlights
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#api-patterns" class="md-nav__link">
-    <span class="md-ellipsis">
-      API patterns
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="API patterns">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#dict-like-interface" class="md-nav__link">
-    <span class="md-ellipsis">
-      Dict-like interface
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#functionclass-injection" class="md-nav__link">
-    <span class="md-ellipsis">
-      Function/class injection
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fastapi-integration-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      FastAPI integration (example)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#taskiq-integration-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Taskiq integration (example)
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation-sections" class="md-nav__link">
-    <span class="md-ellipsis">
-      Documentation sections
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#contributing-license" class="md-nav__link">
-    <span class="md-ellipsis">
-      Contributing &amp; License
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -487,7 +360,7 @@
   
   
     <li class="md-nav__item">
-      <a href="getting-started/installation/" class="md-nav__link">
+      <a href="../../getting-started/installation/" class="md-nav__link">
         
   
   
@@ -510,7 +383,7 @@
   
   
     <li class="md-nav__item">
-      <a href="getting-started/quick-start/" class="md-nav__link">
+      <a href="../../getting-started/quick-start/" class="md-nav__link">
         
   
   
@@ -533,7 +406,7 @@
   
   
     <li class="md-nav__item">
-      <a href="getting-started/first-app/" class="md-nav__link">
+      <a href="../../getting-started/first-app/" class="md-nav__link">
         
   
   
@@ -620,7 +493,7 @@
   
   
     <li class="md-nav__item">
-      <a href="core-concepts/what-is-di/" class="md-nav__link">
+      <a href="../../core-concepts/what-is-di/" class="md-nav__link">
         
   
   
@@ -643,7 +516,7 @@
   
   
     <li class="md-nav__item">
-      <a href="core-concepts/container-pattern/" class="md-nav__link">
+      <a href="../../core-concepts/container-pattern/" class="md-nav__link">
         
   
   
@@ -666,7 +539,7 @@
   
   
     <li class="md-nav__item">
-      <a href="core-concepts/service-lifetimes/" class="md-nav__link">
+      <a href="../../core-concepts/service-lifetimes/" class="md-nav__link">
         
   
   
@@ -689,7 +562,7 @@
   
   
     <li class="md-nav__item">
-      <a href="core-concepts/type-safety/" class="md-nav__link">
+      <a href="../../core-concepts/type-safety/" class="md-nav__link">
         
   
   
@@ -776,7 +649,7 @@
   
   
     <li class="md-nav__item">
-      <a href="injection-patterns/dict-interface/" class="md-nav__link">
+      <a href="../../injection-patterns/dict-interface/" class="md-nav__link">
         
   
   
@@ -799,7 +672,7 @@
   
   
     <li class="md-nav__item">
-      <a href="injection-patterns/inject-decorator/" class="md-nav__link">
+      <a href="../../injection-patterns/inject-decorator/" class="md-nav__link">
         
   
   
@@ -822,7 +695,7 @@
   
   
     <li class="md-nav__item">
-      <a href="injection-patterns/inject-function/" class="md-nav__link">
+      <a href="../../injection-patterns/inject-function/" class="md-nav__link">
         
   
   
@@ -845,7 +718,7 @@
   
   
     <li class="md-nav__item">
-      <a href="injection-patterns/binding-patterns/" class="md-nav__link">
+      <a href="../../injection-patterns/binding-patterns/" class="md-nav__link">
         
   
   
@@ -936,7 +809,7 @@
   
   
     <li class="md-nav__item">
-      <a href="scopes/understanding-scopes/" class="md-nav__link">
+      <a href="../../scopes/understanding-scopes/" class="md-nav__link">
         
   
   
@@ -959,7 +832,7 @@
   
   
     <li class="md-nav__item">
-      <a href="scopes/singleton-scope/" class="md-nav__link">
+      <a href="../../scopes/singleton-scope/" class="md-nav__link">
         
   
   
@@ -982,7 +855,7 @@
   
   
     <li class="md-nav__item">
-      <a href="scopes/transient-scope/" class="md-nav__link">
+      <a href="../../scopes/transient-scope/" class="md-nav__link">
         
   
   
@@ -1005,7 +878,7 @@
   
   
     <li class="md-nav__item">
-      <a href="scopes/scoped-services/" class="md-nav__link">
+      <a href="../../scopes/scoped-services/" class="md-nav__link">
         
   
   
@@ -1028,7 +901,7 @@
   
   
     <li class="md-nav__item">
-      <a href="scopes/custom-scopes/" class="md-nav__link">
+      <a href="../../scopes/custom-scopes/" class="md-nav__link">
         
   
   
@@ -1051,7 +924,7 @@
   
   
     <li class="md-nav__item">
-      <a href="scopes/scope-best-practices/" class="md-nav__link">
+      <a href="../../scopes/scope-best-practices/" class="md-nav__link">
         
   
   
@@ -1140,7 +1013,7 @@
   
   
     <li class="md-nav__item">
-      <a href="modules/overview/" class="md-nav__link">
+      <a href="../../modules/overview/" class="md-nav__link">
         
   
   
@@ -1163,7 +1036,7 @@
   
   
     <li class="md-nav__item">
-      <a href="modules/configuration-modules/" class="md-nav__link">
+      <a href="../../modules/configuration-modules/" class="md-nav__link">
         
   
   
@@ -1186,7 +1059,7 @@
   
   
     <li class="md-nav__item">
-      <a href="modules/module-composition/" class="md-nav__link">
+      <a href="../../modules/module-composition/" class="md-nav__link">
         
   
   
@@ -1209,7 +1082,7 @@
   
   
     <li class="md-nav__item">
-      <a href="modules/provider-modules/" class="md-nav__link">
+      <a href="../../modules/provider-modules/" class="md-nav__link">
         
   
   
@@ -1232,7 +1105,7 @@
   
   
     <li class="md-nav__item">
-      <a href="modules/module-best-practices/" class="md-nav__link">
+      <a href="../../modules/module-best-practices/" class="md-nav__link">
         
   
   
@@ -1319,7 +1192,7 @@
   
   
     <li class="md-nav__item">
-      <a href="integrations/overview/" class="md-nav__link">
+      <a href="../../integrations/overview/" class="md-nav__link">
         
   
   
@@ -1342,7 +1215,7 @@
   
   
     <li class="md-nav__item">
-      <a href="integrations/fastapi/" class="md-nav__link">
+      <a href="../../integrations/fastapi/" class="md-nav__link">
         
   
   
@@ -1365,7 +1238,7 @@
   
   
     <li class="md-nav__item">
-      <a href="integrations/taskiq/" class="md-nav__link">
+      <a href="../../integrations/taskiq/" class="md-nav__link">
         
   
   
@@ -1388,7 +1261,7 @@
   
   
     <li class="md-nav__item">
-      <a href="integrations/fastmcp/" class="md-nav__link">
+      <a href="../../integrations/fastmcp/" class="md-nav__link">
         
   
   
@@ -1415,8 +1288,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -1447,13 +1322,11 @@
     
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
         
           
           <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
@@ -1469,7 +1342,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             Testing
@@ -1483,7 +1356,7 @@
   
   
     <li class="md-nav__item">
-      <a href="testing/overview/" class="md-nav__link">
+      <a href="../overview/" class="md-nav__link">
         
   
   
@@ -1506,7 +1379,7 @@
   
   
     <li class="md-nav__item">
-      <a href="testing/integration-testing/" class="md-nav__link">
+      <a href="../integration-testing/" class="md-nav__link">
         
   
   
@@ -1529,7 +1402,7 @@
   
   
     <li class="md-nav__item">
-      <a href="testing/mocking-overrides.md" class="md-nav__link">
+      <a href="../mocking-overrides.md" class="md-nav__link">
         
   
   
@@ -1552,7 +1425,7 @@
   
   
     <li class="md-nav__item">
-      <a href="testing/override-patterns/" class="md-nav__link">
+      <a href="../override-patterns/" class="md-nav__link">
         
   
   
@@ -1575,7 +1448,7 @@
   
   
     <li class="md-nav__item">
-      <a href="testing/test-scopes/" class="md-nav__link">
+      <a href="../test-scopes/" class="md-nav__link">
         
   
   
@@ -1598,7 +1471,7 @@
   
   
     <li class="md-nav__item">
-      <a href="testing/testing-utilities/" class="md-nav__link">
+      <a href="../testing-utilities/" class="md-nav__link">
         
   
   
@@ -1621,7 +1494,7 @@
   
   
     <li class="md-nav__item">
-      <a href="testing/testing-best-practices/" class="md-nav__link">
+      <a href="../testing-best-practices/" class="md-nav__link">
         
   
   
@@ -1641,10 +1514,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="testing/THREADING_TESTS_SUMMARY/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Threading Test Summary
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1655,6 +1550,203 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#test-coverage-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test Coverage Summary
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Coverage Summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#passing-tests-28-out-of-37" class="md-nav__link">
+    <span class="md-ellipsis">
+      Passing Tests (28 out of 37)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Passing Tests (28 out of 37)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#synchronous-threading-tests-16-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Synchronous Threading Tests (16 tests)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asynchronous-threading-tests-12-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Asynchronous Threading Tests (12 tests)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currently-failing-tests-9-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Currently Failing Tests (9 tests)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-testing-scenarios-covered" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Testing Scenarios Covered
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Testing Scenarios Covered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#race-condition-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Race Condition Testing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-thread-injection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cross-Thread Injection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thread-safety-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thread Safety Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error Handling
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Testing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#async-specific-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Async-Specific Testing
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test Architecture
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#service-classes-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      Service Classes Used
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testing-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Testing Patterns
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coverage-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Coverage Statistics
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommendations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recommendations
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1743,7 +1835,7 @@
   
   
     <li class="md-nav__item">
-      <a href="advanced/overview/" class="md-nav__link">
+      <a href="../../advanced/overview/" class="md-nav__link">
         
   
   
@@ -1766,7 +1858,7 @@
   
   
     <li class="md-nav__item">
-      <a href="advanced/resource-management/" class="md-nav__link">
+      <a href="../../advanced/resource-management/" class="md-nav__link">
         
   
   
@@ -1789,7 +1881,7 @@
   
   
     <li class="md-nav__item">
-      <a href="advanced/circular-dependencies/" class="md-nav__link">
+      <a href="../../advanced/circular-dependencies/" class="md-nav__link">
         
   
   
@@ -1812,7 +1904,7 @@
   
   
     <li class="md-nav__item">
-      <a href="advanced/diagnostics/" class="md-nav__link">
+      <a href="../../advanced/diagnostics/" class="md-nav__link">
         
   
   
@@ -1835,7 +1927,7 @@
   
   
     <li class="md-nav__item">
-      <a href="advanced/profiling/" class="md-nav__link">
+      <a href="../../advanced/profiling/" class="md-nav__link">
         
   
   
@@ -1858,7 +1950,7 @@
   
   
     <li class="md-nav__item">
-      <a href="advanced/performance-optimization/" class="md-nav__link">
+      <a href="../../advanced/performance-optimization/" class="md-nav__link">
         
   
   
@@ -1881,7 +1973,7 @@
   
   
     <li class="md-nav__item">
-      <a href="advanced/thread-safety/" class="md-nav__link">
+      <a href="../../advanced/thread-safety/" class="md-nav__link">
         
   
   
@@ -1904,7 +1996,7 @@
   
   
     <li class="md-nav__item">
-      <a href="advanced/async-support/" class="md-nav__link">
+      <a href="../../advanced/async-support/" class="md-nav__link">
         
   
   
@@ -1927,7 +2019,7 @@
   
   
     <li class="md-nav__item">
-      <a href="advanced/middleware/" class="md-nav__link">
+      <a href="../../advanced/middleware/" class="md-nav__link">
         
   
   
@@ -1950,7 +2042,7 @@
   
   
     <li class="md-nav__item">
-      <a href="advanced/plugins/" class="md-nav__link">
+      <a href="../../advanced/plugins/" class="md-nav__link">
         
   
   
@@ -2033,7 +2125,7 @@
   
   
     <li class="md-nav__item">
-      <a href="migration/python-injector/" class="md-nav__link">
+      <a href="../../migration/python-injector/" class="md-nav__link">
         
   
   
@@ -2056,7 +2148,7 @@
   
   
     <li class="md-nav__item">
-      <a href="migration/other-frameworks/" class="md-nav__link">
+      <a href="../../migration/other-frameworks/" class="md-nav__link">
         
   
   
@@ -2141,7 +2233,7 @@
   
   
     <li class="md-nav__item">
-      <a href="examples/architectural-examples/" class="md-nav__link">
+      <a href="../../examples/architectural-examples/" class="md-nav__link">
         
   
   
@@ -2164,7 +2256,7 @@
   
   
     <li class="md-nav__item">
-      <a href="examples/design-patterns/" class="md-nav__link">
+      <a href="../../examples/design-patterns/" class="md-nav__link">
         
   
   
@@ -2187,7 +2279,7 @@
   
   
     <li class="md-nav__item">
-      <a href="examples/practical-examples/" class="md-nav__link">
+      <a href="../../examples/practical-examples/" class="md-nav__link">
         
   
   
@@ -2274,7 +2366,7 @@
   
   
     <li class="md-nav__item">
-      <a href="best-practices/architectural-patterns/" class="md-nav__link">
+      <a href="../../best-practices/architectural-patterns/" class="md-nav__link">
         
   
   
@@ -2297,7 +2389,7 @@
   
   
     <li class="md-nav__item">
-      <a href="best-practices/performance/" class="md-nav__link">
+      <a href="../../best-practices/performance/" class="md-nav__link">
         
   
   
@@ -2320,7 +2412,7 @@
   
   
     <li class="md-nav__item">
-      <a href="best-practices/security/" class="md-nav__link">
+      <a href="../../best-practices/security/" class="md-nav__link">
         
   
   
@@ -2343,7 +2435,7 @@
   
   
     <li class="md-nav__item">
-      <a href="best-practices/testing-strategies/" class="md-nav__link">
+      <a href="../../best-practices/testing-strategies/" class="md-nav__link">
         
   
   
@@ -2426,7 +2518,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="api-reference/" class="md-nav__link ">
+            <a href="../../api-reference/" class="md-nav__link ">
               
   
   
@@ -2461,7 +2553,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/container/" class="md-nav__link">
+      <a href="../../api-reference/container/" class="md-nav__link">
         
   
   
@@ -2484,7 +2576,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/module/" class="md-nav__link">
+      <a href="../../api-reference/module/" class="md-nav__link">
         
   
   
@@ -2507,7 +2599,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/decorators/" class="md-nav__link">
+      <a href="../../api-reference/decorators/" class="md-nav__link">
         
   
   
@@ -2530,7 +2622,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/scopes/" class="md-nav__link">
+      <a href="../../api-reference/scopes/" class="md-nav__link">
         
   
   
@@ -2553,7 +2645,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/registry/" class="md-nav__link">
+      <a href="../../api-reference/registry/" class="md-nav__link">
         
   
   
@@ -2576,7 +2668,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/resolver/" class="md-nav__link">
+      <a href="../../api-reference/resolver/" class="md-nav__link">
         
   
   
@@ -2599,7 +2691,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/providers/" class="md-nav__link">
+      <a href="../../api-reference/providers/" class="md-nav__link">
         
   
   
@@ -2622,7 +2714,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/validation/" class="md-nav__link">
+      <a href="../../api-reference/validation/" class="md-nav__link">
         
   
   
@@ -2645,7 +2737,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/diagnostics/" class="md-nav__link">
+      <a href="../../api-reference/diagnostics/" class="md-nav__link">
         
   
   
@@ -2668,7 +2760,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/testing/" class="md-nav__link">
+      <a href="../../api-reference/testing/" class="md-nav__link">
         
   
   
@@ -2691,7 +2783,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/integrations/" class="md-nav__link">
+      <a href="../../api-reference/integrations/" class="md-nav__link">
         
   
   
@@ -2714,7 +2806,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/types/" class="md-nav__link">
+      <a href="../../api-reference/types/" class="md-nav__link">
         
   
   
@@ -2737,7 +2829,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/exceptions/" class="md-nav__link">
+      <a href="../../api-reference/exceptions/" class="md-nav__link">
         
   
   
@@ -2767,7 +2859,7 @@
   
   
     <li class="md-nav__item">
-      <a href="contributing/" class="md-nav__link">
+      <a href="../../contributing/" class="md-nav__link">
         
   
   
@@ -2789,7 +2881,7 @@
   
   
     <li class="md-nav__item">
-      <a href="changelog/" class="md-nav__link">
+      <a href="../../changelog/" class="md-nav__link">
         
   
   
@@ -2823,83 +2915,135 @@
   
 
 
-<h1 id="injectq-documentation">InjectQ Documentation<a class="headerlink" href="#injectq-documentation" title="Anchor link to this section for reference">&para;</a></h1>
-<p><a href="https://pypi.org/project/injectq/"><img alt="PyPI version" src="https://badge.fury.io/py/injectq.svg" /></a>
-<a href="https://pypi.org/project/injectq/"><img alt="Python versions" src="https://img.shields.io/pypi/pyversions/injectq.svg" /></a>
-<a href="https://github.com/Iamsdt/injectq/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/Iamsdt/injectq.svg" /></a>
-<a href="#"><img alt="Coverage" src="https://img.shields.io/badge/coverage-73%25-yellow.svg" /></a></p>
-<p>InjectQ is a lightweight, type-friendly dependency injection library for Python focused on clarity and pragmatic integrations.</p>
-<h2 id="quick-example-recommended">Quick example (recommended)<a class="headerlink" href="#quick-example-recommended" title="Anchor link to this section for reference">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">injectq</span><span class="p">,</span> <span class="n">inject</span><span class="p">,</span> <span class="n">singleton</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">injectq</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Hello, World!&quot;</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nd">@singleton</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">greet</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Service says: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="nd">@inject</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">service</span><span class="p">:</span> <span class="n">UserService</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">service</span><span class="o">.</span><span class="n">greet</span><span class="p">())</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    <span class="n">main</span><span class="p">()</span>
-</span></code></pre></div>
-<h2 id="highlights">Highlights<a class="headerlink" href="#highlights" title="Anchor link to this section for reference">&para;</a></h2>
+<h1 id="comprehensive-threading-test-suite-for-injectq">Comprehensive Threading Test Suite for InjectQ<a class="headerlink" href="#comprehensive-threading-test-suite-for-injectq" title="Anchor link to this section for reference">&para;</a></h1>
+<p>This document summarizes the comprehensive threading test suite created for InjectQ, covering both synchronous and asynchronous threading scenarios with focus on race conditions, cross-thread injection, and expected failures.</p>
+<h2 id="test-coverage-summary">Test Coverage Summary<a class="headerlink" href="#test-coverage-summary" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="passing-tests-28-out-of-37">Passing Tests (28 out of 37)<a class="headerlink" href="#passing-tests-28-out-of-37" title="Anchor link to this section for reference">&para;</a></h3>
+<h4 id="synchronous-threading-tests-16-tests">Synchronous Threading Tests (16 tests)<a class="headerlink" href="#synchronous-threading-tests-16-tests" title="Anchor link to this section for reference">&para;</a></h4>
+<ol>
+<li><strong>test_sync_race_condition_singleton</strong> ✅ - Tests that singleton services return same instance across threads</li>
+<li><strong>test_sync_race_condition_transient</strong> ✅ - Tests that transient services create unique instances per thread</li>
+<li><strong>test_sync_concurrent_binding_operations</strong> ✅ - Tests concurrent binding operations from multiple threads</li>
+<li><strong>test_sync_dependent_service_injection</strong> ✅ - Tests dependency injection across threads with mixed scopes</li>
+<li><strong>test_sync_scope_clearing_race_condition</strong> ✅ - Tests concurrent scope clearing and resolution</li>
+<li><strong>test_sync_factory_injection_race</strong> ✅ - Tests concurrent factory-based injection</li>
+<li><strong>test_sync_circular_dependency_thread_safety</strong> ✅ - Tests circular dependency detection in threaded environment</li>
+<li><strong>test_sync_thread_safe_counter_increment</strong> ✅ - Tests AsyncSafeCounter under heavy concurrent access</li>
+<li><strong>test_sync_thread_safe_dict_operations</strong> ✅ - Tests ThreadSafeDict under concurrent access</li>
+<li><strong>test_sync_hybrid_lock_performance</strong> ✅ - Tests HybridLock performance under contention</li>
+<li><strong>test_sync_container_thread_local_state</strong> ✅ - Tests container maintains proper thread-local state</li>
+<li><strong>test_sync_failed_injection_thread_safety</strong> ✅ - Tests failure handling in threaded environment</li>
+<li><strong>test_sync_memory_cleanup_thread_safety</strong> ✅ - Tests memory cleanup in threaded environment</li>
+<li><strong>test_sync_concurrent_container_creation</strong> ✅ - Tests creating multiple containers concurrently</li>
+<li><strong>test_sync_shared_dependency_modification</strong> ✅ - Tests modifying shared dependencies across threads</li>
+<li><strong>test_sync_performance_under_load</strong> ✅ - Tests container performance under heavy concurrent load</li>
+</ol>
+<h4 id="asynchronous-threading-tests-12-tests">Asynchronous Threading Tests (12 tests)<a class="headerlink" href="#asynchronous-threading-tests-12-tests" title="Anchor link to this section for reference">&para;</a></h4>
+<ol>
+<li><strong>test_async_race_condition_singleton</strong> ✅ - Tests async race conditions with singleton scope</li>
+<li><strong>test_async_cross_event_loop_injection</strong> ✅ - Tests injection across different event loops</li>
+<li><strong>test_async_dependent_service_injection</strong> ✅ - Tests async dependent service injection</li>
+<li><strong>test_async_scope_cleanup</strong> ✅ - Tests async scope cleanup operations</li>
+<li><strong>test_async_error_propagation</strong> ✅ - Tests error propagation in async environment</li>
+<li><strong>test_async_circular_dependency_detection</strong> ✅ - Tests async circular dependency detection</li>
+<li><strong>test_async_hybrid_lock_performance</strong> ✅ - Tests HybridLock performance in async environment</li>
+<li><strong>test_async_thread_safe_dict_operations</strong> ✅ - Tests async ThreadSafeDict operations</li>
+<li><strong>test_async_memory_pressure</strong> ✅ - Tests async operations under memory pressure</li>
+<li><strong>test_async_event_loop_integration</strong> ✅ - Tests integration with event loop policies</li>
+<li><strong>test_async_weakref_cleanup</strong> ✅ - Tests weak reference cleanup in async environment</li>
+<li><strong>test_async_stress_test</strong> ✅ - Comprehensive async stress test</li>
+</ol>
+<h3 id="currently-failing-tests-9-tests">Currently Failing Tests (9 tests)<a class="headerlink" href="#currently-failing-tests-9-tests" title="Anchor link to this section for reference">&para;</a></h3>
+<p>These tests have issues that need to be addressed in future iterations:</p>
+<ol>
+<li><strong>test_sync_cross_thread_injection</strong> - Thread ID comparison issue</li>
+<li><strong>test_sync_resource_contention</strong> - Timeout configuration needs adjustment</li>
+<li><strong>test_async_concurrent_factory_calls</strong> - Async factory handling needs fix</li>
+<li><strong>test_async_thread_pool_injection</strong> - ThreadPoolExecutor integration issue</li>
+<li><strong>test_async_cascading_dependencies</strong> - Race condition in dependency creation</li>
+<li><strong>test_async_timeout_handling</strong> - Timeout mechanism not working as expected</li>
+<li><strong>test_async_task_cancellation</strong> - Task cancellation not being detected</li>
+<li><strong>test_async_semaphore_integration</strong> - Semaphore timing issue</li>
+<li><strong>test_async_exception_chaining</strong> - Exception type propagation issue</li>
+</ol>
+<h2 id="key-testing-scenarios-covered">Key Testing Scenarios Covered<a class="headerlink" href="#key-testing-scenarios-covered" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="race-condition-testing">Race Condition Testing<a class="headerlink" href="#race-condition-testing" title="Anchor link to this section for reference">&para;</a></h3>
 <ul>
-<li>Dict-like bindings and simple APIs for small projects</li>
-<li>Decorator and type-based injection (<code>@inject</code>, <code>Inject[T]</code>) for typed code</li>
-<li>Optional integrations for FastAPI and Taskiq (install extras as needed)</li>
-<li>Async factory support and request-scoped lifetimes</li>
+<li>✅ Singleton vs Transient scope behavior under concurrent access</li>
+<li>✅ Concurrent binding and resolution operations</li>
+<li>✅ Scope clearing while other threads are resolving</li>
+<li>✅ Factory function calls under high contention</li>
 </ul>
-<h2 id="api-patterns">API patterns<a class="headerlink" href="#api-patterns" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="dict-like-interface">Dict-like interface<a class="headerlink" href="#dict-like-interface" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">injectq</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">injectq</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;config_value&quot;</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">injectq</span><span class="p">[</span><span class="n">Database</span><span class="p">]</span> <span class="o">=</span> <span class="n">Database</span><span class="p">()</span>
-</span></code></pre></div>
-<h3 id="functionclass-injection">Function/class injection<a class="headerlink" href="#functionclass-injection" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@inject</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="n">service</span><span class="p">:</span> <span class="n">UserService</span><span class="p">):</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="o">...</span>
-</span></code></pre></div>
-<h3 id="fastapi-integration-example">FastAPI integration (example)<a class="headerlink" href="#fastapi-integration-example" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">injectq</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.integrations.fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_fastapi</span><span class="p">,</span> <span class="n">InjectAPI</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">setup_fastapi</span><span class="p">(</span><span class="n">injectq</span><span class="p">,</span> <span class="n">app</span><span class="p">)</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/users/</span><span class="si">{user_id}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_service</span><span class="p">:</span> <span class="n">IUserService</span> <span class="o">=</span> <span class="n">InjectAPI</span><span class="p">[</span><span class="n">IUserService</span><span class="p">]):</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="k">return</span> <span class="n">user_service</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="taskiq-integration-example">Taskiq integration (example)<a class="headerlink" href="#taskiq-integration-example" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">injectq</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.integrations.taskiq</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_taskiq</span><span class="p">,</span> <span class="n">InjectTask</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">setup_taskiq</span><span class="p">(</span><span class="n">injectq</span><span class="p">,</span> <span class="n">broker</span><span class="p">)</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nd">@broker</span><span class="o">.</span><span class="n">task</span><span class="p">()</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">save_data</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">service</span><span class="p">:</span> <span class="n">RankingService</span> <span class="o">=</span> <span class="n">InjectTask</span><span class="p">[</span><span class="n">RankingService</span><span class="p">]):</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span></code></pre></div>
-<h2 id="documentation-sections">Documentation sections<a class="headerlink" href="#documentation-sections" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="cross-thread-injection">Cross-Thread Injection<a class="headerlink" href="#cross-thread-injection" title="Anchor link to this section for reference">&para;</a></h3>
 <ul>
-<li>Getting started (installation &amp; quick-start)</li>
-<li>Injection patterns (dict-style, decorator, Inject[T])</li>
-<li>Scopes and lifecycle (singleton, transient, request)</li>
-<li>Modules and providers</li>
-<li>Integrations (FastAPI, Taskiq)</li>
-<li>Testing utilities and examples</li>
-<li>API reference and migration guides</li>
+<li>✅ Shared singleton instances across threads</li>
+<li>✅ Thread-local state management</li>
+<li>✅ Data storage and retrieval across threads</li>
+<li>✅ Dependency modification across threads</li>
 </ul>
-<h2 id="contributing-license">Contributing &amp; License<a class="headerlink" href="#contributing-license" title="Anchor link to this section for reference">&para;</a></h2>
-<p>See <code>CONTRIBUTING.md</code> and <code>LICENSE</code> for contribution rules and licensing.</p>
-<p>Note: This repository maintains a test coverage floor of 73% enforced by CI and pytest configuration.</p>
+<h3 id="thread-safety-components">Thread Safety Components<a class="headerlink" href="#thread-safety-components" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li>✅ AsyncSafeCounter - Thread-safe counter with hybrid locking</li>
+<li>✅ ThreadSafeDict - Thread-safe dictionary operations</li>
+<li>✅ HybridLock - Works with both sync and async contexts</li>
+<li>✅ Thread-safe container operations</li>
+</ul>
+<h3 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li>✅ Circular dependency detection in threaded environment</li>
+<li>✅ Failed injection handling across threads</li>
+<li>✅ Exception propagation in async contexts</li>
+<li>✅ Memory cleanup and resource management</li>
+</ul>
+<h3 id="performance-testing">Performance Testing<a class="headerlink" href="#performance-testing" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li>✅ Container performance under heavy concurrent load (2000+ operations)</li>
+<li>✅ Lock contention and throughput testing</li>
+<li>✅ Memory pressure testing</li>
+<li>✅ Async operation scalability</li>
+</ul>
+<h3 id="async-specific-testing">Async-Specific Testing<a class="headerlink" href="#async-specific-testing" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li>✅ Event loop integration</li>
+<li>✅ Mixed sync/async contexts</li>
+<li>✅ Concurrent coroutine execution</li>
+<li>✅ Resource cleanup in async environments</li>
+</ul>
+<h2 id="test-architecture">Test Architecture<a class="headerlink" href="#test-architecture" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="service-classes-used">Service Classes Used<a class="headerlink" href="#service-classes-used" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><strong>CounterService</strong> - Basic service with thread ID tracking</li>
+<li><strong>ThreadSafeCounterService</strong> - Thread-safe version with internal locking</li>
+<li><strong>DataService</strong> - Service for key-value storage and retrieval</li>
+<li><strong>DependentService</strong> - Service with dependencies for injection testing</li>
+<li><strong>AsyncDependentService</strong> - Async service with async operations</li>
+<li><strong>FailingService</strong> - Service that intentionally fails for error testing</li>
+</ul>
+<h3 id="testing-patterns">Testing Patterns<a class="headerlink" href="#testing-patterns" title="Anchor link to this section for reference">&para;</a></h3>
+<ol>
+<li><strong>Concurrent Execution</strong> - Multiple threads/coroutines executing simultaneously</li>
+<li><strong>Sequential Dependencies</strong> - Operations that must happen in order</li>
+<li><strong>Resource Contention</strong> - Limited resources accessed by multiple threads</li>
+<li><strong>State Sharing</strong> - Shared state modification and verification</li>
+<li><strong>Error Injection</strong> - Intentional failures to test error handling</li>
+</ol>
+<h2 id="coverage-statistics">Coverage Statistics<a class="headerlink" href="#coverage-statistics" title="Anchor link to this section for reference">&para;</a></h2>
+<p>The test suite provides comprehensive coverage of:
+- <strong>Thread safety mechanisms</strong> in InjectQ core
+- <strong>Race condition scenarios</strong> in dependency injection
+- <strong>Cross-thread communication</strong> patterns
+- <strong>Async/await integration</strong> with threading
+- <strong>Performance characteristics</strong> under load
+- <strong>Error handling</strong> in concurrent environments</p>
+<h2 id="recommendations">Recommendations<a class="headerlink" href="#recommendations" title="Anchor link to this section for reference">&para;</a></h2>
+<ol>
+<li><strong>Fix the 9 failing tests</strong> to achieve 100% test coverage</li>
+<li><strong>Add more edge case scenarios</strong> for corner cases</li>
+<li><strong>Performance benchmarking</strong> integration for regression testing</li>
+<li><strong>Stress testing</strong> with higher thread counts and longer durations</li>
+<li><strong>Memory leak detection</strong> with longer-running tests</li>
+</ol>
+<p>This test suite serves as a robust foundation for ensuring InjectQ's thread safety and reliability in concurrent applications.</p>
 
 
 
@@ -2936,15 +3080,31 @@
       
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
+          
+          <a href="../testing-best-practices/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Best Practices">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Best Practices
+              </div>
+            </div>
+          </a>
+        
         
           
-          <a href="getting-started/installation/" class="md-footer__link md-footer__link--next" aria-label="Next: Installation">
+          <a href="../../advanced/overview/" class="md-footer__link md-footer__link--next" aria-label="Next: Overview">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Installation
+                Overview
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -3008,10 +3168,10 @@
     
     
       
-      <script id="__config" type="application/json">{"base": ".", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.footnote.tooltips", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow", "toc.integrate"], "search": "assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.footnote.tooltips", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow", "toc.integrate"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
-      <script src="assets/javascripts/bundle.92b07e13.min.js"></script>
+      <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
     
   </body>
