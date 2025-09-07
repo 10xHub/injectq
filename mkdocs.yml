@@ -33,8 +33,6 @@ theme:
         name: Switch to system preference
   features:
     - announce.dismiss
-    - content.action.edit
-    - content.action.view
     - content.code.annotate
     - content.code.copy
     - content.code.select
@@ -50,8 +48,6 @@ theme:
     - navigation.instant.progress
     - navigation.prune
     - navigation.sections
-    - navigation.tabs
-    - navigation.tabs.sticky
     - navigation.top
     - navigation.tracking
     - search.highlight
@@ -122,45 +118,48 @@ nav:
       - Custom Scopes: scopes/custom-scopes.md
       - Scope Best Practices: scopes/scope-best-practices.md
   - Modules & Providers:
-      - Module System: modules/module-system.md
-      - Provider Pattern: modules/provider-pattern.md
+      - Module Overview: modules/overview.md
       - Configuration Modules: modules/configuration-modules.md
       - Module Composition: modules/module-composition.md
-      - Lazy Loading: modules/lazy-loading.md
+      - Provider: modules/provider-modules.md
+      - Best Practices: modules/module-best-practices.md
   - Framework Integrations:
+      - Overview: integrations/overview.md
       - FastAPI Integration: integrations/fastapi.md
       - Taskiq Integration: integrations/taskiq.md
       - FastMCP Integration: integrations/fastmcp.md
   - Testing:
-      - Testing Overview: testing/testing-overview.md
-      - Test Containers: testing/test-containers.md
-      - Mocking & Overrides: testing/mocking-overrides.md
+      - Testing Overview: testing/overview.md
       - Integration Testing: testing/integration-testing.md
-      - Unit Testing: testing/unit-testing.md
-      - AsyncIO Testing: testing/asyncio-testing.md
-      - Performance Testing: testing/performance-testing.md
+      - Mocking & Overrides: testing/mocking-overrides.md
+      - Override Patterns: testing/override-patterns.md
+      - Test Scopes: testing/test-scopes.md
+      - Testing Utilities: testing/testing-utilities.md
+      - Best Practices: testing/testing-best-practices.md
+      - Threading Test Summary: testing/THREADING_TESTS_SUMMARY.md
   - Advanced:
+      - Overview: advanced/overview.md
       - Resource Management: advanced/resource-management.md
-      - Diagnostics & Profiling: advanced/diagnostics-profiling.md
+      - Circular Dependencies: advanced/circular-dependencies.md
+      - Diagnostics: advanced/diagnostics.md
+      - Profiling: advanced/profiling.md
       - Performance Optimization: advanced/performance-optimization.md
       - Thread Safety: advanced/thread-safety.md
       - Async Support: advanced/async-support.md
       - Middleware: advanced/middleware.md
       - Plugins: advanced/plugins.md
   - Migration Guides:
-      - From Python-Injector: migration/from-python-injector.md
-      - From Other Libraries: migration/from-other-libraries.md
-      - From Old Versions: migration/from-old-versions.md
+      - From Python-Injector: migration/python-injector.md
+      - From Other Libraries: migration/other-frameworks.md
   - Examples:
-      - Practical Examples: examples/practical-examples.md
-      - Design Patterns: examples/design-patterns.md
       - Architectural Examples: examples/architectural-examples.md
+      - Design Patterns: examples/design-patterns.md
+      - Practical Examples: examples/practical-examples.md
   - Best Practices:
+      - Architectural Patterns: best-practices/architectural-patterns.md
       - Performance: best-practices/performance.md
       - Security: best-practices/security.md
-      - Architectural Patterns: best-practices/architectural-patterns.md
       - Testing Strategies: best-practices/testing-strategies.md
-      - Debugging: best-practices/debugging.md
   - API Reference:
       - Overview: api-reference/index.md
       - Container: api-reference/container.md
