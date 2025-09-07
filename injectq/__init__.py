@@ -4,7 +4,7 @@ Combines the simplicity of kink, the power of python-injector,
 and the advanced features of modern DI frameworks.
 """
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 # Core exports
 # Testing exports
@@ -141,8 +141,3 @@ __all__ = [
     "testing",
     "transient",
 ]
-
-# Create default container instance for convenience
-# It will use the active context container if available, otherwise the global singleton
-# User can use `injectq` to resolve dependencies
-injectq = get_active_container() or InjectQ.get_instance()

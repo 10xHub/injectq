@@ -1,15 +1,17 @@
 """Simple smoke test to verify core InjectQ functionality."""
 
-from injectq import inject, injectq, singleton, transient
+from injectq import inject, InjectQ, singleton, transient
 
 
 def main():
     """Run basic smoke tests."""
     print("Running InjectQ smoke tests...")
 
+    container = InjectQ.get_instance()
+
     # Test 1: Basic container operations
-    injectq[str] = "Hello, InjectQ!"
-    assert injectq[str] == "Hello, InjectQ!"
+    container[str] = "Hello, InjectQ!"
+    assert container[str] == "Hello, InjectQ!"
     print("✓ Dict-like interface works")
 
     # Test 2: Class dependency injection
@@ -24,10 +26,10 @@ def main():
         def get_info(self):
             return f"Connected to: {self.db.connection_string}"
 
-    injectq.bind(Database, Database)
-    injectq.bind(UserService, UserService)
+    container.bind(Database, Database)
+    container.bind(UserService, UserService)
 
-    service = injectq.get(UserService)
+    service = container.get(UserService)
     info = service.get_info()
     assert "Hello, InjectQ!" in info
     print("✓ Class dependency injection works")
@@ -52,8 +54,8 @@ def main():
             self.counter += 1
             return self.counter
 
-    s1 = injectq.get(SingletonService)
-    s2 = injectq.get(SingletonService)
+    s1 = container.get(SingletonService)
+    s2 = container.get(SingletonService)
     assert s1 is s2
     assert s1.increment() == 1
     assert s2.increment() == 2  # Same instance
@@ -66,8 +68,8 @@ def main():
             self.db = db
             self.id = id(self)
 
-    t1 = injectq.get(TransientService)
-    t2 = injectq.get(TransientService)
+    t1 = container.get(TransientService)
+    t2 = container.get(TransientService)
     assert t1 is not t2
     assert t1.id != t2.id
     print("✓ @transient decorator works")
@@ -76,10 +78,10 @@ def main():
     def create_special_service() -> str:
         return "Special service created by factory"
 
-    injectq.factories[str] = create_special_service
+    container.factories[str] = create_special_service
 
     # Note: This will override the previous str binding, showing factory precedence
-    special = injectq.get(str)
+    special = container.get(str)
     assert special == "Special service created by factory"
     print("✓ Factory functions work")
 

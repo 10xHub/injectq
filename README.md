@@ -21,13 +21,15 @@ Full documentation is hosted at https://iamsdt.github.io/injectq/ and the reposi
 
 ## Quick Start (recommended pattern)
 
-Prefer the exported global `injectq` container in examples and application code. It uses the active context container when present, otherwise falls back to a global singleton.
+Prefer the exported global `InjectQ.get_instance()` container in examples and application code. It uses the active context container when present, otherwise falls back to a global singleton.
 
 ```python
-from injectq import injectq, inject, singleton
+from injectq import InjectQ, inject, singleton
+
+container = InjectQ.get_instance()
 
 # Basic value binding
-injectq[str] = "Hello, World!"
+container[str] = "Hello, World!"
 
 @singleton
 class UserService:
@@ -46,7 +48,7 @@ if __name__ == "__main__":
 ```
 
 Notes:
-- Use `injectq[...]` for simple bindings and values.
+- Use `container[...]` for simple bindings and values.
 - Use `@inject` and `Inject[T]` for function/class injection.
 
 ## Enhanced Features

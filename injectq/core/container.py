@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from injectq.utils import (
     BindingError,
@@ -13,7 +12,7 @@ from injectq.utils import (
     ServiceKey,
 )
 
-from .registry import ServiceRegistry, _UNSET
+from .registry import _UNSET, ServiceRegistry
 from .resolver import DependencyResolver
 from .scopes import ScopeManager, ScopeType
 from .thread_safety import HybridLock
@@ -110,7 +109,22 @@ class InjectQ:
 
     @classmethod
     def get_instance(cls) -> InjectQ:
-        """Get the global singleton container instance."""
+        """
+        Returns the current instance of the InjectQ container.
+        This method first attempts to retrieve the current container context using
+        `ContainerContext.get_current()`. If a context is available, it returns that
+        context. Otherwise, it checks if a singleton instance of the container exists;
+        if not, it creates one and returns it.
+        Returns:
+            InjectQ: The current container instance, either from the context or as a singleton.
+        """
+
+        from .context import ContainerContext  # noqa: PLC0415
+
+        ctx = ContainerContext.get_current()
+        if ctx is not None:
+            return ctx
+
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
@@ -174,7 +188,6 @@ class InjectQ:
         """Check if a service is registered."""
         return self._ensure_thread_safe(lambda: service_type in self._registry)
 
-    # Core binding methods
     def bind(
         self,
         service_type: ServiceKey,
@@ -237,7 +250,6 @@ class InjectQ:
         self,
         service_type: ServiceKey,
         factory: ServiceFactory,
-        allow_concrete: bool = True,
     ) -> None:
         """Bind a service type to a factory function.
 
@@ -249,7 +261,9 @@ class InjectQ:
         """
         self._ensure_thread_safe(
             lambda: self._registry.bind_factory(
-                service_type, factory, allow_concrete, self._allow_override
+                service_type,
+                factory,
+                self._allow_override,
             )
         )
 

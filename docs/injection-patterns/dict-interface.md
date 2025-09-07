@@ -1,22 +1,24 @@
 
 # Dict-like Interface
 
-The dict-like interface is the simplest way to start with InjectQ. Use the exported `injectq` global in application code — it prefers the active container context if present and falls back to a global singleton.
+The dict-like interface is the simplest way to start with InjectQ. Use `InjectQ.get_instance()` to get the container — it prefers the active container context if present and falls back to a global singleton.
 
 ## Basic usage
 
 ```python
-from injectq import injectq
+from injectq import InjectQ
+
+container = InjectQ.get_instance()
 
 # Bind simple values
-injectq[str] = "Hello, InjectQ!"
-injectq[int] = 42
-injectq["database_url"] = "postgresql://localhost/db"
+container[str] = "Hello, InjectQ!"
+container[int] = 42
+container["database_url"] = "postgresql://localhost/db"
 
 # Retrieve services
-message = injectq[str]      # "Hello, InjectQ!"
-number = injectq[int]       # 42
-db_url = injectq["database_url"]  # "postgresql://localhost/db"
+message = container[str]      # "Hello, InjectQ!"
+number = container[int]       # 42
+db_url = container["database_url"]  # "postgresql://localhost/db"
 ```
 
 ## 🏗️ Class Registration
@@ -24,7 +26,9 @@ db_url = injectq["database_url"]  # "postgresql://localhost/db"
 Register classes for automatic instantiation:
 
 ```python
-from injectq import injectq
+from injectq import InjectQ
+
+container = InjectQ.get_instance()
 
 class DatabaseConfig:
     def __init__(self, host: str = "localhost", port: int = 5432):
@@ -41,12 +45,12 @@ class UserRepository:
         self.db = db
 
 # Register bindings
-injectq[DatabaseConfig] = DatabaseConfig()
-injectq[Database] = Database
-injectq[UserRepository] = UserRepository
+container[DatabaseConfig] = DatabaseConfig()
+container[Database] = Database
+container[UserRepository] = UserRepository
 
 # Automatic dependency resolution
-repo = injectq[UserRepository]  # Creates DatabaseConfig, Database, then UserRepository
+repo = container[UserRepository]  # Creates DatabaseConfig, Database, then UserRepository
 ```
 
 ## Key operations
@@ -54,55 +58,59 @@ repo = injectq[UserRepository]  # Creates DatabaseConfig, Database, then UserRep
 ### Setting values
 
 ```python
+from injectq import InjectQ
+
+container = InjectQ.get_instance()
+
 # Simple values
-injectq[str] = "configuration"
-injectq[int] = 12345
-injectq[bool] = True
+container[str] = "configuration"
+container[int] = 12345
+container[bool] = True
 
 # Complex objects
-injectq["config"] = AppConfig(host="prod", debug=False)
+container["config"] = AppConfig(host="prod", debug=False)
 
 # Classes (for automatic instantiation)
-injectq[Database] = Database
-injectq[UserService] = UserService
+container[Database] = Database
+container[UserService] = UserService
 
 # Instances (pre-created objects)
-injectq["cache"] = RedisCache(host="localhost")
+container["cache"] = RedisCache(host="localhost")
 ```
 
 ### Getting values
 
 ```python
 # Simple retrieval
-config = injectq[str]
-number = injectq[int]
+config = container[str]
+number = container[int]
 
 # With type hints (better IDE support)
-config: str = injectq[str]
-service: UserService = injectq[UserService]
+config: str = container[str]
+service: UserService = container[UserService]
 ```
 
 ### Checking existence
 
 ```python
 # Check if a service is registered
-if str in injectq:
-    config = injectq[str]
+if str in container:
+    config = container[str]
 
-if "database" in injectq:
-    db = injectq["database"]
+if "database" in container:
+    db = container["database"]
 ```
 
 ### Removing services
 
 ```python
 # Remove a service
-del injectq[str]
-del injectq[Database]
+del container[str]
+del container[Database]
 
 # Check removal
-assert str not in injectq
-assert Database not in injectq
+assert str not in container
+assert Database not in container
 ```
 
 ## 🎨 Advanced Patterns
@@ -112,18 +120,22 @@ assert Database not in injectq
 Use `bind_factory` or the `factories` proxy for factory bindings (examples below show simple lambdas). For async factories, use `get_async`.
 
 ```python
+from injectq import InjectQ
+
+container = InjectQ.get_instance()
+
 import uuid
 from datetime import datetime
 
 # Simple factory-like binding (synchronous)
-injectq["request_id"] = lambda: str(uuid.uuid4())
+container["request_id"] = lambda: str(uuid.uuid4())
 
 # For more advanced factories use bind_factory
-injectq.bind_factory("timestamp", lambda: datetime.now().isoformat())
+container.bind_factory("timestamp", lambda: datetime.now().isoformat())
 
 # Accessing factories returns created values
-id1 = injectq["request_id"]
-id2 = injectq["request_id"]
+id1 = container["request_id"]
+id2 = container["request_id"]
 print(f"IDs are different: {id1 != id2}")
 ```
 
@@ -132,6 +144,10 @@ print(f"IDs are different: {id1 != id2}")
 Register services based on environment:
 
 ```python
+from injectq import InjectQ
+
+container = InjectQ.get_instance()
+
 if environment == "production":
     container[Database] = PostgreSQLDatabase
     container["cache"] = RedisCache(host="prod-redis")
@@ -148,6 +164,10 @@ else:
 Use strings as keys for multiple implementations:
 
 ```python
+from injectq import InjectQ
+
+container = InjectQ.get_instance()
+
 # Multiple cache implementations
 container["redis_cache"] = RedisCache(host="localhost")
 container["memory_cache"] = MemoryCache()
@@ -163,11 +183,13 @@ backup_cache = container["memory_cache"]
 The dict-style bindings work with the `@inject` decorator and `Inject[T]` markers.
 
 ```python
-from injectq import inject, singleton, injectq
+from injectq import inject, singleton, InjectQ
+
+container = InjectQ.get_instance()
 
 # Register services
-injectq[Database] = Database
-injectq["config"] = AppConfig()
+container[Database] = Database
+container["config"] = AppConfig()
 
 @inject
 def process_data(db: Database, config: dict) -> None:
@@ -182,6 +204,7 @@ process_data()
 Use the testing utilities to create disposable containers for unit tests.
 
 ```python
+from injectq import InjectQ
 from injectq.testing import test_container
 
 def test_user_service():
@@ -198,9 +221,11 @@ def test_user_service():
 ## Real-world example
 
 ```python
-from injectq import injectq
+from injectq import InjectQ
 from typing import List, Optional
 from dataclasses import dataclass
+
+container = InjectQ.get_instance()
 
 @dataclass
 class User:
@@ -237,13 +262,13 @@ class UserService:
         return self.repo.find_by_id(user_id)
 
 # Application setup
-injectq[str] = "postgresql://localhost:5432/myapp"  # Database URL
-injectq[int] = 300  # Cache timeout in seconds
+container[str] = "postgresql://localhost:5432/myapp"  # Database URL
+container[int] = 300  # Cache timeout in seconds
 
-injectq[UserRepository] = UserRepository
-injectq[UserService] = UserService
+container[UserRepository] = UserRepository
+container[UserService] = UserService
 
-service = injectq[UserService]
+service = container[UserService]
 
 user1 = service.create_user("John Doe", "john@example.com")
 user2 = service.create_user("Jane Smith", "jane@example.com")
@@ -251,7 +276,7 @@ user2 = service.create_user("Jane Smith", "jane@example.com")
 found_user = service.get_user(1)
 print(f"Found user: {found_user}")
 
-all_users = injectq[UserRepository].find_all()
+all_users = container[UserRepository].find_all()
 print(f"All users: {all_users}")
 ```
 

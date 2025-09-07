@@ -277,19 +277,19 @@ from .models import CreateUserRequest, UpdateUserRequest
 
 async def setup_container() -> None:
     """Set up the dependency injection container using the public convenience container."""
-    from injectq import injectq
+    from injectq import InjectQ
 
     # use the global convenience container directly
-    # use `injectq` directly instead of assigning it to a new variable
+    container = InjectQ.get_instance()
 
     # Bind configurations
-    injectq[DatabaseConfig] = DatabaseConfig
-    injectq[AppConfig] = AppConfig
+    container[DatabaseConfig] = DatabaseConfig
+    container[AppConfig] = AppConfig
 
     # Bind services (automatically resolved)
-    injectq[Database] = Database
-    injectq[UserRepository] = UserRepository
-    injectq[UserService] = UserService
+    container[Database] = Database
+    container[UserRepository] = UserRepository
+    container[UserService] = UserService
 
 
 @inject

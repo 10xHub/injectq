@@ -7,17 +7,20 @@ Get up and running with InjectQ in minutes! This guide will walk you through the
 Let's start with a simple example:
 
 ```python
-from injectq import injectq, inject
+from injectq import InjectQ, inject
 
-# 1. Bind a simple value
-injectq[str] = "Hello, InjectQ!"
+# 1. Get the container
+container = InjectQ.get_instance()
 
-# 2. Use dependency injection
+# 2. Bind a simple value
+container[str] = "Hello, InjectQ!"
+
+# 3. Use dependency injection
 @inject
 def greet(message: str) -> str:
     return f"Message: {message}"
 
-# 3. Call the function
+# 4. Call the function
 result = greet()
 print(result)  # Output: Message: Hello, InjectQ!
 ```
@@ -48,11 +51,12 @@ class UserService:
         return 42  # Mock result
 
 # 2. Set up the container
-injectq[str] = "postgresql://localhost:5432/myapp"
+container = InjectQ.get_instance()
+container[str] = "postgresql://localhost:5432/myapp"
 
 # Bind services (classes are automatically resolved)
-injectq[Database] = Database
-injectq[UserService] = UserService
+container[Database] = Database
+container[UserService] = UserService
 
 # 3. Use dependency injection
 @inject
@@ -84,20 +88,22 @@ process_data()
 ### Method 2: Dict-like Interface
 
 ```python
-injectq["api_key"] = "your-secret-key"
-injectq[UserService] = UserService()
+container = InjectQ.get_instance()
+container["api_key"] = "your-secret-key"
+container[UserService] = UserService()
 
 # Access directly
-api_key = injectq["api_key"]
-service = injectq[UserService]
+api_key = container["api_key"]
+service = container[UserService]
 ```
 
 ### Method 3: Manual Resolution
 
 ```python
 # Get services when needed
-service = injectq[UserService]
-config = injectq[str]
+container = InjectQ.get_instance()
+service = container[UserService]
+config = container[str]
 ```
 
 ## 🎭 Understanding Scopes
@@ -105,7 +111,9 @@ config = injectq[str]
 Control how long your services live:
 
 ```python
-from injectq import singleton, transient
+from injectq import InjectQ, singleton, transient
+
+container = InjectQ.get_instance()
 
 @singleton  # One instance for entire app
 class DatabaseConnection:
@@ -120,17 +128,17 @@ class RequestHandler:
         self.id = id(self)
         print(f"Handler created: {self.id}")
 
-injectq[DatabaseConnection] = DatabaseConnection
-injectq[RequestHandler] = RequestHandler
+container[DatabaseConnection] = DatabaseConnection
+container[RequestHandler] = RequestHandler
 
 # Test singleton behavior
-db1 = injectq[DatabaseConnection]
-db2 = injectq[DatabaseConnection]
+db1 = container[DatabaseConnection]
+db2 = container[DatabaseConnection]
 print(f"Same database? {db1 is db2}")  # True
 
 # Test transient behavior
-handler1 = injectq[RequestHandler]
-handler2 = injectq[RequestHandler]
+handler1 = container[RequestHandler]
+handler2 = container[RequestHandler]
 print(f"Different handlers? {handler1 is not handler2}")  # True
 print(f"Same database in handlers? {handler1.db is handler2.db}")  # True
 ```
@@ -140,7 +148,9 @@ print(f"Same database in handlers? {handler1.db is handler2.db}")  # True
 Organize your dependencies with modules:
 
 ```python
-from injectq import Module, provider
+from injectq import InjectQ, Module, provider
+
+container = InjectQ.get_instance()
 
 class ConfigModule(Module):
     def configure(self, binder):
@@ -172,7 +182,10 @@ main()
 InjectQ makes testing easy:
 
 ```python
+from injectq import InjectQ
 from injectq.testing import override_dependency
+
+container = InjectQ.get_instance()
 
 def test_user_service():
     # Override dependencies for testing

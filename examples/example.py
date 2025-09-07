@@ -8,12 +8,12 @@ import asyncio
 import uuid
 from datetime import datetime
 
-from injectq import injectq, inject, singleton, transient
+from injectq import InjectQ, inject, singleton, transient
 
 
 # Example 1: Simple dict-like interface
 print("=== Example 1: Dict-like Interface ===")
-container = injectq
+container = InjectQ.get_instance()
 
 # Simple value binding
 container[str] = "postgresql://localhost:5432/mydb"

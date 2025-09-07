@@ -7,11 +7,13 @@ The **`@inject` decorator** is InjectQ's most powerful and recommended way to in
 The `@inject` decorator eliminates manual dependency management:
 
 ```python
-from injectq import injectq, inject
+from injectq import InjectQ, inject
+
+container = InjectQ.get_instance()
 
 # Set up container
-injectq[Database] = Database
-injectq[UserService] = UserService
+container[Database] = Database
+container[UserService] = UserService
 
 # Use @inject decorator
 @inject
@@ -52,6 +54,10 @@ def create_report(
 Dependencies are resolved based on type hints:
 
 ```python
+from injectq import InjectQ
+
+container = InjectQ.get_instance()
+
 class IUserRepository(Protocol):
     def get_by_id(self, id: int) -> Optional[User]: ...
 
@@ -61,7 +67,7 @@ class UserRepository:
         pass
 
 # Register implementation
-injectq.bind(IUserRepository, UserRepository)
+container.bind(IUserRepository, UserRepository)
 
 @inject
 def get_user(repo: IUserRepository) -> Optional[User]:
@@ -135,7 +141,7 @@ class UserService:
         self.repo = repo
 
 # Register only the top-level service
-injectq[UserService] = UserService
+container[UserService] = UserService
 
 @inject
 def use_service(service: UserService) -> None:
@@ -217,6 +223,7 @@ def process_with_transaction(service: UserService) -> None:
 ### Mock Dependencies
 
 ```python
+from injectq import InjectQ
 from injectq.testing import override_dependency
 
 def test_user_service():
@@ -231,6 +238,7 @@ def test_user_service():
 ### Test Containers
 
 ```python
+from injectq import InjectQ
 from injectq.testing import test_container
 
 def test_with_isolation():

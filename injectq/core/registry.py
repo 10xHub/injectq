@@ -134,7 +134,6 @@ class ServiceRegistry:
         self,
         service_type: ServiceKey,
         factory: ServiceFactory,
-        allow_concrete: bool = True,
         allow_override: bool = True,
     ) -> None:
         """Bind a service type to a factory function.
@@ -142,8 +141,6 @@ class ServiceRegistry:
         Args:
             service_type: The service type or key to bind
             factory: The factory function
-            allow_concrete: Whether to auto-register concrete types when
-                          registering instances (default: True)
             allow_override: Whether to allow overriding existing registrations
                           (default: True)
         """
