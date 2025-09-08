@@ -1,9 +1,7 @@
-"""Inject decorator for automatic dependency injection."""
-
 import functools
 import inspect
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Generic, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, Generic, Type, TypeVar, cast, overload
 
 from injectq.core import InjectQ
 from injectq.utils import (
@@ -21,8 +19,16 @@ except ImportError:
     ContainerContext = None
 
 
-F = TypeVar("F", bound=Callable)
+F = TypeVar("F", bound=Callable[..., Any])
 T = TypeVar("T")
+
+
+@overload
+def inject(func: F) -> F: ...
+
+
+@overload
+def inject(*, container: "InjectQ") -> Callable[[F], F]: ...
 
 
 def inject(
@@ -130,7 +136,7 @@ async def _inject_and_call_async(
                 try:
                     # If an explicit Inject(...) marker is provided as default, honor it
                     param = sig.parameters.get(param_name)
-                    if param and isinstance(param.default, Inject | InjectType):
+                    if param and isinstance(param.default, Inject):
                         dependency = await container.aget(param.default.service_type)
                         bound_args.arguments[param_name] = dependency
                         continue
@@ -188,7 +194,7 @@ def _inject_and_call(
                 try:
                     # If an explicit Inject(...) marker is provided as default, honor it
                     param = sig.parameters.get(param_name)
-                    if param and isinstance(param.default, Inject | InjectType):
+                    if param and isinstance(param.default, Inject):
                         dependency = container.get(param.default.service_type)
                         bound_args.arguments[param_name] = dependency
                         continue
@@ -227,187 +233,112 @@ def _inject_and_call(
         raise InjectionError(msg) from e
 
 
-if TYPE_CHECKING:
-    # Type-only base class that makes InjectType appear as T to type checkers
-    class _InjectTypeBase(Generic[T]):
-        def __new__(cls, service_type: type[T]) -> T:  # type: ignore[misc]
-            # This will never be called at runtime
-            return super().__new__(cls)  # type: ignore[return-value]
-else:
-    _InjectTypeBase = Generic
+class _InjectMeta(type):
+    """Metaclass to enable the `Inject[ServiceType]` syntax."""
+
+    def __getitem__(cls, item: type[T]) -> T:
+        return cls(item)
 
 
-class InjectType(_InjectTypeBase[T]):
-    """Type-safe injection marker for Inject[ServiceType] syntax."""
+class Inject(Generic[T], metaclass=_InjectMeta):
+    """A lazy proxy object that resolves a dependency from the container on first use.
+
+    This works both with and without the @inject decorator.
+
+    Usage:
+        # The parameter `a` will be an instance of `Inject`.
+        # When `a.hello()` is called, it will fetch `A` from the
+        # container and delegate the call.
+        def my_function(a: A = Inject[A]):
+            a.hello()
+    """
 
     def __init__(self, service_type: type[T]) -> None:
         self.service_type = service_type
-        self._injected_value: T | None = None
-        self._injected = False
+        # Use a special object to signify that the value has not been resolved yet.
+        self._injected_value: Any = None
+
+    def _resolve(self) -> T:
+        """Resolves the dependency from the container if it hasn't been already."""
+        if self._injected_value is None:
+            # Get the container at the last possible moment.
+            container = InjectQ.get_instance()
+            self._injected_value = container.get(self.service_type)
+        return self._injected_value
+
+    @property
+    def __class__(self):  # type: ignore  # noqa: ANN204, PGH003
+        # Before resolution -> looks like NoneType (or keep it as Inject)
+        self._resolve()
+        if self._injected_value is None:
+            return type(None)  # or `Inject`
+        # After resolution -> looks like the resolved object's type
+        return self._injected_value.__class__
 
     def __repr__(self) -> str:
-        return f"Inject[{self.service_type.__name__}]"
+        self._resolve()
+        if self._injected_value:
+            return f"{self._injected_value.__class__.__name__}"
+        return "None"
 
-    def __getattr__(self, name: str) -> object:
-        if not self._injected:
-            # Get the container at call time, preferring context over singleton
-            container = ContainerContext.get_current() if ContainerContext else None
-            if not container:
-                container = InjectQ.get_instance()
-            self._injected_value = container.get(self.service_type)
-            self._injected = True
-        if self._injected_value is not None:
-            return getattr(self._injected_value, name)
-        msg = f"'{self.__class__.__name__}' object has no attribute '{name}'"
-        raise AttributeError(msg)
+    def __getattr__(self, name: str) -> Any:
+        """Called when an attribute is accessed (e.g., `a.hello`).
 
-    def __call__(self) -> T:
-        """Allow Inject to be called to get the injected value."""
-        if not self._injected:
-            # Get the container at call time, preferring context over singleton
-            container = ContainerContext.get_current() if ContainerContext else None
-            if not container:
-                container = InjectQ.get_instance()
-            self._injected_value = container.get(self.service_type)
-            self._injected = True
-        return self._injected_value  # type: ignore[return-value]
+        This is the magic. It resolves the real object and gets the attribute from it.
+        """
+        resolved_instance = self._resolve()
+        if name == "__class__":
+            if resolved_instance is None:
+                return type(None)
+            return resolved_instance.__class__
+
+        return getattr(resolved_instance, name)
 
     def __bool__(self) -> bool:
-        """Make Inject truthy when injected."""
-        return self._injected
+        """Allows `if a:` to work correctly.
+
+        It resolves the dependency and checks the truthiness of the real object.
+
+        Args:
+            a: The injected dependency (optional).
+
+        Returns:
+            bool: Truthiness of the resolved object
+
+        Raises:
+            DependencyNotFoundError: If the dependency cannot be resolved
+        """
+        try:
+            return bool(self._resolve())
+        except DependencyNotFoundError:
+            # If the dependency cannot be found, the proxy is considered Falsy.
+            return False
 
     def __eq__(self, other: object) -> bool:
-        """Compare with injected value."""
-        if not self._injected:
-            # Get the container at call time, preferring context over singleton
-            container = ContainerContext.get_current() if ContainerContext else None
-            if not container:
-                container = InjectQ.get_instance()
-            self._injected_value = container.get(self.service_type)
-            self._injected = True
+        """Compares the resolved object to another object."""
+        if self._injected_value is None:
+            # If not yet resolved, it can't be equal to anything.
+            # You could resolve here, but it might have side effects.
+            # A simple comparison is safer.
+            return False
         return self._injected_value == other
 
     def __hash__(self) -> int:
-        """Hash based on injected value."""
-        if not self._injected:
-            # Get the container at call time, preferring context over singleton
-            container = ContainerContext.get_current() if ContainerContext else None
-            if not container:
-                container = InjectQ.get_instance()
-            self._injected_value = container.get(self.service_type)
-            self._injected = True
-        return hash(self._injected_value)
+        return hash(self._resolve())
 
+    def __instancecheck__(self, instance: Any) -> bool:
+        """Support isinstance(proxy, ResolvedType)."""
+        return isinstance(self._resolve(), instance)
 
-class _InjectMeta(type):
-    """Metaclass for Inject that enables generic syntax."""
+    def __subclasscheck__(self, subclass: Any) -> bool:
+        """Support issubclass(proxy_type, ResolvedType)."""
+        return issubclass(self._resolve().__class__, subclass)
 
-    def __getitem__(cls, item: type[T]) -> T:  # type: ignore[misc]
-        """Support generic syntax Inject[ServiceType]."""
-        if TYPE_CHECKING:
-            # For type checking, return the actual type
-            return item  # type: ignore[return-value]
-        # At runtime, return InjectType instance
-        return InjectType(item)  # type: ignore[return-value]
-
-
-class InjectRequiresServiceTypeError(TypeError):
-    """Exception raised when Inject() is called without service_type."""
-
-    def __init__(self) -> None:
-        super().__init__("Inject() requires service_type argument")
-
-
-if TYPE_CHECKING:
-    # Type-only base class that makes Inject appear as T to type checkers
-    class _InjectBase(Generic[T]):
-        def __new__(cls, service_type: type[T] | None = None) -> T:  # type: ignore[misc]
-            # This will never be called at runtime
-            return super().__new__(cls)  # type: ignore[return-value]
-else:
-    _InjectBase = Generic
-
-
-class Inject(_InjectBase[T], metaclass=_InjectMeta):
-    """Explicit dependency injection marker.
-
-    Can be used in two ways:
-    1. Inject(ServiceType) - traditional syntax
-    2. Inject[ServiceType] - generic syntax (recommended for type safety)
-
-    Examples:
-        def my_function(service=Inject(UserService)):
-            # service will be injected
-            pass
-
-        def my_function(service: UserService = Inject[UserService]):
-            # service will be injected with proper type checking
-            pass
-    """
-
-    @overload
-    def __init__(self, service_type: type[T]) -> None: ...
-
-    @overload
-    def __init__(self) -> None: ...
-
-    def __init__(self, service_type: type[T] | None = None) -> None:
-        if service_type is None:
-            # This should never happen at runtime, only for type checker satisfaction
-            raise InjectRequiresServiceTypeError
-        self.service_type = service_type
-        self._injected_value: T | None = None
-        self._injected = False
-
-    def __repr__(self) -> str:
-        return f"Inject({self.service_type})"
-
-    def __getattr__(self, name: str) -> object:
-        if not self._injected:
-            # Get the container at call time, preferring context over singleton
-            container = ContainerContext.get_current() if ContainerContext else None
-            if not container:
-                container = InjectQ.get_instance()
-            self._injected_value = container.get(self.service_type)
-            self._injected = True
-        if self._injected_value is not None:
-            return getattr(self._injected_value, name)
-        msg = f"'{self.__class__.__name__}' object has no attribute '{name}'"
-        raise AttributeError(msg)
-
-    def __call__(self) -> T:
-        """Allow Inject to be called to get the injected value."""
-        if not self._injected:
-            # Get the container at call time, preferring context over singleton
-            container = ContainerContext.get_current() if ContainerContext else None
-            if not container:
-                container = InjectQ.get_instance()
-            self._injected_value = container.get(self.service_type)
-            self._injected = True
-        return self._injected_value  # type: ignore[return-value]
-
-    def __bool__(self) -> bool:
-        """Make Inject truthy when injected."""
-        return self._injected
-
-    def __eq__(self, other: object) -> bool:
-        """Compare with injected value."""
-        if not self._injected:
-            # Get the container at call time, preferring context over singleton
-            container = ContainerContext.get_current() if ContainerContext else None
-            if not container:
-                container = InjectQ.get_instance()
-            self._injected_value = container.get(self.service_type)
-            self._injected = True
-        return self._injected_value == other
-
-    def __hash__(self) -> int:
-        """Hash based on injected value."""
-        if not self._injected:
-            # Get the container at call time, preferring context over singleton
-            container = ContainerContext.get_current() if ContainerContext else None
-            if not container:
-                container = InjectQ.get_instance()
-            self._injected_value = container.get(self.service_type)
-            self._injected = True
-        return hash(self._injected_value)
+    def __getattribute__(self, name: str):
+        # Special handling for __class__ to spoof type()
+        if name == "__class__":
+            resolved_instance = self._resolve()
+            if resolved_instance is None:
+                return type(None)
+            return resolved_instance.__class__
+        return object.__getattribute__(self, name)
