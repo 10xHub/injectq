@@ -283,7 +283,7 @@ class TestTypeChecking:
         container.bind(PostgreSQLDatabase, PostgreSQLDatabase)
 
         def get_database() -> PostgreSQLDatabase:
-            db: PostgreSQLDatabase = Inject(PostgreSQLDatabase)()  # type: ignore[assignment]
+            db: PostgreSQLDatabase = Inject[PostgreSQLDatabase]
             return db
 
         with container.context():

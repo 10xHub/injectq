@@ -2,41 +2,91 @@
 
 **FastAPI integration** provides seamless dependency injection for FastAPI applications, enabling automatic service resolution with proper request scoping and lifecycle management.
 
+
 ## 🎯 Getting Started
 
-### Basic Setup
+### Modern Middleware-Based Setup (Recommended)
+
+InjectQ's FastAPI integration uses a high-performance, middleware-based approach for dependency injection. This avoids global container state and leverages per-request ContextVars for true request scoping and isolation.
+
+**Key benefits:**
+- No global container state or manual access
+- Request-scoped caching and lifecycle
+- Lazy-by-default injection: dependencies are only resolved when first accessed
+- Type-safe: static analysis tools (Pylance, MyPy) see the correct type
+- Middleware sets up context for every request with O(1) overhead
+
+#### Example Usage
 
 ```python
-from fastapi import FastAPI
-from injectq import InjectQ
-from injectq.integrations.fastapi import setup_fastapi_integration, InjectQDependency
+from fastapi import FastAPI, HTTPException
+from injectq import InjectQ, singleton, inject
+from injectq.integrations import InjectAPI, setup_fastapi
 
-# 1. Create container and bind services
-container = InjectQ()
-container.bind(IUserService, UserService())
-container.bind(IOrderService, OrderService())
+@singleton
+class UserRepo:
+    ...
 
-# 2. Create FastAPI app
-app = FastAPI(title="My API", version="1.0.0")
+@singleton
+class UserService:
+    @inject
+    def __init__(self, user_repo: UserRepo):
+        self.user_repo = user_repo
+    ...
 
-# 3. Set up integration
-setup_fastapi_integration(app, container)
+app = FastAPI()
+container = InjectQ.get_instance()
+setup_fastapi(container, app)
 
-# 4. Use dependency injection in endpoints
+# Dependency variable at module scope (recommended for static typing)
+@app.post("/users/{user_id}")
+def create_user(
+    user_id: str, user_service: Annotated[UserService, InjectAPI(UserService)]
+):
+    user_service.create_user(user_id, {"name": "John Doe"})
+    return {"message": "User created successfully"}
+
+
 @app.get("/users/{user_id}")
-async def get_user(
-    user_id: int,
-    user_service: IUserService = InjectQDependency(IUserService)
-):
-    return user_service.get_user(user_id)
-
-@app.post("/orders")
-async def create_order(
-    order_data: OrderCreate,
-    order_service: IOrderService = InjectQDependency(IOrderService)
-):
-    return order_service.create_order(order_data)
+def get_user(user_id: str, user_service: UserService = InjectAPI[UserService]):
+    user = user_service.retrieve_user(user_id)
+    if user:
+        return user
+    raise HTTPException(status_code=404, detail="User not found")
 ```
+
+#### Why This Is a Better Approach
+
+- **Middleware-based context propagation**: The integration uses a Starlette middleware to set per-request ContextVars, ensuring each request gets its own isolated container and cache. This avoids the performance overhead of entering container context managers for every request and eliminates global state.
+- **Lazy-by-default injection**: InjectAPI returns a proxy that only resolves the dependency when you first access it (attribute or call). This means you pay zero cost for unused dependencies, and heavy objects are only created if needed.
+- **Type safety and static analysis**: By using a module-level dependency variable (e.g., `user_service_dep = InjectAPI(UserService)`), you avoid Pylance and MyPy errors about mismatched types. The InjectAPI class is designed to spoof the type for static analysis, so your endpoint signatures remain correct and IDEs provide full type hints.
+- **Request-scoped caching**: If you use `InjectAPI(Service, scope="request")`, the same instance is reused for the lifetime of the request, ideal for expensive or stateful services.
+- **No manual container access**: You never need to reach into a global container in your endpoints. All resolution is automatic and per-request.
+- **Performance**: ContextVar set/reset is O(1) and extremely fast. No per-request context manager entry/exit.
+
+#### Pylance and Static Typing
+
+If you use InjectAPI as a type annotation (e.g., `user_service: InjectAPI[UserService]`), Pylance will complain that the type is not assignable to `UserService`. The recommended pattern is to use a module-level dependency variable as the default value:
+
+```python
+user_service_dep = InjectAPI(UserService)
+
+def endpoint(..., user_service: UserService = user_service_dep):
+    ...
+```
+
+This ensures type safety and avoids IDE errors.
+
+#### Advanced: Scopes and Lazy
+
+- `InjectAPI(Service, scope="request")` enables request-local caching.
+- `InjectAPI(Service, lazy=False)` disables lazy proxy and resolves eagerly.
+- Helpers: `Singleton(Service)`, `RequestScoped(Service)`, `Transient(Service)`.
+
+#### Testing
+
+You can stub InjectAPI in tests or use the same pattern with FastAPI's TestClient. The middleware ensures each test request is isolated.
+
 
 ### Service Definitions
 
@@ -689,6 +739,7 @@ FastAPI integration provides:
 - **Framework lifecycle integration** - Automatic cleanup and resource management
 - **Testing support** - Easy mocking and test isolation
 
+
 **Key features:**
 - Seamless integration with FastAPI's dependency system
 - Support for all InjectQ scopes (singleton, scoped, transient)
@@ -696,6 +747,7 @@ FastAPI integration provides:
 - Custom dependency resolvers
 - Background task integration
 - WebSocket support
+- **Lazy-by-default injection for optimal performance**
 
 **Best practices:**
 - Use scoped services for request-specific data
