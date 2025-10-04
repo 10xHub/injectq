@@ -8,7 +8,7 @@
 InjectQ is a modern, lightweight Python dependency injection library focused on clarity, type-safety, and seamless framework integration.
 
 ## Documentation
-Full documentation is hosted at https://iamsdt.github.io/injectq/ and the repository `docs/` contains the source.
+Full documentation is hosted at [https://iamsdt.github.io/injectq/](https://10xhub.github.io/injectq/) and the repository `docs/` contains the source.
 
 ## Key features
 
