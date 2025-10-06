@@ -1,8 +1,6 @@
-import inspect
 from abc import ABC, abstractmethod
-from typing import Type
 
-from injectq import inject, injectq
+from injectq import InjectQ, inject
 
 
 class Base(ABC):
@@ -12,17 +10,17 @@ class Base(ABC):
 
 
 class Derived(Base):
-    async def method(self):  # type: ignore
+    async def method(self):  # type: ignore  # noqa: PGH003
         return "Implemented method"
 
 
 class Derived2(Base):
-    async def method(self):  # type: ignore
+    async def method(self):  # type: ignore  # noqa: PGH003
         return "Implemented method"
 
 
 class Derived3(Base):
-    async def method(self):  # type: ignore
+    async def method(self):  # type: ignore  # noqa: PGH003
         return "Implemented method"
 
 
@@ -35,17 +33,18 @@ async def call(base: Base):
 async def call2(base: Derived):
     print(base)
     if base is None:
-        return
+        return None
     return await base.method()
 
 
 async def main():
-    print(await call())
-    print(await call2())
+    print(await call())  # type: ignore  # noqa: PGH003
+    print(await call2())  # type: ignore  # noqa: PGH003
 
 
 if __name__ == "__main__":
     instance = Derived()
+    injectq = InjectQ()
     injectq[Base] = instance
     print(type(instance))
     import asyncio

@@ -1,4 +1,4 @@
-from injectq import inject, injectq
+from injectq import InjectQ, inject
 
 from .graph import BaseCheckpointer, Checkpointer, Graph
 
@@ -13,6 +13,6 @@ if __name__ == "__main__":
     compiled = app.compile()
     compiled.invoke()
 
-    injectq.bind(BaseCheckpointer, Checkpointer())
+    InjectQ.get_instance().bind(BaseCheckpointer, Checkpointer())
 
     call()  # type: ignore

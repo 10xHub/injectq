@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from injectq import inject, injectq
+from injectq import InjectQ, inject
 
 
 class ExpensiveService:
@@ -45,7 +45,8 @@ class EagerLoader:
 
 
 # Register the service (don't create it yet)
-injectq.bind(ExpensiveService)
+container = InjectQ.get_instance()
+container.bind(ExpensiveService)
 
 if __name__ == "__main__":
     print("=== Lazy Loading Example ===")

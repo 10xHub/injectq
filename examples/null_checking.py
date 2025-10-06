@@ -1,8 +1,8 @@
-from injectq import Inject, inject, singleton, injectq
+from injectq import Inject, InjectQ
 
 
 class A:
-    def __init__(self):
+    def __init__(self) -> None:
         self.value = "Service A"
 
 
@@ -13,5 +13,6 @@ def call_hello(name: str, service: A | None = Inject[A]) -> None:
 
 
 if __name__ == "__main__":
-    injectq.bind(A, None, allow_none=True)  # Now works with allow_none=True
+    injectq = InjectQ.get_instance()
+    injectq.bind(A, None, allow_none=True)
     call_hello("World")

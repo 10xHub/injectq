@@ -1,4 +1,4 @@
-from injectq import injectq
+from injectq import InjectQ
 
 
 class A:
@@ -6,7 +6,7 @@ class A:
 
 
 if __name__ == "__main__":
-    ins = A
+    ins = A()
 
     if isinstance(ins, type):
         print("ins is a type")
@@ -16,6 +16,7 @@ if __name__ == "__main__":
     else:
         print("ins is NOT an instance of A")
 
-    injectq.bind_instance(A, A)
+    injectq = InjectQ()
+    injectq.bind_instance(A, A())
     a1 = injectq.get(A)
     print(a1)

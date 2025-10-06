@@ -65,8 +65,8 @@ async def demo_allow_concrete():
 
     # Both base and concrete types work
     print("2. Testing injection...")
-    base_result = await process_base()
-    concrete_result = await process_concrete()
+    base_result = await process_base()  # type: ignore
+    concrete_result = await process_concrete()  # type: ignore
 
     print(f"   {base_result}")
     print(f"   {concrete_result}")

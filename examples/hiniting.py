@@ -1,8 +1,8 @@
-from injectq import Inject, inject, injectq, singleton
+from injectq import Inject, InjectQ
 
 
 class A:
-    def __init__(self):
+    def __init__(self) -> None:
         self.value = "Service A"
 
 
@@ -12,4 +12,6 @@ def hello_function(name: str, service: A = Inject[A]) -> None:
 
 
 if __name__ == "__main__":
-    hello_function()
+    container = InjectQ.get_instance()
+    container.bind(A, A())  # Bind the type A to an instance of A
+    hello_function()  # type: ignore  # noqa: PGH003

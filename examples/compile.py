@@ -1,4 +1,4 @@
-from injectq import injectq
+from injectq import InjectQ
 
 
 class Model:
@@ -12,6 +12,7 @@ class Model2:
 
 
 if __name__ == "__main__":
+    injectq = InjectQ()
     injectq[Model] = Model()
     injectq.compile()
 

@@ -1,6 +1,6 @@
-from injectq import Inject, inject, injectq
-from injectq.core.container import InjectQ
 from typing import Any
+
+from injectq import Inject, InjectQ, inject
 
 
 class C:
@@ -11,7 +11,7 @@ class Agent:
     def __init__(self, container: Any, name: str) -> None:
         self.name = name
         # Use provided container or fallback to global convenience container
-        self.container = container or injectq
+        self.container = container or InjectQ.get_instance()
         self.container.bind("agent_name", self.name)
         # Bind the agent instance to the container for injection
         self.container.bind(Agent, self)
@@ -35,7 +35,7 @@ def checking(
         return
     print("Agent 2", agent2)
     print(agent.name)
-    print(agent.container is injectq)
+    print(agent.container is InjectQ.get_instance())
     print(agent_name)
 
 

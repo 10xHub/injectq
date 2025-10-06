@@ -1,5 +1,4 @@
-
-from injectq import inject, injectq, singleton
+from injectq import inject, InjectQ, singleton
 
 
 # class A:
@@ -45,6 +44,7 @@ class Graph:
         self.edges = {}
 
     def compile(self):
+        injectq = InjectQ.get_instance()
         injectq.bind(Graph, self)
         app = CompiledGraph()  # type: ignore[call-arg]
         injectq.bind(CompiledGraph, app)
