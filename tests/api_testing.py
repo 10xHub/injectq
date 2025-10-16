@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import FastAPI, HTTPException
+from fastapi.testclient import TestClient
 
 from injectq import InjectQ, inject, singleton
 from injectq.integrations.fastapi import InjectFastAPI, setup_fastapi
@@ -63,7 +64,23 @@ def get_user(
     raise HTTPException(status_code=404, detail="User not found")
 
 
-if __name__ == "__main__":
-    import uvicorn
+def test_create_user():
+    client = TestClient(app)
+    response = client.post("/users/123")
+    assert response.status_code == 200
+    assert response.json() == {"message": "User created successfully"}
 
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+
+def test_get_user():
+    client = TestClient(app)
+    client.post("/users/123")  # Ensure user exists
+    response = client.get("/users/123")
+    assert response.status_code == 200
+    assert response.json() == {"name": "John Doe"}
+
+
+def test_get_user_not_found():
+    client = TestClient(app)
+    response = client.get("/users/999")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "User not found"}
