@@ -109,6 +109,8 @@ pytest tests/test_benchmarks.py  # Runs without detailed timing
 - `test_benchmark_stress_sequential_binds` - 500 sequential binds
 - `test_benchmark_stress_resolution_mix` - 100 mixed operations
 
+**Note:** Stress tests show `(>1000.0)` in red because they measure cumulative operations. The per-operation cost is calculated by dividing the total time by the number of operations.
+
 ---
 
 ## 📈 Key Performance Metrics
@@ -139,8 +141,15 @@ thread_safe_ops:    24.7 μs  ⚡ 40.5K ops/sec
 web_request (10):    142 μs  ⚡ 7,037 ops/sec
 100 services:        779 μs  ⚡ 1,283 ops/sec
 1000 gets:           739 μs  ⚡ 1,352 ops/sec
-1000 transients:    24.8 ms  ⚡ 40 ops/sec
 ```
+
+### Stress Tests (1+ ms) ⚠️
+**Note:** These show as red `(>1000.0)` because they're cumulative operations
+```
+500 sequential binds:  1.88 ms  ⚡ 532 ops/sec  (3.76 μs per bind)
+1000 transients:      24.87 ms  ⚡ 40 ops/sec   (24.87 μs per instance)
+```
+✅ **Per-operation performance is normal** - the large multiplier is expected for bulk operations
 
 ---
 
@@ -163,7 +172,25 @@ web_request (10):    142 μs  ⚡ 7,037 ops/sec
 ### Comparison Operators
 - **(1.0)** = Baseline (fastest test)
 - **(2.5)** = 2.5× slower than baseline
-- **(>1000.0)** = More than 1000× slower
+- **(>1000.0)** = More than 1000× slower (shown in RED)
+
+### Why Are Some Tests Red?
+
+**Stress tests will appear RED with `(>1000.0)`** - this is normal!
+
+- **Root cause:** Stress tests measure *cumulative* operations (500-1000 ops), while basic tests measure *single* operations
+- **Example:** A 1.88 ms stress test is compared against a 272 ns basic operation → 6,900× multiplier
+- **Verdict:** ✅ **Not a performance problem** - per-operation cost is still good
+
+**How to interpret:**
+- Stress test mean time: 1.88 ms for 500 operations
+- **Per-operation time:** 1.88 ms ÷ 500 = **3.76 μs** (actually good!)
+- The large multiplier is expected for bulk operations
+
+**When to worry:**
+- ❌ Individual operation benchmarks showing >10× regression
+- ❌ Stress tests taking orders of magnitude longer than expected
+- ✅ Stress tests showing `(>1000.0)` due to cumulative operations → Normal
 
 ---
 
