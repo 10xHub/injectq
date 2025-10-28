@@ -1,8 +1,8 @@
 # InjectQ Performance Benchmark Report
 
-**Generated:** October 28, 2024  
-**Python Version:** 3.13.5  
-**Platform:** macOS (Darwin)  
+**Generated:** October 28, 2024
+**Python Version:** 3.13.5
+**Platform:** macOS (Darwin)
 **Benchmark Tool:** pytest-benchmark 5.1.0
 
 ## Executive Summary
@@ -11,10 +11,10 @@ This report presents comprehensive performance benchmarks for the InjectQ depend
 
 ### Key Findings
 
-✅ **Ultra-Fast Core Operations:** Basic container operations (bind, get, has) execute in **~270-780 nanoseconds**  
-✅ **Efficient Dependency Resolution:** Simple to complex dependency graphs resolve in **1-25 microseconds**  
-✅ **Excellent Scalability:** Handles **1,000+ service instances** efficiently  
-✅ **Thread-Safe:** Concurrent operations maintain performance with minimal overhead  
+✅ **Ultra-Fast Core Operations:** Basic container operations (bind, get, has) execute in **~270-780 nanoseconds**
+✅ **Efficient Dependency Resolution:** Simple to complex dependency graphs resolve in **1-25 microseconds**
+✅ **Excellent Scalability:** Handles **1,000+ service instances** efficiently
+✅ **Thread-Safe:** Concurrent operations maintain performance with minimal overhead
 ✅ **Production-Ready:** Real-world scenarios (web requests, API stacks) perform exceptionally well
 
 ---
@@ -91,7 +91,7 @@ Performance under load conditions:
 | `stress_sequential_binds` | 1.96 ms | 509 | 500 sequential binds |
 | `load_transient_creation` | 24.8 ms | 40 | 1,000 transient instances |
 
-**Analysis:** 
+**Analysis:**
 - ✅ Can handle **1,000 get operations** in under 1 millisecond
 - ✅ Web request simulation (realistic scenario) completes in **142 microseconds**
 - ✅ Creating 100 services takes only **779 microseconds**
@@ -307,11 +307,11 @@ time_per_resolution = ~1,000 ns (1 μs)
 
 InjectQ demonstrates **exceptional performance** across all tested scenarios:
 
-✅ **Sub-microsecond operations** for core functionality  
-✅ **Linear scaling** under load (1,000+ operations)  
-✅ **Thread-safe** with acceptable overhead  
-✅ **Production-ready** for high-performance applications  
-✅ **Negligible overhead** compared to manual dependency injection  
+✅ **Sub-microsecond operations** for core functionality
+✅ **Linear scaling** under load (1,000+ operations)
+✅ **Thread-safe** with acceptable overhead
+✅ **Production-ready** for high-performance applications
+✅ **Negligible overhead** compared to manual dependency injection
 
 ### Performance Grade: **A+**
 
@@ -361,7 +361,7 @@ pytest-benchmark compare --histogram
 
 ---
 
-**Report Version:** 1.0  
-**Benchmark Suite:** test_benchmarks.py (30 tests)  
-**Total Runtime:** ~56 seconds  
+**Report Version:** 1.0
+**Benchmark Suite:** test_benchmarks.py (30 tests)
+**Total Runtime:** ~56 seconds
 **Test Status:** ✅ All 30 benchmarks passed

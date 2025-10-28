@@ -86,7 +86,7 @@ def InjectTaskiq(  # noqa: N802
         ```
     """
     try:
-        from taskiq import Context, TaskiqDepends  # noqa: PLC0415
+        from taskiq import Context, TaskiqDepends
     except ImportError as exc:
         msg = (
             "InjectTaskiq requires the 'taskiq' package. Install with "

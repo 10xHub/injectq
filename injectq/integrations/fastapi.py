@@ -77,7 +77,7 @@ def InjectFastAPI(interface: type[T]) -> T:  # noqa: N802
         ```
     """
     try:
-        from fastapi import Depends  # noqa: PLC0415
+        from fastapi import Depends
     except ImportError as exc:
         msg = (
             "InjectFastAPI requires the 'fastapi' package. Install with "

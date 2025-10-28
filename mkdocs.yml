@@ -116,7 +116,6 @@ nav:
       - Scoped Services: scopes/scoped-services.md
   - Modules & Providers:
       - Module Overview: modules/overview.md
-      - Configuration Modules: modules/configuration-modules.md
   - Framework Integrations:
       - FastAPI Integration: integrations/fastapi.md
       - Taskiq Integration: integrations/taskiq.md

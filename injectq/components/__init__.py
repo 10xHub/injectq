@@ -53,7 +53,7 @@ class ComponentInterface(Protocol):
         """Initialize the component."""
         ...
 
-    def configure(self, **kwargs) -> None:
+    def configure(self, **kwargs) -> None:  # noqa: ANN003
         """Configure the component with parameters."""
         ...
 
@@ -124,7 +124,7 @@ class ComponentScope(Scope):
     def clear(self) -> None:
         """Clear all component-scoped instances."""
         # Stop and destroy component instances
-        import contextlib  # noqa: PLC0415
+        import contextlib
 
         for instance in self._instances.values():
             if hasattr(instance, "stop"):
@@ -456,7 +456,7 @@ class ComponentRegistry:
     def clear(self) -> None:
         """Clear all registrations and instances."""
         # Stop and destroy all instances
-        import contextlib  # noqa: PLC0415
+        import contextlib
 
         for instance in self._instances.values():
             with contextlib.suppress(Exception):

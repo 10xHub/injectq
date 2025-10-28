@@ -118,7 +118,7 @@ def create_test_module(bindings: dict[ServiceKey, Any]) -> "TestModule":
         })
         container = InjectQ([module])
     """
-    from injectq.modules import SimpleModule  # noqa: PLC0415
+    from injectq.modules import SimpleModule
 
     module = SimpleModule()
     for service_type, implementation in bindings.items():
@@ -134,7 +134,7 @@ class TestModule:
     """
 
     def __init__(self) -> None:
-        from injectq.modules import SimpleModule  # noqa: PLC0415
+        from injectq.modules import SimpleModule
 
         self._module = SimpleModule()
 
@@ -188,9 +188,9 @@ def pytest_container_fixture() -> Callable[[], Any]:
             container.bind(Database, MockDatabase)
             # Use container in test
     """
-    import pytest  # noqa: PLC0415
+    import pytest
 
-    @pytest.fixture
+    @pytest.fixture()
     def container() -> Any:
         with test_container() as test_cont:
             yield test_cont

@@ -71,7 +71,7 @@ class EmailService:
 class NotificationService:
     def __init__(self, email_service: EmailService | None = None):
         self.email_service = email_service
-    
+
     def notify(self, message: str) -> str:
         if self.email_service:
             return self.email_service.send_email("user", message)
@@ -149,7 +149,7 @@ service = await container.ainvoke("async_service", batch_size=100)
 
 **When to use `invoke()`:**
 - Factory needs some DI dependencies + some runtime arguments
-- You want cleaner code without manual resolution  
+- You want cleaner code without manual resolution
 - Mix configuration from container with user input
 
 See `examples/factory_api_showcase.py` and `docs/injection-patterns/factory-methods.md` for details.

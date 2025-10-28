@@ -148,7 +148,7 @@ web_request (10):    142 μs  ⚡ 7,037 ops/sec
 
 ### Time Units
 - **ns** (nanosecond) = 0.000001 milliseconds
-- **μs** (microsecond) = 0.001 milliseconds  
+- **μs** (microsecond) = 0.001 milliseconds
 - **ms** (millisecond) = 0.001 seconds
 
 ### Operations Per Second (OPS)

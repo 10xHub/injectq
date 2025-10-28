@@ -464,7 +464,7 @@ class DependencyResolver:
         # validate all dependencies exist, and cache resolution metadata.
         # For now, we'll do a basic validation pass.
 
-        import contextlib  # noqa: PLC0415
+        import contextlib
 
         with contextlib.suppress(InjectionError):
             self.validate_dependencies()

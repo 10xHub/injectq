@@ -142,7 +142,7 @@ class ProviderModule(Module):
             # Create a factory function that manually resolves dependencies
             def factory() -> Any:
                 # Get dependencies for the provider method
-                from injectq.utils import get_function_dependencies  # noqa: PLC0415
+                from injectq.utils import get_function_dependencies
 
                 dependencies = get_function_dependencies(provider_method)
 

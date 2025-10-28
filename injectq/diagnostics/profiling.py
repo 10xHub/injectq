@@ -321,8 +321,8 @@ class DependencyProfiler:
 
     def export_csv(self, filename: str) -> None:
         """Export metrics to CSV file."""
-        import csv  # noqa: PLC0415
-        from pathlib import Path  # noqa: PLC0415
+        import csv
+        from pathlib import Path
 
         with Path(filename).open("w", newline="") as csvfile:
             writer = csv.writer(csvfile)

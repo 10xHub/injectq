@@ -68,7 +68,7 @@ class ContainerContext:
 
     @classmethod
     @contextmanager
-    def use(cls, container: InjectQ) -> Generator[None, None, None]:
+    def use(cls, container: InjectQ) -> Generator[None]:
         """Context manager to temporarily set a container as active.
 
         Args:
@@ -89,7 +89,7 @@ class ContainerContext:
 
     @classmethod
     @asynccontextmanager
-    async def use_async(cls, container: InjectQ) -> AsyncGenerator[None, None]:
+    async def use_async(cls, container: InjectQ) -> AsyncGenerator[None]:
         """Async context manager to temporarily set a container as active.
 
         Args:

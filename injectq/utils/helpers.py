@@ -38,7 +38,7 @@ def get_function_dependencies(func: Callable[..., Any]) -> dict[str, type[Any]]:
             if param.default is not inspect.Parameter.empty:
                 # Import here to avoid circular import
                 try:
-                    from injectq.decorators.inject import (  # noqa: PLC0415
+                    from injectq.decorators.inject import (
                         Inject,
                         InjectType,
                     )

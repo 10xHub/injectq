@@ -251,6 +251,6 @@ Verdict: ✅ ZERO PERCEIVED DELAY
 
 ---
 
-**📊 Full Report:** See `BENCHMARK_REPORT.md`  
-**🚀 Quick Guide:** See `BENCHMARK_QUICK_GUIDE.md`  
+**📊 Full Report:** See `BENCHMARK_REPORT.md`
+**🚀 Quick Guide:** See `BENCHMARK_QUICK_GUIDE.md`
 **🔬 Raw Data:** See `.benchmarks/` directory

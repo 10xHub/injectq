@@ -1,6 +1,6 @@
 """Simple smoke test to verify core InjectQ functionality."""
 
-from injectq import inject, InjectQ, singleton, transient
+from injectq import InjectQ, inject, singleton, transient
 
 
 def main():

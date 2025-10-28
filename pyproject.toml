@@ -163,7 +163,7 @@ target-version = "py310"
 line-length = 88
 exclude = [
     ".bzr",
-    ".direnv", 
+    ".direnv",
     ".eggs",
     ".git",
     ".git-rewrite",
@@ -189,7 +189,7 @@ exclude = [
 # Enable comprehensive rule sets
 select = [
     "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings  
+    "W",   # pycodestyle warnings
     "F",   # pyflakes
     "I",   # isort
     "N",   # pep8-naming
