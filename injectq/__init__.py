@@ -77,6 +77,7 @@ from .utils import (
     ServiceFactory,
     # Type utilities and protocols
     ServiceKey,
+    logger,
 )
 
 
@@ -130,6 +131,7 @@ __all__ = [
     "get_resource_manager",
     # Decorators
     "inject",
+    "logger",
     "managed_resource",
     "provider",
     "register_as",
