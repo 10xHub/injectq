@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.4.0] - Unreleased
+## [0.4.0] - Released
 
 **🎯 Focus:** Enhanced factory methods, improved type safety, and better async support.
 

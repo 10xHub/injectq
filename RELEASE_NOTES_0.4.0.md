@@ -1,8 +1,4 @@
 # InjectQ 0.4.0 Release Notes
-
-**Release Date:** TBD
-**Status:** 🚧 In Development
-
 ---
 
 ## 🎯 Overview
@@ -87,9 +83,6 @@ container.bind(Service, impl2)  # ❌ Raises AlreadyRegisteredError
 ## 🚀 Upgrade Guide
 
 ### From 0.3.x to 0.4.0
-
-**✅ Backward Compatible** - No breaking changes for existing code!
-
 **Optional Improvements:**
 
 **Before:**
@@ -134,31 +127,14 @@ container = InjectQ(allow_override=False)
 ## 🙏 Contributors
 
 Special thanks to:
-- Core development team
 - Community contributors
 - Beta testers and early adopters
 - Everyone who provided feedback!
-
----
-
-## 🔗 Resources
-
-- **GitHub:** [github.com/Iamsdt/injectq](https://github.com/Iamsdt/injectq)
-- **PyPI:** [pypi.org/project/injectq](https://pypi.org/project/injectq/)
-- **Docs:** [iamsdt.github.io/injectq](https://iamsdt.github.io/injectq/)
 - **Issues:** [Report bugs](https://github.com/Iamsdt/injectq/issues)
 - **Discussions:** [Get help](https://github.com/Iamsdt/injectq/discussions)
-
----
-
-## 📦 Installation
-
 ```bash
 # Install or upgrade
-pip install --upgrade injectq
-
 # Or with extras
-pip install "injectq[fastapi,taskiq]"
 ```
 
 ---
