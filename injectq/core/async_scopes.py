@@ -22,7 +22,7 @@ class AsyncScope(Scope):
         self._instances_var: contextvars.ContextVar[dict[Any, Any]] = (
             contextvars.ContextVar(
                 f"{name}_instances",
-                default={},  # noqa: B039
+                default={},
             )
         )
 
@@ -85,8 +85,9 @@ class AsyncActionScope(AsyncScope):
 
 
 class HybridScope(Scope):
-    """Hybrid scope that uses contextvars for async contexts and thread-local
-    for sync contexts. Automatically detects the execution environment and uses
+    """Hybrid scope using contextvars for async and thread-local for sync contexts.
+
+    Automatically detects the execution environment and uses
     appropriate storage.
     """
 
@@ -164,7 +165,7 @@ class AsyncScopeManager(BaseScopeManager):
         # Use contextvars for async context isolation
         self._current_scopes_var: contextvars.ContextVar[list] = contextvars.ContextVar(
             "current_scopes",
-            default=[],  # noqa: B039
+            default=[],
         )
 
         # Fallback to thread-local for sync contexts
@@ -280,7 +281,7 @@ def create_enhanced_scope_manager() -> AsyncScopeManager:
     manager = AsyncScopeManager()
 
     # Register built-in scopes - import here to avoid circular imports
-    from .scopes import SingletonScope, TransientScope  # noqa: PLC0415
+    from .scopes import SingletonScope, TransientScope
 
     # Register core scopes
     manager.register_scope(SingletonScope())

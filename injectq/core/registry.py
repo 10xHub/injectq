@@ -13,6 +13,7 @@ from injectq.utils import (
 
 from .scopes import ScopeType
 
+
 # Sentinel value to detect when implementation is not provided
 _UNSET = object()
 

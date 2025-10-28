@@ -2,10 +2,11 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from contextlib import suppress
 from typing import Any, get_type_hints
 
 from injectq.core import ModuleBinder, ScopeType
-from injectq.utils import BindingError, ServiceKey
+from injectq.utils import BindingError, ServiceKey, get_function_dependencies
 
 
 class Module(ABC):
@@ -142,14 +143,12 @@ class ProviderModule(Module):
             # Create a factory function that manually resolves dependencies
             def factory() -> Any:
                 # Get dependencies for the provider method
-                from injectq.utils import get_function_dependencies  # noqa: PLC0415
-
                 dependencies = get_function_dependencies(provider_method)
 
                 # Resolve dependencies from the container
                 resolved_args = {}
                 for param_name, param_type in dependencies.items():
-                    try:
+                    with suppress(Exception):
                         # First try to resolve by parameter name (string key)
                         if binder._container.has(param_name):  # noqa: SLF001
                             resolved_args[param_name] = binder._container.get(  # noqa: SLF001
@@ -160,9 +159,6 @@ class ProviderModule(Module):
                             resolved_args[param_name] = binder._container.get(  # noqa: SLF001
                                 param_type
                             )
-                    except Exception:  # noqa: BLE001, PERF203, S110
-                        # If dependency cannot be resolved, skip it
-                        pass
 
                 # Call the provider method (it's already bound to self)
                 return provider_method(**resolved_args)

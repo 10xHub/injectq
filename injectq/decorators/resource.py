@@ -4,7 +4,7 @@ import inspect
 import weakref
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Callable, Iterator
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager, contextmanager, suppress
 from typing import Any, TypeVar
 
 from injectq.utils import InjectQError
@@ -29,13 +29,13 @@ class ResourceLifecycle(ABC):
         self._resource = None
 
     @abstractmethod
-    def initialize(self, *args, **kwargs) -> Any:
+    def initialize(self, *args: Any, **kwargs: Any) -> Any:
         """Initialize the resource."""
 
-    def shutdown(self) -> None:
+    def shutdown(self) -> None:  # noqa: B027
         """Shutdown the resource (sync version)."""
 
-    async def shutdown_async(self) -> None:
+    async def shutdown_async(self) -> None:  # noqa: B027
         """Shutdown the resource (async version)."""
 
     @property
@@ -60,7 +60,7 @@ class SyncResourceLifecycle(ResourceLifecycle):
         self._context_manager = None
         self._generator = None
 
-    def initialize(self, *args, **kwargs) -> Any:
+    def initialize(self, *args: Any, **kwargs: Any) -> Any:
         """Initialize a synchronous resource."""
         if self._initialized:
             return self._resource
@@ -82,12 +82,12 @@ class SyncResourceLifecycle(ResourceLifecycle):
             else:
                 self._resource = result
 
-            self._initialized = True
-            return self._resource
-
         except Exception as e:
             msg = f"Failed to initialize resource: {e}"
             raise ResourceError(msg) from e
+        else:
+            self._initialized = True
+            return self._resource
 
     def shutdown(self) -> None:
         """Shutdown a synchronous resource."""
@@ -130,7 +130,7 @@ class AsyncResourceLifecycle(ResourceLifecycle):
         self._context_manager = None
         self._async_generator = None
 
-    async def initialize(self, *args, **kwargs) -> Any:
+    async def initialize(self, *args: Any, **kwargs: Any) -> Any:
         """Initialize an asynchronous resource."""
         if self._initialized:
             return self._resource
@@ -157,15 +157,15 @@ class AsyncResourceLifecycle(ResourceLifecycle):
             else:
                 self._resource = result
 
-            self._initialized = True
-            return self._resource
-
         except Exception as e:
             msg = f"Failed to initialize async resource: {e}"
             raise ResourceError(msg) from e
+        else:
+            self._initialized = True
+            return self._resource
 
     def shutdown(self) -> None:
-        """Shutdown is not supported for async resources - use shutdown_async instead."""
+        """Shutdown is not supported for async- use shutdown_async instead."""
         msg = "Cannot shutdown async resource synchronously - use shutdown_async()"
         raise ResourceError(msg)
 
@@ -217,7 +217,7 @@ class ResourceManager:
         """Get a resource lifecycle by name."""
         return self._resources.get(name)
 
-    def initialize_resource(self, name: str, *args, **kwargs) -> Any:
+    def initialize_resource(self, name: str, *args: Any, **kwargs: Any) -> Any:
         """Initialize a specific resource."""
         lifecycle = self._resources.get(name)
         if not lifecycle:
@@ -230,7 +230,12 @@ class ResourceManager:
 
         return lifecycle.initialize(*args, **kwargs)
 
-    async def initialize_async_resource(self, name: str, *args, **kwargs) -> Any:
+    async def initialize_async_resource(
+        self,
+        name: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
         """Initialize an async resource."""
         lifecycle = self._resources.get(name)
         if not lifecycle:
@@ -264,24 +269,18 @@ class ResourceManager:
         """Shutdown all synchronous resources."""
         for lifecycle in self._resources.values():
             if lifecycle.initialized and not lifecycle.is_async:
-                try:
+                with suppress(Exception):
                     lifecycle.shutdown()
-                except Exception:
-                    # Log error but continue shutting down other resources
-                    pass
 
     async def shutdown_all_async(self) -> None:
         """Shutdown all resources (both sync and async)."""
         for lifecycle in self._resources.values():
             if lifecycle.initialized:
-                try:
+                with suppress(Exception):
                     if lifecycle.is_async:
                         await lifecycle.shutdown_async()
                     else:
                         lifecycle.shutdown()
-                except Exception:
-                    # Log error but continue shutting down other resources
-                    pass
 
 
 # Global resource manager
@@ -294,11 +293,12 @@ def get_resource_manager() -> ResourceManager:
 
 
 def resource(scope: str = "singleton") -> Callable[[Callable], Callable]:
-    """Decorator to mark a function as a resource provider with automatic lifecycle management.
+    """Decorator to mark a function as a resource provider with automatic lifecycle.
 
     The decorated function can be:
     - A generator function that yields a resource and contains cleanup code after yield
-    - An async generator function that yields a resource and contains cleanup code after yield
+    - An async generator function that yields a resource and contains cleanup code after
+         yield
     - A function that returns a context manager
     - An async function that returns an async context manager
     - A regular function that returns a resource (no automatic cleanup)

@@ -2,7 +2,10 @@
 
 import inspect
 from collections import defaultdict
+from pathlib import Path
+from typing import Any
 
+from injectq.core.container import InjectQ
 from injectq.utils.exceptions import InjectQError
 from injectq.utils.types import ServiceKey
 
@@ -34,7 +37,7 @@ class DependencyVisualizer:
         ```
     """
 
-    def __init__(self, container=None) -> None:
+    def __init__(self, container: InjectQ | None = None) -> None:
         """Initialize the visualizer.
 
         Args:
@@ -44,7 +47,7 @@ class DependencyVisualizer:
         self._dependency_graph: dict[ServiceKey, set[ServiceKey]] = defaultdict(set)
         self._service_info: dict[ServiceKey, dict] = {}
 
-    def set_container(self, container) -> None:
+    def set_container(self, container: InjectQ | None) -> None:
         """Set the container to visualize."""
         self.container = container
         self._analyze_dependencies()
@@ -57,17 +60,17 @@ class DependencyVisualizer:
         self._dependency_graph.clear()
         self._service_info.clear()
 
-        registry = self.container._registry
+        registry = self.container._registry  # noqa: SLF001
 
         # Analyze bindings
-        for service_key, binding in registry._bindings.items():
+        for service_key, binding in registry._bindings.items():  # noqa: SLF001
             self._analyze_binding(service_key, binding)
 
         # Analyze factories
-        for service_key, factory in registry._factories.items():
+        for service_key, factory in registry._factories.items():  # noqa: SLF001
             self._analyze_factory(service_key, factory)
 
-    def _analyze_binding(self, service_key: ServiceKey, binding) -> None:
+    def _analyze_binding(self, service_key: ServiceKey, binding: Any) -> None:
         """Analyze a service binding for dependencies."""
         implementation = binding.implementation
 
@@ -107,7 +110,7 @@ class DependencyVisualizer:
 
         self._service_info[service_key] = service_info
 
-    def _analyze_factory(self, service_key: ServiceKey, factory) -> None:
+    def _analyze_factory(self, service_key: ServiceKey, factory: Any) -> None:
         """Analyze a factory function for dependencies."""
         service_info = {
             "type": "factory",
@@ -261,7 +264,9 @@ class DependencyVisualizer:
         return ", " + ", ".join(attrs) if attrs else ""
 
     def _get_edge_attributes(
-        self, from_service: ServiceKey, to_service: ServiceKey
+        self,
+        from_service: ServiceKey,  # noqa: ARG002
+        to_service: ServiceKey,  # noqa: ARG002
     ) -> str:
         """Get DOT attributes for an edge."""
         # Could add different edge styles based on dependency type
@@ -317,7 +322,7 @@ class DependencyVisualizer:
             },
         }
 
-    def to_ascii(self, max_width: int = 80) -> str:
+    def to_ascii(self, max_width: int = 80) -> str:  # noqa: ARG002
         """Generate ASCII art representation of the dependency graph.
 
         Args:
@@ -360,7 +365,7 @@ class DependencyVisualizer:
 
         return "\n".join(lines)
 
-    def save_graph(self, filename: str, format: str = "dot", **kwargs) -> None:
+    def save_graph(self, filename: str, format: str = "dot", **kwargs: Any) -> None:  # noqa: A002
         """Save the dependency graph to a file.
 
         Args:
@@ -380,7 +385,7 @@ class DependencyVisualizer:
             msg = f"Unknown format: {format}"
             raise VisualizationError(msg)
 
-        with open(filename, "w") as f:
+        with Path(filename).open("w") as f:
             f.write(content)
 
     def get_statistics(self) -> dict:

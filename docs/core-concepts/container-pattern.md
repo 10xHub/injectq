@@ -18,11 +18,27 @@ A **Dependency Injection Container** (or DI Container) is an object that:
 The container needs to know what services exist and how to create them:
 
 ```python
-from injectq import injectq
-# Register services
-injectq.bind(Database, PostgreSQLDatabase)
-injectq.bind(Cache, RedisCache)
-injectq.bind(UserService, UserService)
+from injectq import InjectQ, singleton
+
+container = InjectQ.get_instance()
+
+# Option 1: Use decorators (recommended)
+@singleton
+class Database:
+    pass
+
+@singleton
+class Cache:
+    pass
+
+@singleton
+class UserService:
+    pass
+
+# Option 2: Manual binding
+container.bind(Database, Database)
+container.bind(Cache, Cache)
+container.bind(UserService, UserService)
 ```
 
 ### 2. Dependency Resolution
@@ -36,6 +52,23 @@ When a service is requested, the container:
 5. Returns the fully configured instance
 
 ```python
+from injectq import inject, singleton
+
+@singleton
+class Database:
+    pass
+
+@singleton
+class Cache:
+    pass
+
+@singleton
+class UserService:
+    @inject
+    def __init__(self, db: Database, cache: Cache):
+        self.db = db
+        self.cache = cache
+
 # Container resolves this automatically
 @inject
 def process_data(service: UserService):
@@ -114,9 +147,9 @@ The scope manager controls service lifetimes:
 
 ```python
 # Different scopes for different lifetimes
-injectq.bind(AppConfig, scope=Scope.APP)        # Application lifetime
-injectq.bind(RequestContext, scope=Scope.REQUEST)  # Per request
-injectq.bind(TempData, scope=Scope.TRANSIENT)      # Always new
+injectq.bind(RequestContext, scope=ScopeType.REQUEST)  # Per request
+injectq.bind(TempData, scope=ScopeType.TRANSIENT)      # Always new
+injectq.bind(AppConfig, scope=ScopeType.SINGLETON)     # One for app
 ```
 
 ## 🎯 Container Patterns
@@ -126,14 +159,21 @@ injectq.bind(TempData, scope=Scope.TRANSIENT)      # Always new
 One global container for the entire application (recommended pattern):
 
 ```python
-from injectq import injectq
+from injectq import InjectQ, inject, singleton
 
-# Global convenience container
-container = injectq
+# Get the global container instance
+container = InjectQ.get_instance()
 
-# Register services
-container.bind(Database, PostgreSQLDatabase)
-container.bind(UserService, UserService)
+# Register services using decorators or manual binding
+@singleton
+class Database:
+    pass
+
+@singleton
+class UserService:
+    @inject
+    def __init__(self, db: Database):
+        self.db = db
 
 # Use anywhere in the app
 @inject
@@ -145,6 +185,7 @@ def handler(service: UserService):
 - Simple to use
 - Services available everywhere
 - Easy to set up
+- Decorators auto-register
 
 **Cons:**
 - Global state
@@ -153,20 +194,34 @@ def handler(service: UserService):
 
 ### 2. Composed Containers
 
-Multiple containers that can inherit from each other:
+Multiple containers for different contexts:
 
 ```python
+from injectq import InjectQ, Module, singleton
+
+@singleton
+class Database:
+    pass
+
+class WebModule(Module):
+    def configure(self, binder):
+        binder.bind("web_config", {"port": 8080})
+
+class ApiModule(Module):
+    def configure(self, binder):
+        binder.bind("api_config", {"version": "v1"})
+
 # Base container with common services
 base_container = InjectQ()
-base_container.bind(Database, PostgreSQLDatabase)
+base_container.bind(Database, Database)
 
 # Web-specific container
 web_container = InjectQ(modules=[WebModule()])
-web_container.bind(WebConfig, WebConfig)
+web_container.bind(Database, Database)
 
 # API-specific container
 api_container = InjectQ(modules=[ApiModule()])
-api_container.bind(ApiConfig, ApiConfig)
+api_container.bind(Database, Database)
 ```
 
 ### 3. Scoped Containers
@@ -190,25 +245,48 @@ async with container.scope("request"):
 Simple key-value bindings:
 
 ```python
+from injectq import InjectQ
+
+container = InjectQ.get_instance()
+
 # Simple values
-injectq[str] = "postgresql://localhost/db"
-injectq[int] = 42
-injectq[bool] = True
+container["db_url"] = "postgresql://localhost/db"
+container["port"] = 8080
+container["debug"] = True
 
 # Complex objects
-injectq["config"] = AppConfig(host="localhost", port=8080)
+class AppConfig:
+    def __init__(self, host: str, port: int):
+        self.host = host
+        self.port = port
+
+container["config"] = AppConfig(host="localhost", port=8080)
 ```
 
 ### 2. Type-based Configuration
 
-Bind interfaces to implementations:
+Bind types to implementations:
 
 ```python
+from injectq import InjectQ, singleton
+from abc import ABC, abstractmethod
 
-# Interface to implementation
-container.bind(IDatabase, PostgreSQLDatabase)
-container.bind(ICache, RedisCache)
-container.bind(IUserRepository, UserRepository)
+# Define interface
+class Database(ABC):
+    @abstractmethod
+    def query(self, sql: str):
+        pass
+
+# Implementation
+@singleton
+class PostgreSQLDatabase(Database):
+    def query(self, sql: str):
+        return f"PostgreSQL: {sql}"
+
+container = InjectQ.get_instance()
+
+# Bind interface to implementation
+container.bind(Database, PostgreSQLDatabase)
 ```
 
 ### 3. Factory-based Configuration
@@ -220,20 +298,33 @@ Use factories for complex creation logic. InjectQ supports both **DI-based facto
 Create factories that are resolved automatically using DI:
 
 ```python
-def create_database(config: DatabaseConfig) -> IDatabase:
+from injectq import InjectQ, inject, singleton
+
+container = InjectQ.get_instance()
+
+@singleton
+class DatabaseConfig:
+    def __init__(self):
+        self.driver = "postgres"
+
+class Database:
+    def __init__(self, config: DatabaseConfig):
+        self.config = config
+
+# Factory with DI - dependencies are injected
+@inject
+def create_database(config: DatabaseConfig) -> Database:
     """Factory with DI - dependencies are injected."""
     if config.driver == "postgres":
-        return PostgreSQLDatabase(config)
-    elif config.driver == "mysql":
-        return MySQLDatabase(config)
+        return Database(config)
     else:
-        return SQLiteDatabase(config)
+        return Database(config)
 
 # Bind the factory - DatabaseConfig is automatically injected
-container.bind_factory(IDatabase, create_database)
+container.bind_factory(Database, create_database)
 
 # Get the instance - factory is called automatically
-db = container[IDatabase]
+db = container[Database]
 ```
 
 #### Parameterized Factory
@@ -265,17 +356,34 @@ logs_pool = container.get_factory("db_pool")("logs_db")
 Mix both patterns in the same container:
 
 ```python
+from injectq import InjectQ, singleton, inject
+
+container = InjectQ.get_instance()
+
+@singleton
+class LogConfig:
+    def __init__(self):
+        self.level = "INFO"
+
+class Logger:
+    def __init__(self, config: LogConfig):
+        self.config = config
+
+@singleton
+class Database:
+    pass
+
 # DI factory
-def create_logger() -> Logger:
+@inject
+def create_logger(config: LogConfig) -> Logger:
     """Factory with DI - dependencies injected."""
-    config = container[LogConfig]  # or through @inject
     return Logger(config)
 
 # Parameterized factory
 def get_user_from_db(user_id: int):
     """Factory with parameters - custom arguments."""
     db = container[Database]  # Can still use DI
-    return db.get_user(user_id)
+    return {"user_id": user_id, "db": db}
 
 # Bind both
 container.bind_factory(Logger, create_logger)        # DI factory
@@ -291,13 +399,29 @@ user = container.call_factory("get_user", 42) # Pass args
 The new `invoke()` method combines DI with manual arguments automatically:
 
 ```python
+from injectq import InjectQ, singleton, inject
+
+container = InjectQ.get_instance()
+
+@singleton
+class Database:
+    pass
+
+@singleton
+class Cache:
+    pass
+
+class UserService:
+    def __init__(self, db: Database, cache: Cache, user_id: str):
+        self.db = db
+        self.cache = cache
+        self.user_id = user_id
+
 # Factory that needs BOTH DI dependencies and manual arguments
-def create_user_service(db: Database, cache: Cache, user_id: str):
+def create_user_service(db: Database, cache: Cache, user_id: str) -> UserService:
     """Hybrid factory - some deps injected, some provided manually."""
     return UserService(db, cache, user_id)
 
-container.bind(Database, Database)
-container.bind(Cache, Cache)
 container.bind_factory("user_service", create_user_service)
 
 # ❌ Old way - verbose manual resolution
@@ -310,7 +434,11 @@ service = container.invoke("user_service", user_id="user123")
 # Database and Cache are auto-injected, only provide user_id!
 
 # Also works with async
-async_service = await container.ainvoke("async_service", batch_size=100)
+async def async_factory(db: Database, batch_size: int) -> dict:
+    return {"db": db, "batch_size": batch_size}
+
+container.bind_factory("async_service", async_factory)
+result = await container.ainvoke("async_service", batch_size=100)
 ```
 
 **When to use invoke():**
@@ -323,6 +451,10 @@ Learn more in [Factory Methods](../injection-patterns/factory-methods.md).
 #### Real-World Example: Multiple Database Connections
 
 ```python
+from injectq import InjectQ
+
+container = InjectQ.get_instance()
+
 class DatabasePool:
     """Connection pool for a database."""
     def __init__(self, db_name: str, max_connections: int = 10):
@@ -353,20 +485,46 @@ assert orders_db.max_connections == 15
 Organize configuration with modules:
 
 ```python
-from injectq import Module
+from injectq import Module, InjectQ, singleton
+from abc import ABC, abstractmethod
+
+# Define interface
+class Database(ABC):
+    @abstractmethod
+    def query(self, sql: str):
+        pass
+
+# Implementation
+@singleton
+class PostgreSQLDatabase(Database):
+    def query(self, sql: str):
+        return f"PostgreSQL: {sql}"
+
+@singleton
+class DatabaseConfig:
+    def __init__(self):
+        self.connection_string = "postgresql://localhost/db"
+
+@singleton
+class UserService:
+    pass
+
+@singleton  
+class OrderService:
+    pass
 
 class DatabaseModule(Module):
     def configure(self, binder):
-        binder.bind(IDatabase, PostgreSQLDatabase)
+        binder.bind(Database, PostgreSQLDatabase)
         binder.bind(DatabaseConfig, DatabaseConfig)
 
 class ServiceModule(Module):
     def configure(self, binder):
-        binder.bind(IUserService, UserService)
-        binder.bind(IOrderService, OrderService)
+        binder.bind(UserService, UserService)
+        binder.bind(OrderService, OrderService)
 
 # Compose modules
-container = InjectQ([DatabaseModule(), ServiceModule()])
+container = InjectQ(modules=[DatabaseModule(), ServiceModule()])
 ```
 
 ## 🔄 Container Lifecycle
@@ -376,14 +534,29 @@ container = InjectQ([DatabaseModule(), ServiceModule()])
 Set up all service bindings:
 
 ```python
+from injectq import InjectQ, singleton
+
 container = InjectQ()
 
-# Register all services
-container.bind(Database, PostgreSQLDatabase)
-container.bind(Cache, RedisCache)
+# Register all services using decorators
+@singleton
+class Database:
+    pass
+
+@singleton
+class Cache:
+    pass
+
+@singleton
+class UserService:
+    pass
+
+# Or manual binding
+container.bind(Database, Database)
+container.bind(Cache, Cache)
 container.bind(UserService, UserService)
 
-# Validate configuration
+# Validate configuration (optional but recommended)
 container.validate()
 ```
 
@@ -405,14 +578,18 @@ assert user_service is another_service  # True for singletons
 Clean up resources when the application shuts down:
 
 ```python
+from injectq import InjectQ
+
+container = InjectQ()
+
 # Manual cleanup
 container.clear()
 
 # Or use context manager
-with InjectQ() as container:
+with container.context():
     # Use container
     pass
-# Automatic cleanup
+# Automatic cleanup when exiting context
 ```
 
 ## 🚀 Advanced Container Features
@@ -422,13 +599,20 @@ with InjectQ() as container:
 Services are created only when first accessed:
 
 ```python
-container.bind(ExpensiveService, ExpensiveService)
+from injectq import InjectQ, singleton
+
+container = InjectQ.get_instance()
+
+@singleton
+class ExpensiveService:
+    def __init__(self):
+        print("ExpensiveService initialized")
 
 # Service not created yet
 print("Container ready")
 
 # Service created here
-service = container.get(ExpensiveService)
+service = container[ExpensiveService]  # Prints: ExpensiveService initialized
 ```
 
 ### 2. Circular Dependency Detection
@@ -436,19 +620,27 @@ service = container.get(ExpensiveService)
 Container detects and prevents circular dependencies:
 
 ```python
+from injectq import InjectQ, inject, singleton
+
+@singleton
 class A:
-    def __init__(self, b: B):
+    @inject
+    def __init__(self, b: "B"):
         self.b = b
 
+@singleton
 class B:
+    @inject
     def __init__(self, a: A):  # Circular dependency!
         self.a = a
 
-container.bind(A, A)
-container.bind(B, B)
+container = InjectQ.get_instance()
 
-# This will raise CircularDependencyError
-container.validate()
+# This will raise CircularDependencyError when trying to resolve
+try:
+    container.validate()
+except Exception as e:
+    print(f"Circular dependency detected: {e}")
 ```
 
 ### 3. Conditional Registration
@@ -456,24 +648,31 @@ container.validate()
 Register services based on conditions:
 
 ```python
+from injectq import InjectQ, singleton
+from abc import ABC, abstractmethod
+
+class Database(ABC):
+    @abstractmethod
+    def query(self, sql: str):
+        pass
+
+@singleton
+class PostgreSQLDatabase(Database):
+    def query(self, sql: str):
+        return f"PostgreSQL: {sql}"
+
+@singleton
+class SQLiteDatabase(Database):
+    def query(self, sql: str):
+        return f"SQLite: {sql}"
+
+container = InjectQ.get_instance()
+environment = "production"  # or "development"
+
 if environment == "production":
-    container.bind(IDatabase, PostgreSQLDatabase)
+    container.bind(Database, PostgreSQLDatabase)
 else:
-    container.bind(IDatabase, SQLiteDatabase)
-```
-
-### 4. Named Bindings
-
-Multiple implementations of the same interface:
-
-```python
-# Register multiple caches
-container.bind(Cache, RedisCache, name="redis")
-container.bind(Cache, MemoryCache, name="memory")
-
-# Resolve by name
-redis_cache = container.get(Cache, name="redis")
-memory_cache = container.get(Cache, name="memory")
+    container.bind(Database, SQLiteDatabase)
 ```
 
 ## 🧪 Testing with Containers
@@ -484,17 +683,38 @@ Create isolated containers for testing:
 
 ```python
 from injectq.testing import test_container
+from injectq import singleton, inject
+from abc import ABC, abstractmethod
+
+class Database(ABC):
+    @abstractmethod
+    def get_user(self, user_id: int):
+        pass
+
+class MockDatabase(Database):
+    def get_user(self, user_id: int):
+        return {"id": user_id, "name": "Mock User"}
+
+@singleton
+class UserService:
+    @inject
+    def __init__(self, db: Database):
+        self.db = db
+    
+    def get_user(self, user_id: int):
+        return self.db.get_user(user_id)
 
 def test_user_service():
     with test_container() as container:
         # Set up test dependencies
-        container.bind(IDatabase, MockDatabase)
-        container.bind(ICache, MockCache)
+        container.bind(Database, MockDatabase)
+        container.bind(UserService, UserService)
 
         # Test the service
-        service = container.get(UserService)
+        service = container[UserService]
         result = service.get_user(1)
         assert result is not None
+        assert result["name"] == "Mock User"
 ```
 
 ### 2. Dependency Overrides
@@ -503,15 +723,41 @@ Temporarily override dependencies:
 
 ```python
 from injectq.testing import override_dependency
+from injectq import InjectQ, singleton, inject
+from abc import ABC, abstractmethod
+
+class Database(ABC):
+    @abstractmethod
+    def get_user(self, user_id: int):
+        pass
+
+@singleton
+class RealDatabase(Database):
+    def get_user(self, user_id: int):
+        return {"id": user_id, "name": "Real User"}
+
+class MockDatabase(Database):
+    def get_user(self, user_id: int):
+        return {"id": user_id, "name": "Mock User"}
+
+@singleton
+class UserService:
+    @inject
+    def __init__(self, db: Database):
+        self.db = db
+    
+    def get_user(self, user_id: int):
+        return self.db.get_user(user_id)
 
 def test_with_override():
+    container = InjectQ.get_instance()
     mock_db = MockDatabase()
 
-    with override_dependency(IDatabase, mock_db):
-        service = container.get(UserService)
+    with override_dependency(Database, mock_db):
+        service = container[UserService]
         # service now uses mock_db
         result = service.get_user(1)
-        assert result.name == "Mock User"
+        assert result["name"] == "Mock User"
 ```
 
 ## 📊 Performance Considerations
@@ -533,9 +779,17 @@ service = container.get(UserService)  # Optimized resolution
 Container caches resolved instances based on scope:
 
 ```python
+from injectq import InjectQ, singleton
+
+@singleton
+class Database:
+    pass
+
+container = InjectQ.get_instance()
+
 # Singleton services are cached
-db1 = container.get(Database)
-db2 = container.get(Database)
+db1 = container[Database]
+db2 = container[Database]
 assert db1 is db2  # Same instance
 ```
 
@@ -544,11 +798,20 @@ assert db1 is db2  # Same instance
 Services are created only when needed:
 
 ```python
+from injectq import InjectQ, singleton
+
+@singleton
+class HeavyService:
+    def __init__(self):
+        print("HeavyService initialized")
+
+container = InjectQ.get_instance()
+
 # No instances created yet
-container.bind(HeavyService, HeavyService)
+print("Container ready")
 
 # Instance created here
-service = container.get(HeavyService)
+service = container[HeavyService]  # Prints: HeavyService initialized
 ```
 
 ## 🎉 Container Benefits
@@ -558,7 +821,28 @@ service = container.get(HeavyService)
 No manual wiring of dependencies:
 
 ```python
-# Manual (error-prone)
+from injectq import inject, singleton
+
+# ❌ Manual (error-prone)
+class DatabaseConfig:
+    pass
+
+class Database:
+    def __init__(self, config: DatabaseConfig):
+        self.config = config
+
+class Cache:
+    pass
+
+class Logger:
+    pass
+
+class UserService:
+    def __init__(self, db: Database, cache: Cache, logger: Logger):
+        self.db = db
+        self.cache = cache
+        self.logger = logger
+
 def create_service():
     config = DatabaseConfig()
     db = Database(config)
@@ -566,7 +850,33 @@ def create_service():
     logger = Logger()
     return UserService(db, cache, logger)
 
-# Container (automatic)
+# ✅ Container (automatic)
+@singleton
+class DatabaseConfig:
+    pass
+
+@singleton
+class Database:
+    @inject
+    def __init__(self, config: DatabaseConfig):
+        self.config = config
+
+@singleton
+class Cache:
+    pass
+
+@singleton
+class Logger:
+    pass
+
+@singleton
+class UserService:
+    @inject
+    def __init__(self, db: Database, cache: Cache, logger: Logger):
+        self.db = db
+        self.cache = cache
+        self.logger = logger
+
 @inject
 def use_service(service: UserService):
     pass
@@ -577,12 +887,36 @@ def use_service(service: UserService):
 All service configuration in one place:
 
 ```python
-container = InjectQ()
+from injectq import InjectQ, Module, singleton
+from abc import ABC, abstractmethod
 
-# All configuration here
+# Define services
+class Database(ABC):
+    @abstractmethod
+    def query(self, sql: str):
+        pass
+
+@singleton
+class PostgreSQLDatabase(Database):
+    def query(self, sql: str):
+        return f"PostgreSQL: {sql}"
+
+@singleton
+class RedisCache:
+    pass
+
+# Option 1: Module-based configuration
+class AppModule(Module):
+    def configure(self, binder):
+        binder.bind(Database, PostgreSQLDatabase)
+        binder.bind(RedisCache, RedisCache)
+
+container = InjectQ(modules=[AppModule()])
+
+# Option 2: Direct configuration
+container = InjectQ.get_instance()
 container.bind(Database, PostgreSQLDatabase)
-container.bind(Cache, RedisCache)
-container.bind_all_from_module(MyModule)
+container.bind(RedisCache, RedisCache)
 ```
 
 ### 3. **Lifetime Management**
@@ -605,11 +939,30 @@ class Database:
 Easy to replace dependencies for testing:
 
 ```python
+from injectq import InjectQ, singleton
+from injectq.testing import override_dependency
+from abc import ABC, abstractmethod
+
 # Production
-container.bind(IDatabase, PostgreSQLDatabase)
+class Database(ABC):
+    @abstractmethod
+    def query(self, sql: str):
+        pass
+
+@singleton
+class PostgreSQLDatabase(Database):
+    def query(self, sql: str):
+        return f"PostgreSQL: {sql}"
+
+container = InjectQ.get_instance()
+container.bind(Database, PostgreSQLDatabase)
 
 # Testing
-with override_dependency(IDatabase, MockDatabase):
+class MockDatabase(Database):
+    def query(self, sql: str):
+        return "Mock result"
+
+with override_dependency(Database, MockDatabase()):
     # Test with mock
     pass
 ```
@@ -619,12 +972,21 @@ with override_dependency(IDatabase, MockDatabase):
 ### 1. **Over-using the Global Container**
 
 ```python
-# ❌ Global container everywhere
-from injectq import injectq
+from injectq import InjectQ, inject, singleton
 
+# ❌ Global container everywhere - hidden dependency
+@singleton
 class MyClass:
     def __init__(self):
-        self.service = injectq.get(UserService)  # Hidden dependency
+        container = InjectQ.get_instance()
+        self.service = container[UserService]  # Hidden dependency
+
+# ✅ Explicit dependency injection
+@singleton
+class MyClass:
+    @inject
+    def __init__(self, service: UserService):
+        self.service = service  # Clear dependency
 ```
 
 ### 2. **Ignoring Scopes**
@@ -639,14 +1001,33 @@ class RequestData:  # Should be scoped or transient
 ### 3. **Circular Dependencies**
 
 ```python
+from injectq import singleton, inject
+
 # ❌ Circular dependency
+@singleton
 class A:
-    def __init__(self, b: B):
+    @inject
+    def __init__(self, b: "B"):
         self.b = b
 
+@singleton
 class B:
+    @inject
     def __init__(self, a: A):
         self.a = a
+
+# ✅ Break the cycle with a factory or interface
+@singleton
+class A:
+    def set_b(self, b: "B"):
+        self.b = b
+
+@singleton
+class B:
+    @inject
+    def __init__(self, a: A):
+        self.a = a
+        a.set_b(self)
 ```
 
 ## 🏆 Best Practices
@@ -654,18 +1035,36 @@ class B:
 ### 1. **Use Modules for Organization**
 
 ```python
+from injectq import Module, InjectQ, singleton
+from abc import ABC, abstractmethod
+
+# Define interfaces and implementations
+class Database(ABC):
+    @abstractmethod
+    def query(self, sql: str):
+        pass
+
+@singleton
+class PostgreSQLDatabase(Database):
+    def query(self, sql: str):
+        return f"PostgreSQL: {sql}"
+
 # ✅ Organize with modules
 class DatabaseModule(Module):
     def configure(self, binder):
-        binder.bind(IDatabase, PostgreSQLDatabase)
+        binder.bind(Database, PostgreSQLDatabase)
 
-container = InjectQ([DatabaseModule()])
+container = InjectQ(modules=[DatabaseModule()])
 ```
 
 ### 2. **Validate Early**
 
 ```python
+from injectq import InjectQ
+
 # ✅ Validate configuration
+container = InjectQ()
+# ... register services ...
 container.validate()  # Check for errors early
 ```
 

@@ -18,6 +18,9 @@ from .helpers import (
     is_injectable_function,
     safe_issubclass,
 )
+from .logging import (
+    logger,
+)
 from .protocols import (
     AnyFactory,
     AnyProvider,
@@ -62,9 +65,7 @@ __all__ = [
     "Configurable",
     "DependencyNotFoundError",
     "Factory",
-    # Exceptions
     "InjectQError",
-    # Protocols
     "Injectable",
     "InjectableAsyncFunction",
     "InjectableCallable",
@@ -77,18 +78,17 @@ __all__ = [
     "ScopeError",
     "ServiceFactory",
     "ServiceInstance",
-    # Types
     "ServiceKey",
     "ThreadLocalStorage",
     "format_type_name",
     "get_class_constructor_dependencies",
-    # Helpers
     "get_function_dependencies",
     "get_type_name",
     "is_concrete_type",
     "is_generic_type",
     "is_injectable_class",
     "is_injectable_function",
+    "logger",
     "normalize_type",
     "safe_issubclass",
 ]

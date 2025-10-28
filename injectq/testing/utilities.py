@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from typing import Any
 
 from injectq.core import InjectQ
+from injectq.core.container import ModuleBinder
 from injectq.utils import ServiceKey
 
 
@@ -65,7 +66,7 @@ class MockFactory:
     def __init__(self) -> None:
         self._instances: dict[type, Any] = {}
 
-    def create_mock(self, service_type: type, **kwargs) -> Any:
+    def create_mock(self, service_type: type, **kwargs: Any) -> Any:
         """Create a mock instance of a service type.
 
         Args:
@@ -78,13 +79,13 @@ class MockFactory:
         if service_type not in self._instances:
             # Create a simple mock class
             class MockService:
-                def __init__(self, **init_kwargs) -> None:
+                def __init__(self, **init_kwargs: Any) -> None:
                     for key, value in init_kwargs.items():
                         setattr(self, key, value)
 
-                def __getattr__(self, name) -> Callable:
+                def __getattr__(self, name: str) -> Callable:
                     # Return a simple mock function for any method
-                    def mock_method(*args, **method_kwargs) -> str:
+                    def mock_method(*args: Any, **method_kwargs: Any) -> str:  # noqa: ARG001
                         return f"mock_{name}_result"
 
                     return mock_method
@@ -118,13 +119,13 @@ def create_test_module(bindings: dict[ServiceKey, Any]) -> "TestModule":
         })
         container = InjectQ([module])
     """
-    from injectq.modules import SimpleModule  # noqa: PLC0415
+    from injectq.modules import SimpleModule
 
     module = SimpleModule()
     for service_type, implementation in bindings.items():
         module.bind_instance(service_type, implementation)
 
-    return module  # type: ignore
+    return module  # type: ignore  # noqa: PGH003
 
 
 class TestModule:
@@ -134,11 +135,11 @@ class TestModule:
     """
 
     def __init__(self) -> None:
-        from injectq.modules import SimpleModule  # noqa: PLC0415
+        from injectq.modules import SimpleModule
 
         self._module = SimpleModule()
 
-    def mock(self, service_type: type, **kwargs) -> "TestModule":
+    def mock(self, service_type: type, **kwargs: Any) -> "TestModule":
         """Add a mock binding for a service type.
 
         Args:
@@ -165,7 +166,7 @@ class TestModule:
         self._module.bind_instance(service_type, value)
         return self
 
-    def configure(self, binder) -> None:
+    def configure(self, binder: ModuleBinder) -> None:
         """Configure the underlying module."""
         self._module.configure(binder)
 
@@ -188,9 +189,9 @@ def pytest_container_fixture() -> Callable[[], Any]:
             container.bind(Database, MockDatabase)
             # Use container in test
     """
-    import pytest  # noqa: PLC0415
+    import pytest
 
-    @pytest.fixture
+    @pytest.fixture()
     def container() -> Any:
         with test_container() as test_cont:
             yield test_cont

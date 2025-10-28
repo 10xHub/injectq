@@ -1,13 +1,13 @@
 site_name: InjectQ Documentation
 site_description: Modern Python dependency injection library
 site_author: InjectQ Contributors
-site_url: https://iamsdt.github.io/injectq/
+site_url: https://10xhub.github.io/injectq/
 
-repo_name: Iamsdt/injectq
-repo_url: https://github.com/Iamsdt/injectq
+repo_name: 10xhub/injectq
+repo_url: https://github.com/10xhub/injectq
 edit_uri: edit/main/docs/
 
-copyright: Copyright &copy; 2024 InjectQ Contributors
+copyright: Copyright &copy; 10xHub
 
 theme:
   name: material
@@ -116,14 +116,15 @@ nav:
       - Scoped Services: scopes/scoped-services.md
   - Modules & Providers:
       - Module Overview: modules/overview.md
-      - Configuration Modules: modules/configuration-modules.md
   - Framework Integrations:
-      - Overview: integrations/overview.md
       - FastAPI Integration: integrations/fastapi.md
       - Taskiq Integration: integrations/taskiq.md
   - Testing:
       - Testing Overview: testing/overview.md
       - Testing Patterns: testing/testing-patterns.md
+  - Performance:
+      - Benchmark Report: benchmark-report.md
+      - Quick Guide: benchmark-guide.md
   - API Reference:
       - Overview: api-reference/index.md
       - Quick Reference: api-reference/quick-reference.md

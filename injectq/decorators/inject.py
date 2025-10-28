@@ -79,7 +79,7 @@ def inject(
         if inspect.iscoroutinefunction(f):
 
             @functools.wraps(f)
-            async def async_wrapper(*args, **kwargs):
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
                 # Get the container at call time
                 target_container = container
                 if not target_container:
@@ -95,7 +95,7 @@ def inject(
             return cast("F", async_wrapper)
 
         @functools.wraps(f)
-        def sync_wrapper(*args, **kwargs):
+        def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
             # Get the container at call time
             target_container = container
             if not target_container:
@@ -122,7 +122,7 @@ async def _inject_and_call_async(
     container: InjectQ,
     args: tuple,
     kwargs: dict,
-):
+) -> Any:
     """Helper function to inject dependencies and call the async function."""
     try:
         # Get function signature
@@ -180,7 +180,7 @@ def _inject_and_call(
     container: InjectQ,
     args: tuple,
     kwargs: dict,
-):
+) -> Any:
     """Helper function to inject dependencies and call the function."""
     try:
         # Get function signature
@@ -333,7 +333,7 @@ class Inject(Generic[T], metaclass=_InjectMeta):
         """Support issubclass(proxy_type, ResolvedType)."""
         return issubclass(self._resolve().__class__, subclass)
 
-    def __getattribute__(self, name: str):
+    def __getattribute__(self, name: str) -> Any:
         # Special handling for __class__ to spoof type()
         if name == "__class__":
             resolved_instance = self._resolve()

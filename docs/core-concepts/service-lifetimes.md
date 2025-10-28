@@ -142,15 +142,15 @@ async with container.scope("request"):
 
 InjectQ provides several built-in scopes:
 
-### Application Scope
+### Singleton Scope
 
-Lives for the entire application lifetime (same as singleton):
+Lives for the entire application lifetime:
 
 ```python
-from injectq import Scope
+from injectq import ScopeType
 
-container.bind(AppConfig, scope=Scope.APP)
-container.bind(Database, scope=Scope.APP)
+container.bind(AppConfig, scope=ScopeType.SINGLETON)
+container.bind(Database, scope=ScopeType.SINGLETON)
 ```
 
 ### Request Scope

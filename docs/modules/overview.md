@@ -1,548 +1,376 @@
 # Modules & Providers
 
-**Modules and providers** organize your dependency injection configuration into reusable, composable units that make your application more maintainable and testable.
+Organize your dependency injection configuration into reusable, composable units.
 
-## 🎯 What are Modules?
+## What are Modules?
 
-Modules are **containers for related bindings** that group together services with similar responsibilities or from the same domain.
+Modules are **containers for related bindings** that group services together.
 
 ```python
-from injectq import Module, InjectQ
+from injectq import InjectQ
+from injectq.modules import Module
 
-# Database module - groups all database-related services
 class DatabaseModule(Module):
     def configure(self, binder):
-        binder.bind(DatabaseConnection, PostgresConnection())
-        binder.bind(UserRepository, UserRepositoryImpl())
-        binder.bind(OrderRepository, OrderRepositoryImpl())
+        binder.bind(Database, PostgresDatabase)
+        binder.bind(UserRepository, UserRepositoryImpl)
 
-# Email module - groups email-related services
-class EmailModule(Module):
-    def configure(self, binder):
-        binder.bind(EmailService, SmtpEmailService())
-        binder.bind(EmailTemplateEngine, JinjaTemplateEngine())
-
-# Application setup
-container = InjectQ()
-container.install(DatabaseModule())
-container.install(EmailModule())
+container = InjectQ.get_instance()
+container.install_module(DatabaseModule())
 
 # Services are now available
-user_repo = container.get(UserRepository)
-email_svc = container.get(EmailService)
+repo = container[UserRepository]
 ```
 
-## 🏗️ Why Use Modules?
+## Module Types
 
-### ✅ Benefits
+### 1. Simple Module
 
-- **Organization** - Group related services together
-- **Reusability** - Reuse modules across applications
-- **Testability** - Easy to replace modules in tests
-- **Maintainability** - Clear separation of concerns
-- **Composition** - Combine modules for different environments
+Basic module for straightforward bindings:
 
 ```python
-# Production configuration
-container.install(DatabaseModule())
-container.install(EmailModule())
-container.install(CacheModule())
+from injectq.modules import SimpleModule
 
-# Test configuration
-container.install(InMemoryDatabaseModule())
-container.install(MockEmailModule())
-container.install(NoOpCacheModule())
+module = SimpleModule() \
+    .bind(Database, PostgresDatabase) \
+    .bind(Cache, RedisCache) \
+    .bind_instance("api_key", "secret-123")
+
+container.install_module(module)
 ```
 
-### ❌ Without Modules
+### 2. Configuration Module
+
+Bind configuration values:
 
 ```python
-# ❌ All bindings in one place - hard to maintain
-container = InjectQ()
+from injectq.modules import ConfigurationModule
 
-# Database bindings
-container.bind(DatabaseConnection, PostgresConnection())
-container.bind(UserRepository, UserRepositoryImpl())
-# ... 20 more database bindings
+config = {
+    "db_host": "localhost",
+    "db_port": 5432,
+    "api_key": "secret-key"
+}
 
-# Email bindings
-container.bind(EmailService, SmtpEmailService())
-# ... 10 more email bindings
+container.install_module(ConfigurationModule(config))
 
-# Cache bindings
-container.bind(CacheService, RedisCache())
-# ... 5 more cache bindings
-
-# Total: 35+ scattered bindings
+# Access configuration
+host = container["db_host"]
+port = container["db_port"]
 ```
 
-## 🔧 Module Types
+### 3. Provider Module
 
-### Configuration Module
-
-**Configuration modules** bind interfaces to implementations and configure services.
+**Most powerful** - use `@provider` methods for complex initialization:
 
 ```python
-from injectq import Module
+from injectq.modules import ProviderModule, provider
 
-class DatabaseModule(Module):
-    def __init__(self, connection_string: str):
-        self.connection_string = connection_string
-
-    def configure(self, binder):
-        # Bind interfaces to implementations
-        binder.bind(IDatabaseConnection, PostgresConnection(self.connection_string))
-        binder.bind(IUserRepository, UserRepository())
-        binder.bind(IOrderRepository, OrderRepository())
-
-        # Configure with specific settings
-        binder.bind(DatabaseConfig, DatabaseConfig(max_connections=20))
-
-# Usage
-container.install(DatabaseModule("postgresql://localhost/mydb"))
-```
-
-### Provider Module
-
-**Provider modules** use factory functions to create complex service instances.
-
-```python
-from injectq import Module, provider
-
-class ServiceModule(Module):
+class AppModule(ProviderModule):
     @provider
-    def create_database_pool(self) -> DatabasePool:
-        """Factory for database connection pool"""
-        return DatabasePool(
-            host="localhost",
-            port=5432,
-            max_connections=20,
-            min_connections=5
+    def provide_database_config(
+        self, db_host: str, db_port: int, db_name: str
+    ) -> DatabaseConfig:
+        """Provider parameters are auto-injected"""
+        return DatabaseConfig(
+            host=db_host,
+            port=db_port,
+            database=db_name
         )
 
     @provider
-    def create_cache_service(self, pool: DatabasePool) -> ICache:
-        """Factory for cache service with dependencies"""
-        return RedisCache(
-            host="redis-server",
-            db_pool=pool
-        )
+    def provide_database(self, config: DatabaseConfig) -> Database:
+        """Compose dependencies with initialization logic"""
+        db = Database(config)
+        db.connect()  # Custom initialization
+        return db
 
-# Usage
-container.install(ServiceModule())
-cache = container.get(ICache)  # Gets RedisCache with pool
+# Bind config values
+container.bind_instance("db_host", "localhost")
+container.bind_instance("db_port", 5432)
+container.bind_instance("db_name", "myapp")
+
+# Install module
+container.install_module(AppModule())
+
+# Get fully initialized database
+db = container[Database]
 ```
 
-### Conditional Module
+## Provider Pattern (Recommended)
 
-**Conditional modules** configure services based on environment or conditions.
+The **@provider pattern** is the most powerful way to create complex dependencies.
+
+### Basic Provider
 
 ```python
-class EnvironmentModule(Module):
+class ServiceModule(ProviderModule):
+    @provider
+    def provide_logger(self, app_name: str, log_level: str) -> Logger:
+        """Return type annotation determines what this provides"""
+        return Logger(name=app_name, level=log_level)
+
+# Bind parameters
+container.bind_instance("app_name", "MyApp")
+container.bind_instance("log_level", "INFO")
+
+# Install and use
+container.install_module(ServiceModule())
+logger = container[Logger]
+```
+
+### Provider with Dependencies
+
+```python
+class UserModule(ProviderModule):
+    @provider
+    def provide_user_service(
+        self, database: Database, cache: Cache, logger: Logger
+    ) -> UserService:
+        """Dependencies are auto-injected"""
+        return UserService(db=database, cache=cache, logger=logger)
+```
+
+### Provider with Initialization
+
+```python
+class DatabaseModule(ProviderModule):
+    @provider
+    def provide_database(self, config: DatabaseConfig) -> Database:
+        """Perform complex initialization"""
+        db = Database(config)
+        db.connect()
+        db.setup_tables()
+        db.run_migrations()
+        return db
+```
+
+### Environment-Specific Providers
+
+```python
+class EnvironmentModule(ProviderModule):
     def __init__(self, environment: str):
         self.environment = environment
 
-    def configure(self, binder):
+    @provider
+    def provide_database_config(self) -> DatabaseConfig:
+        """Use module state for environment-specific logic"""
         if self.environment == "production":
-            binder.bind(IDatabase, PostgresDatabase())
-            binder.bind(ICache, RedisCache())
-        elif self.environment == "testing":
-            binder.bind(IDatabase, InMemoryDatabase())
-            binder.bind(ICache, NoOpCache())
+            return DatabaseConfig(
+                host="prod-db.example.com",
+                port=5432,
+                ssl=True
+            )
         else:  # development
-            binder.bind(IDatabase, PostgresDatabase())
-            binder.bind(ICache, InMemoryCache())
+            return DatabaseConfig(
+                host="localhost",
+                port=5432,
+                ssl=False
+            )
 
 # Usage
-container.install(EnvironmentModule(os.getenv("ENV", "development")))
+container.install_module(EnvironmentModule("production"))
 ```
 
-## 🎨 Module Patterns
-
-### Domain Module
-
-Group services by business domain.
+## Complete Example
 
 ```python
-# User domain module
-class UserModule(Module):
-    def configure(self, binder):
-        binder.bind(IUserRepository, UserRepository())
-        binder.bind(IUserService, UserService())
-        binder.bind(IUserValidator, UserValidator())
+from injectq import InjectQ
+from injectq.modules import ProviderModule, provider
 
-# Order domain module
-class OrderModule(Module):
-    def configure(self, binder):
-        binder.bind(IOrderRepository, OrderRepository())
-        binder.bind(IOrderService, OrderService())
-        binder.bind(IOrderValidator, OrderValidator())
+# Domain models
+class DatabaseConfig:
+    def __init__(self, host: str, port: int):
+        self.host = host
+        self.port = port
 
-# Payment domain module
-class PaymentModule(Module):
-    def configure(self, binder):
-        binder.bind(IPaymentProcessor, StripeProcessor())
-        binder.bind(IPaymentRepository, PaymentRepository())
+class Database:
+    def __init__(self, config: DatabaseConfig):
+        self.config = config
+        self.connected = False
 
-# Application assembly
-container.install(UserModule())
-container.install(OrderModule())
-container.install(PaymentModule())
+    def connect(self):
+        self.connected = True
+        print(f"Connected to {self.config.host}")
+
+class UserService:
+    def __init__(self, db: Database, logger: Logger):
+        self.db = db
+        self.logger = logger
+
+# Provider module
+class ApplicationModule(ProviderModule):
+    @provider
+    def provide_database_config(
+        self, db_host: str, db_port: int
+    ) -> DatabaseConfig:
+        return DatabaseConfig(host=db_host, port=db_port)
+
+    @provider
+    def provide_database(self, config: DatabaseConfig) -> Database:
+        db = Database(config)
+        db.connect()  # Initialize
+        return db
+
+    @provider
+    def provide_logger(self, log_level: str) -> Logger:
+        return Logger(level=log_level)
+
+    @provider
+    def provide_user_service(
+        self, db: Database, logger: Logger
+    ) -> UserService:
+        return UserService(db=db, logger=logger)
+
+# Setup
+container = InjectQ.get_instance()
+
+# Bind configuration
+container.bind_instance("db_host", "localhost")
+container.bind_instance("db_port", 5432)
+container.bind_instance("log_level", "INFO")
+
+# Install module
+container.install_module(ApplicationModule())
+
+# Use services
+user_service = container[UserService]
+# Database is connected, logger is configured
+```
+
+## Module Patterns
+
+### Domain Modules
+
+```python
+class UserModule(ProviderModule):
+    @provider
+    def provide_user_repository(self, db: Database) -> UserRepository:
+        return UserRepository(db)
+
+    @provider
+    def provide_user_service(self, repo: UserRepository) -> UserService:
+        return UserService(repo)
+
+class OrderModule(ProviderModule):
+    @provider
+    def provide_order_repository(self, db: Database) -> OrderRepository:
+        return OrderRepository(db)
+
+    @provider
+    def provide_order_service(self, repo: OrderRepository) -> OrderService:
+        return OrderService(repo)
 ```
 
 ### Infrastructure Module
 
-Group infrastructure services.
-
 ```python
-class InfrastructureModule(Module):
-    def configure(self, binder):
-        # Database
-        binder.bind(IDatabase, PostgresDatabase())
-
-        # Cache
-        binder.bind(ICache, RedisCache())
-
-        # Message queue
-        binder.bind(IMessageQueue, RabbitMQ())
-
-        # External APIs
-        binder.bind(IPaymentAPI, StripeAPI())
-        binder.bind(IEmailAPI, SendGridAPI())
-```
-
-### Cross-Cutting Module
-
-Group cross-cutting concerns.
-
-```python
-class CrossCuttingModule(Module):
-    def configure(self, binder):
-        # Logging
-        binder.bind(ILogger, StructuredLogger())
-
-        # Metrics
-        binder.bind(IMetrics, PrometheusMetrics())
-
-        # Security
-        binder.bind(IAuthenticator, JWTAuthenticator())
-        binder.bind(IAuthorizer, RBACAuthorizer())
-
-        # Validation
-        binder.bind(IValidator, FluentValidator())
-```
-
-## 🔄 Module Composition
-
-### Module Dependencies
-
-Modules can depend on services from other modules.
-
-```python
-class EmailModule(Module):
-    def configure(self, binder):
-        binder.bind(IEmailService, SmtpEmailService())
-        binder.bind(IEmailTemplate, JinjaTemplate())
-
-class NotificationModule(Module):
-    def configure(self, binder):
-        # Depends on EmailModule's IEmailService
-        binder.bind(INotificationService, EmailNotificationService())
-
-# Installation order matters
-container.install(EmailModule())      # First
-container.install(NotificationModule())  # Second
-```
-
-### Module Overrides
-
-Override bindings for testing or different environments.
-
-```python
-class ProductionModule(Module):
-    def configure(self, binder):
-        binder.bind(IDatabase, PostgresDatabase())
-
-class TestModule(Module):
-    def configure(self, binder):
-        # Override production database
-        binder.bind(IDatabase, InMemoryDatabase())
-
-# Test setup
-container.install(ProductionModule())
-container.install(TestModule())  # Overrides database binding
-```
-
-### Module Inheritance
-
-Extend modules for specialization.
-
-```python
-class BaseDatabaseModule(Module):
-    def configure(self, binder):
-        binder.bind(IDatabaseConnection, self.create_connection())
-
-    def create_connection(self):
-        raise NotImplementedError
-
-class PostgresModule(BaseDatabaseModule):
-    def create_connection(self):
-        return PostgresConnection("postgresql://...")
-
-class MySQLModule(BaseDatabaseModule):
-    def create_connection(self):
-        return MySQLConnection("mysql://...")
-```
-
-## 🧪 Testing with Modules
-
-### Module Replacement
-
-Replace entire modules for testing.
-
-```python
-class MockEmailModule(Module):
-    def configure(self, binder):
-        binder.bind(IEmailService, MockEmailService())
-
-# Test setup
-def test_user_registration():
-    container = InjectQ()
-
-    # Use real modules
-    container.install(DatabaseModule())
-    container.install(UserModule())
-
-    # Replace email module with mock
-    container.install(MockEmailModule())
-
-    # Test
-    service = container.get(IUserService)
-    service.register_user("test@example.com", "password")
-
-    # Verify email was "sent"
-    mock_email = container.get(IEmailService)
-    assert len(mock_email.sent_emails) == 1
-```
-
-### Partial Overrides
-
-Override only specific bindings.
-
-```python
-class TestOverridesModule(Module):
-    def configure(self, binder):
-        # Only override the repository, keep other services
-        binder.bind(IUserRepository, MockUserRepository())
-
-# Test with partial override
-container.install(ProductionModule())  # All production services
-container.install(TestOverridesModule())  # Override just repository
-```
-
-### Test Module Composition
-
-```python
-def create_test_container():
-    """Factory for test containers"""
-    container = InjectQ()
-
-    # Install test versions of all modules
-    container.install(TestDatabaseModule())
-    container.install(TestEmailModule())
-    container.install(TestCacheModule())
-
-    return container
-
-def test_complete_workflow():
-    container = create_test_container()
-
-    # Test entire workflow with mocked dependencies
-    workflow = container.get(OrderWorkflow)
-    result = workflow.process_order(order_data)
-
-    assert result.success
-```
-
-## 🚨 Module Best Practices
-
-### 1. Single Responsibility
-
-```python
-# ✅ Good: Single responsibility
-class DatabaseModule(Module):
-    """Handles all database-related bindings"""
-
-class EmailModule(Module):
-    """Handles all email-related bindings"""
-
-# ❌ Bad: Multiple responsibilities
-class UtilsModule(Module):
-    """Handles database, email, cache, logging... everything!"""
-```
-
-### 2. Interface-Based Binding
-
-```python
-# ✅ Good: Bind to interfaces
-class RepositoryModule(Module):
-    def configure(self, binder):
-        binder.bind(IUserRepository, SqlUserRepository())
-        binder.bind(IOrderRepository, SqlOrderRepository())
-
-# ❌ Bad: Bind to implementations
-class RepositoryModule(Module):
-    def configure(self, binder):
-        binder.bind(SqlUserRepository, SqlUserRepository())
-        binder.bind(SqlOrderRepository, SqlOrderRepository())
-```
-
-### 3. Configuration Through Parameters
-
-```python
-# ✅ Good: Configurable modules
-class DatabaseModule(Module):
-    def __init__(self, config: DatabaseConfig):
-        self.config = config
-
-    def configure(self, binder):
-        binder.bind(IDatabase, PostgresDatabase(self.config))
-
-# ❌ Bad: Hard-coded configuration
-class DatabaseModule(Module):
-    def configure(self, binder):
-        binder.bind(IDatabase, PostgresDatabase("hardcoded-connection"))
-```
-
-### 4. Clear Naming Conventions
-
-```python
-# ✅ Good naming
-class UserDomainModule(Module): pass
-class InfrastructureModule(Module): pass
-class TestOverridesModule(Module): pass
-
-# ❌ Bad naming
-class Module1(Module): pass
-class MyModule(Module): pass
-class StuffModule(Module): pass
-```
-
-### 5. Documentation
-
-```python
-class PaymentProcessingModule(Module):
-    """
-    Payment Processing Module
-
-    Provides services for processing payments through various
-    payment gateways. Supports Stripe, PayPal, and bank transfers.
-
-    Bindings:
-    - IPaymentProcessor -> StripeProcessor (primary)
-    - IPaymentRepository -> DatabasePaymentRepository
-    - IPaymentValidator -> PaymentValidator
-
-    Dependencies:
-    - Requires InfrastructureModule for database access
-    - Requires SecurityModule for encryption
-
-    Environment Variables:
-    - STRIPE_API_KEY: Stripe API key
-    - PAYPAL_CLIENT_ID: PayPal client ID
-    """
-    pass
-```
-
-## ⚡ Advanced Module Features
-
-### Dynamic Module Loading
-
-```python
-def load_modules_from_config(config_file: str) -> List[Module]:
-    """Load modules based on configuration"""
-    config = load_config(config_file)
-    modules = []
-
-    if config.get("database.enabled"):
-        modules.append(DatabaseModule(config["database"]))
-
-    if config.get("email.enabled"):
-        modules.append(EmailModule(config["email"]))
-
-    if config.get("cache.enabled"):
-        modules.append(CacheModule(config["cache"]))
-
-    return modules
-
-# Usage
-modules = load_modules_from_config("app_config.yaml")
-for module in modules:
-    container.install(module)
-```
-
-### Module Health Checks
-
-```python
-class HealthCheckModule(Module):
-    def configure(self, binder):
-        binder.bind(IHealthChecker, CompositeHealthChecker())
+class InfrastructureModule(ProviderModule):
+    @provider
+    def provide_database(self, db_url: str) -> Database:
+        return Database(db_url)
 
     @provider
-    def create_health_checker(self) -> IHealthChecker:
-        checkers = [
-            DatabaseHealthChecker(),
-            CacheHealthChecker(),
-            EmailHealthChecker(),
-        ]
-        return CompositeHealthChecker(checkers)
-
-# Usage
-health_checker = container.get(IHealthChecker)
-status = health_checker.check_all()
-```
-
-### Module Metrics
-
-```python
-class MetricsModule(Module):
-    def configure(self, binder):
-        binder.bind(IMetrics, PrometheusMetrics())
+    def provide_cache(self, redis_url: str) -> Cache:
+        return RedisCache(redis_url)
 
     @provider
-    def create_metrics(self) -> IMetrics:
-        metrics = PrometheusMetrics()
-
-        # Add module-specific metrics
-        metrics.gauge("modules_loaded", len(container._modules))
-        metrics.counter("bindings_created", len(container._bindings))
-
-        return metrics
+    def provide_queue(self, queue_url: str) -> Queue:
+        return MessageQueue(queue_url)
 ```
 
-## 🎯 Summary
+### Testing Modules
 
-Modules provide:
+```python
+class TestModule(ProviderModule):
+    @provider
+    def provide_database(self) -> Database:
+        return InMemoryDatabase()
 
-- **Organization** - Group related bindings together
-- **Reusability** - Reuse across applications and tests
-- **Testability** - Easy replacement for testing
-- **Maintainability** - Clear separation of concerns
-- **Composition** - Flexible combination of modules
+    @provider
+    def provide_cache(self) -> Cache:
+        return MockCache()
 
-**Key patterns:**
-- Domain modules for business logic
-- Infrastructure modules for technical services
-- Provider modules for factory functions
-- Conditional modules for environment-specific config
+# Test setup
+def test_user_service():
+    container = InjectQ.get_instance()
+    container.install_module(TestModule())
+    
+    service = container[UserService]
+    # Uses mocked dependencies
+```
 
-**Best practices:**
-- Single responsibility per module
-- Interface-based bindings
-- Configurable through parameters
-- Clear naming conventions
-- Comprehensive documentation
+## Best Practices
 
-Ready to explore [framework integrations](../integrations/overview.md)?
+### ✅ Use Providers for Complex Setup
 
-````
+```python
+@provider
+def provide_database(self, config: DatabaseConfig) -> Database:
+    db = Database(config)
+    db.connect()
+    db.run_migrations()
+    return db
+```
+
+### ✅ One Module Per Domain
+
+```python
+class UserModule(ProviderModule): pass
+class OrderModule(ProviderModule): pass
+class PaymentModule(ProviderModule): pass
+```
+
+### ✅ Environment-Specific Modules
+
+```python
+class ProductionModule(ProviderModule):
+    def __init__(self):
+        self.environment = "production"
+
+    @provider
+    def provide_config(self) -> Config:
+        return Config(ssl=True, debug=False)
+```
+
+### ✅ Type Annotations Required
+
+```python
+@provider
+def provide_database(self, config: DatabaseConfig) -> Database:
+    """Return type annotation is required"""
+    return Database(config)
+```
+
+### ❌ Avoid God Modules
+
+```python
+# ❌ Bad - everything in one module
+class EverythingModule(ProviderModule):
+    # 50+ providers...
+
+# ✅ Good - focused modules
+class DatabaseModule(ProviderModule): pass
+class CacheModule(ProviderModule): pass
+class EmailModule(ProviderModule): pass
+```
+
+## Summary
+
+- **Simple Module**: Fluent API for basic bindings
+- **Configuration Module**: Bind config dictionaries
+- **Provider Module**: Most powerful - complex initialization
+
+**Provider Pattern Benefits:**
+- Auto-inject dependencies into provider methods
+- Custom initialization logic
+- Environment-specific configuration
+- Clean, organized code
+
+**Key Points:**
+- Use `@provider` decorator on methods
+- Return type annotation determines what's provided
+- Parameters are auto-injected from container
+- Great for multi-step initialization
+
+Next: [FastAPI Integration](../integrations/fastapi.md) | [Testing](../testing/overview.md)

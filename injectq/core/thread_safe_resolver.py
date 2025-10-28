@@ -34,7 +34,7 @@ class ThreadSafeDependencyResolver:
         self.scope_manager = scope_manager or get_scope_manager()
 
         # Thread-safe resolution stack using thread-local storage
-        import threading  # noqa: PLC0415
+        import threading
 
         self._thread_local = threading.local()
 

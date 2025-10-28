@@ -1,234 +1,250 @@
 # Changelog
 
-All notable changes to InjectQ will be documented in this file.
+All notable changes to InjectQ are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+---
+
+## [0.4.0] - Unreleased
+
+**🎯 Focus:** Enhanced factory methods, improved type safety, and better async support.
 
 ### Added
-- **🆕 Hybrid factory methods**: New `invoke()` and `ainvoke()` methods that combine dependency injection with manual argument provision
-  - `invoke(service_type, *args, **kwargs)` - Sync hybrid invocation
-  - `ainvoke(service_type, *args, **kwargs)` - Async hybrid invocation
-  - Automatically injects missing dependencies while accepting custom arguments
-  - Smart resolution: by parameter name first, then by type annotation (non-primitives only)
-- **🆕 Async factory methods**: New async variants of factory operations
-  - `aget_factory(service_type)` - Async version of get_factory()
-  - `acall_factory(service_type, *args, **kwargs)` - Async version of call_factory()
-- Comprehensive factory method documentation with examples
-- 23 new tests for factory enhancements (all passing)
-- Factory API showcase example demonstrating all patterns
-- **Auto-registration of concrete types**: New `allow_concrete` parameter (default: True) 
-  automatically registers concrete types when registering instances to base types
-- **Registration override control**: New `allow_override` parameter (default: True) 
-  controls whether existing service registrations can be overwritten
-- Enhanced `bind_instance()` method with `allow_concrete` parameter
-- Enhanced `bind_factory()` method with `allow_concrete` parameter
-- Enhanced `bind()` method with `allow_concrete` parameter
-- New `AlreadyRegisteredError` exception for override conflicts
+
+#### Factory Enhancements
+- **Hybrid factory methods**: `invoke()` and `ainvoke()` combine dependency injection with manual arguments
+  ```python
+  # Inject dependencies, provide custom args
+  service = container.invoke(UserService, user_id=123)
+  result = await container.ainvoke(AsyncService, data="custom")
+  ```
+- **Async factory methods**: `aget_factory()` and `acall_factory()` for async operations
+- Smart parameter resolution: by name first, then by type (non-primitives only)
+
+#### Registration Control
+- **Auto-registration**: `allow_concrete=True` (default) automatically registers concrete types
+  ```python
+  container.bind_instance(Animal, dog)  # Both Animal and Dog are now resolvable
+  ```
+- **Override control**: `allow_override=True` (default) controls registration overwrites
+- New `AlreadyRegisteredError` exception for conflict detection
+- Enhanced `bind()`, `bind_instance()`, and `bind_factory()` methods
+
+#### Framework & Tools
 - Comprehensive documentation with MkDocs
 - Plugin system for extensibility
 - Advanced middleware support
-- Enhanced async support with context managers
 - Resource management utilities
 - Performance profiling tools
 - Diagnostic and validation utilities
 - Migration guides from other DI libraries
 
 ### Changed
-- **Breaking**: InjectQ constructor now accepts `allow_override` parameter
 - **Breaking**: All binding methods now accept `allow_concrete` parameter
-- Dict-like syntax (`container[Type] = instance`) now uses `allow_concrete=True` by default
-- Improved subclass injection support - both base and concrete types can be resolved
-- Improved type safety and mypy compliance
-- Enhanced error messages and debugging information
-- Optimized performance for large dependency graphs
+- Improved subclass injection - both base and concrete types are resolvable
+- Enhanced type safety and mypy compliance
+- Better error messages with detailed debugging info
+- Optimized dependency graph resolution
 
 ### Fixed
-- Subclass injection issues where concrete types weren't accessible after registering to base type
-- Various bug fixes and stability improvements
+- Subclass injection issues with concrete type resolution
+- Various stability improvements
+
+### Documentation
+- Complete API reference
+- Framework integration guides (FastAPI, Taskiq)
+- Testing best practices
+- Performance optimization guide
+- Migration guides
+
+---
+
+## [0.3.3] - 2024-12-15
+
+### Added
+- Async scope support with `async with container.scope()`
+- Enhanced testing utilities
+- Performance benchmarks
+
+### Fixed
+- Memory leaks in scoped services
+- Thread safety issues in async contexts
+
+---
+
+## [0.3.0] - 2024-11-01
+
+### Added
+- Custom scope support
+- Module system with `@provider` decorator
+- FastAPI integration with `InjectFastAPI`
+- Taskiq integration with `InjectTaskiq`
+
+### Changed
+- Improved container API
+- Better error messages
+
+---
+
+## [0.2.0] - 2024-09-15
+
+### Added
+- Scoped services with `@scoped` decorator
+- Resource management with `@resource`
+- Testing utilities: `test_container()`, `override_dependency()`
+
+### Changed
+- Enhanced type resolution
+- Performance improvements
+
+---
 
 ## [0.1.0] - 2024-01-15
 
 ### Added
-- Initial release of InjectQ
-- Core dependency injection functionality
-- Multiple injection patterns:
-  - Dict-like interface
-  - `@inject` decorator
-  - `Inject()` function
-- Service scopes:
-  - Singleton scope
-  - Transient scope
-  - Scoped services
-  - Custom scopes
-- Module system for organizing dependencies
-- Provider pattern for complex object creation
-- Framework integrations:
-  - FastAPI integration
-  - Taskiq integration
-  - FastMCP integration
-- Testing utilities:
-  - Test containers
-  - Mocking and overrides
-  - Async testing support
-- Advanced features:
-  - Conditional registration
-  - Lazy loading
-  - Circular dependency detection
-  - Lifecycle hooks
-- Thread safety features
-- Performance optimizations
-- Type safety with full mypy support
+- Initial stable release
+- Core dependency injection with `InjectQ` container
+- Service scopes: `@singleton`, `@transient`
+- `@inject` decorator for automatic injection
+- Dict-like container interface
+- Type safety with mypy support
+- Thread-safe operations
+- Basic testing utilities
 
 ### Features
-
-#### Core Container
-- `InjectQ` container with dict-like interface
 - Automatic dependency resolution
-- Type-safe service registration and retrieval
-- Support for generic types and protocols
-
-#### Scoping System
-- Built-in scopes: singleton, transient, scoped
-- Custom scope creation and management
-- Scope-aware dependency resolution
-- Automatic resource cleanup
-
-#### Module System
-- Modular dependency organization
-- Provider pattern for complex construction
-- Module composition and inheritance
-- Configuration-based modules
-
-#### Injection Patterns
-- `@inject` decorator for automatic injection
-- `Inject()` function for explicit injection
-- Dict-like container access
-- Support for optional dependencies
-
-#### Framework Integrations
-- FastAPI: `Injected[T]` dependency provider
-- Taskiq: Automatic worker dependency injection
-- FastMCP: Server and tool integration
-
-#### Testing Support
-- Test-specific containers
-- Service mocking and overrides
-- Async testing utilities
-- Integration testing helpers
-
-#### Advanced Features
-- Conditional service registration
-- Lazy loading of expensive services
-- Circular dependency detection and resolution
-- Service lifecycle hooks
-- Resource management with automatic cleanup
-
-#### Performance Features
-- Compile-time dependency resolution
-- Service caching and optimization
-- Thread-safe operations
-- Minimal runtime overhead
-
-### Documentation
-- Comprehensive getting started guide
-- Detailed core concepts explanation
-- Extensive examples and tutorials
-- Framework integration guides
-- Testing strategies and best practices
-- Migration guides from other libraries
-- Complete API reference
-
-### Development
-- Full test suite with high coverage
-- Type checking with mypy
-- Code quality with ruff
-- Continuous integration setup
-- Documentation generation with MkDocs
-
-## [0.0.1] - 2023-12-01
-
-### Added
-- Initial project setup
-- Basic dependency injection prototype
-- Core container implementation
-- Simple registration and resolution
+- Circular dependency detection
+- Lifecycle hooks
+- Comprehensive documentation
 
 ---
 
 ## Release Notes
 
-### Version 0.1.0 Release Notes
+### Version 0.4.0 (Upcoming)
 
-InjectQ 0.1.0 is the first stable release of our modern Python dependency injection library. This release focuses on providing a simple yet powerful API that grows with your application needs.
+**InjectQ 0.4.0** introduces powerful factory enhancements and improved control over service registration.
 
-#### Key Highlights
+#### 🚀 Key Highlights
 
-**🎯 Multiple API Styles**: Choose the injection style that fits your needs:
-- Dict-like interface for simple cases
-- `@inject` decorator for automatic injection
-- `Inject()` function for explicit control
+**Hybrid Factories**: Combine DI with manual arguments
+```python
+# Auto-inject Database, provide custom user_id
+service = container.invoke(UserService, user_id=123)
+```
 
-**🔒 Type Safety First**: Full mypy compliance with early error detection and comprehensive type checking.
+**Async Support**: Full async factory operations
+```python
+result = await container.ainvoke(AsyncService, data="custom")
+```
 
-**⚡ Performance Optimized**: Compile-time dependency resolution with caching for minimal runtime overhead.
+**Smart Registration**: Automatic concrete type registration
+```python
+container.bind_instance(Animal, dog)
+# Both Animal and Dog are now available
+```
 
-**🧪 Testing Built-in**: Comprehensive testing utilities including test containers, mocking, and async support.
+**Better Control**: Prevent accidental overwrites
+```python
+container = InjectQ(allow_override=False)
+container.bind(Service, impl1)
+container.bind(Service, impl2)  # Raises AlreadyRegisteredError
+```
 
-**🔗 Framework Native**: Built-in integrations for FastAPI, Taskiq, and FastMCP with idiomatic patterns.
+#### 📦 What's Included
+- 23 new tests for factory methods (all passing)
+- Comprehensive documentation updates
+- Performance optimizations
+- Enhanced error messages
+- Migration guides from other DI libraries
 
-#### Breaking Changes
+#### ⚠️ Breaking Changes
+- All binding methods now accept `allow_concrete` parameter (default: `True`)
+- InjectQ constructor now accepts `allow_override` parameter (default: `True`)
 
-None - this is the first stable release.
-
-#### Migration Guide
-
-This is the initial release, so no migration is needed. However, if you're coming from other dependency injection libraries, check out our [migration guides](migration/from-kink.md).
-
-#### Known Issues
-
-- None currently known
-
-#### Deprecations
-
-- None in this release
-
-#### Acknowledgments
-
-Special thanks to all contributors who helped make this release possible:
-- Core development team
-- Beta testers and early adopters
-- Documentation reviewers
-- Community feedback providers
+#### 📚 Documentation
+- Complete API reference at [docs.injectq.dev](https://iamsdt.github.io/injectq/)
+- [Factory Methods Guide](core-concepts/factory-pattern.md)
+- [Migration Guide](migration/from-kink.md)
+- [Testing Guide](testing/overview.md)
 
 ---
 
-## Upcoming Features
+## Upgrade Guide
 
-### Version 0.2.0 (Planned)
+### From 0.3.x to 0.4.0
 
-- Enhanced plugin system
-- Additional framework integrations
-- Performance improvements
-- Extended diagnostic tools
+**No changes required** for most users. The new features are backward compatible.
 
-### Version 0.3.0 (Planned)
+**Optional upgrades**:
+```python
+# Use hybrid factories for cleaner code
+# Before:
+service = UserService(db=container[Database], user_id=123)
 
-- Configuration management improvements
-- Advanced caching strategies  
-- Monitoring and observability features
-- Additional testing utilities
+# After:
+service = container.invoke(UserService, user_id=123)
+```
+
+**If you need strict registration**:
+```python
+# Prevent accidental overwrites
+container = InjectQ(allow_override=False)
+```
 
 ---
 
 ## Contributing
 
-We welcome contributions! Please see our [contributing guide](contributing.md) for details on how to contribute to InjectQ.
+We welcome contributions! See [CONTRIBUTING.md](contributing.md) for details.
+
+### Reporting Issues
+- **Bug Reports**: [GitHub Issues](https://github.com/Iamsdt/injectq/issues)
+- **Feature Requests**: [GitHub Discussions](https://github.com/Iamsdt/injectq/discussions)
+
+### Development
+```bash
+# Clone repository
+git clone https://github.com/Iamsdt/injectq.git
+cd injectq
+
+# Install dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run type checking
+mypy injectq
+```
+
+---
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/Iamsdt/injectq/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Iamsdt/injectq/discussions)
-- **Documentation**: [InjectQ Docs](https://iamsdt.github.io/injectq/)
+- 📖 **Documentation**: [iamsdt.github.io/injectq](https://iamsdt.github.io/injectq/)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/Iamsdt/injectq/discussions)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/Iamsdt/injectq/issues)
+- 💡 **Examples**: [examples/](https://github.com/Iamsdt/injectq/tree/main/examples)
+
+---
+
+## License
+
+MIT License - see [LICENSE](../LICENSE) for details.
+
+---
+
+## Acknowledgments
+
+Thanks to all contributors who helped make InjectQ better:
+- Core development team
+- Community contributors
+- Beta testers and early adopters
+- Documentation reviewers
+
+**Special thanks** to everyone who provided feedback and feature requests!
+
+

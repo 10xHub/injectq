@@ -10,8 +10,9 @@ from .types import normalize_type
 
 
 def get_function_dependencies(func: Callable[..., Any]) -> dict[str, type[Any]]:
-    """Extract dependency types from function signature
-    type hints and Inject markers.
+    """Extract dependency types from function signature.
+
+    Type hints and Inject markers.
     """
     try:
         # Get type hints for the function
@@ -38,12 +39,11 @@ def get_function_dependencies(func: Callable[..., Any]) -> dict[str, type[Any]]:
             if param.default is not inspect.Parameter.empty:
                 # Import here to avoid circular import
                 try:
-                    from injectq.decorators.inject import (  # noqa: PLC0415
+                    from injectq.decorators.inject import (
                         Inject,
-                        InjectType,
                     )
 
-                    if isinstance(param.default, Inject | InjectType):
+                    if isinstance(param.default, Inject):
                         dependencies[param_name] = param.default.service_type
                         continue
                 except ImportError:

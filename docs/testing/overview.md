@@ -1,4 +1,3 @@
-````markdown
 # Testing
 
 InjectQ provides utilities to test dependency-injected code with proper isolation and mocking.

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from injectq.utils import (
     BindingError,
@@ -19,7 +19,7 @@ from .thread_safety import HybridLock
 
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
     from injectq.diagnostics import DependencyVisualizer
 
@@ -86,7 +86,7 @@ class InjectQ:
 
         # Choose scope manager based on async support requirement
         if use_async_scopes:
-            from .async_scopes import create_enhanced_scope_manager  # noqa: PLC0415
+            from .async_scopes import create_enhanced_scope_manager
 
             self._scope_manager = create_enhanced_scope_manager()
         else:
@@ -109,17 +109,18 @@ class InjectQ:
 
     @classmethod
     def get_instance(cls) -> InjectQ:
-        """
-        Returns the current instance of the InjectQ container.
+        """Returns the current instance of the InjectQ container.
+
         This method first attempts to retrieve the current container context using
         `ContainerContext.get_current()`. If a context is available, it returns that
         context. Otherwise, it checks if a singleton instance of the container exists;
         if not, it creates one and returns it.
-        Returns:
-            InjectQ: The current container instance, either from the context or as a singleton.
-        """
 
-        from .context import ContainerContext  # noqa: PLC0415
+        Returns:
+            InjectQ: The current container instance, either from the context
+            or as a singleton.
+        """
+        from .context import ContainerContext
 
         ctx = ContainerContext.get_current()
         if ctx is not None:
@@ -408,7 +409,7 @@ class InjectQ:
             >>> injector.bind_factory("data_store", async_loader)
             >>> result = await injector.acall_factory("data_store", "key1")
         """
-        import asyncio  # noqa: PLC0415
+        import asyncio
 
         factory = await self.aget_factory(service_type)
         if asyncio.iscoroutinefunction(factory):
@@ -450,7 +451,7 @@ class InjectQ:
             >>> # Provide user_id, db will be injected automatically
             >>> service = injector.invoke("service", user_id="123")
         """
-        import inspect  # noqa: PLC0415
+        import inspect
 
         factory = self.get_factory(service_type)
         sig = inspect.signature(factory)
@@ -536,8 +537,8 @@ class InjectQ:
             >>> injector.bind_factory("service", create_service)
             >>> service = await injector.ainvoke("service", user_id="123")
         """
-        import asyncio  # noqa: PLC0415
-        import inspect  # noqa: PLC0415
+        import asyncio
+        import inspect
 
         factory = await self.aget_factory(service_type)
         sig = inspect.signature(factory)
@@ -630,7 +631,7 @@ class InjectQ:
                 # Dependencies resolved using this container
                 my_function()
         """
-        from .context import ContainerContext  # noqa: PLC0415
+        from .context import ContainerContext
 
         old_container = ContainerContext.get_current()
         ContainerContext.set_current(self)
@@ -650,7 +651,7 @@ class InjectQ:
 
         Note: Use context() manager for temporary activation instead.
         """
-        from .context import ContainerContext  # noqa: PLC0415
+        from .context import ContainerContext
 
         ContainerContext.set_current(self)
 
@@ -684,7 +685,7 @@ class InjectQ:
 
     def visualize_dependencies(self) -> DependencyVisualizer:
         """Get a dependency visualizer for this container."""
-        from injectq.diagnostics import DependencyVisualizer  # noqa: PLC0415
+        from injectq.diagnostics import DependencyVisualizer
 
         return DependencyVisualizer(self)
 
