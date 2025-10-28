@@ -1,6 +1,7 @@
 """Service registry for InjectQ dependency injection library."""
 
 import inspect
+import logging
 from dataclasses import dataclass
 from typing import Any
 
@@ -16,6 +17,8 @@ from .scopes import ScopeType
 
 # Sentinel value to detect when implementation is not provided
 _UNSET = object()
+
+_logger = logging.getLogger("injectq.core")
 
 
 @dataclass
@@ -96,10 +99,19 @@ class ServiceRegistry:
 
         # Check for existing binding if override not allowed
         if not allow_override and service_type in self._bindings:
+            _logger.debug(
+                "Binding already exists, override not allowed: %s", service_type
+            )
             raise AlreadyRegisteredError(service_type)
 
         # Normalize scope
         scope_name = scope.value if isinstance(scope, ScopeType) else str(scope)
+        _logger.debug(
+            "Creating binding: %s -> %s (scope: %s)",
+            service_type,
+            implementation,
+            scope_name,
+        )
 
         # Create binding
         binding = ServiceBinding(

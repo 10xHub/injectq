@@ -2,6 +2,7 @@
 
 import asyncio
 import inspect
+import logging
 from collections.abc import Callable
 from typing import Any
 
@@ -20,6 +21,9 @@ from .base_scope_manager import BaseScopeManager
 from .registry import ServiceBinding, ServiceRegistry
 from .scopes import get_scope_manager
 from .thread_safety import HybridLock
+
+
+_logger = logging.getLogger("injectq.core")
 
 
 class ThreadSafeDependencyResolver:

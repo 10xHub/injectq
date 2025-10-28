@@ -2,6 +2,7 @@
 
 import asyncio
 import contextvars
+import logging
 import threading
 from collections.abc import AsyncIterator, Callable, Iterator
 from contextlib import asynccontextmanager, contextmanager
@@ -11,6 +12,9 @@ from injectq.utils import ScopeError
 
 from .base_scope_manager import BaseScopeManager
 from .scopes import Scope, ThreadLocalScope
+
+
+_logger = logging.getLogger("injectq.core")
 
 
 class AsyncScope(Scope):
@@ -35,8 +39,10 @@ class AsyncScope(Scope):
             new_instances = instances.copy()
             new_instances[key] = factory()
             self._instances_var.set(new_instances)
+            _logger.debug("Created new async scope instance for key: %s", key)
             return new_instances[key]
 
+        _logger.debug("Reusing async scope instance for key: %s", key)
         return instances[key]
 
     async def aget(self, key: Any, factory: Callable[[], Any]) -> Any:
@@ -51,12 +57,16 @@ class AsyncScope(Scope):
                 result = await result
             new_instances[key] = result
             self._instances_var.set(new_instances)
+            _logger.debug("Created new async scope instance (async) for key: %s", key)
             return new_instances[key]
 
+        _logger.debug("Reusing async scope instance (async) for key: %s", key)
         return instances[key]
 
     def clear(self) -> None:
-        """Clear instances in current async context."""
+        """Clear all instances in this async scope."""
+        _logger.debug("Clearing async scope: %s", self.name)
+        # Reset to empty dict
         self._instances_var.set({})
 
     def enter(self) -> None:

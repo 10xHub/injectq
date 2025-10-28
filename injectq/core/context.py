@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextvars
+import logging
 import threading
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING
@@ -12,6 +13,9 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
 
     from .container import InjectQ
+
+
+_logger = logging.getLogger("injectq.core")
 
 
 class ContainerContext:
@@ -39,12 +43,16 @@ class ContainerContext:
         try:
             container = cls._context_var.get()
             if container is not None:
+                _logger.debug("Found container in async context")
                 return container
         except LookupError:
             pass
 
         # Fall back to thread-local storage
-        return getattr(cls._thread_local, "container", None)
+        container = getattr(cls._thread_local, "container", None)
+        if container is not None:
+            _logger.debug("Found container in thread-local storage")
+        return container
 
     @classmethod
     def set_current(cls, container: InjectQ) -> None:
@@ -56,12 +64,14 @@ class ContainerContext:
         Args:
             container: The container to set as current.
         """
+        _logger.debug("Setting current container in context")
         cls._context_var.set(container)
         cls._thread_local.container = container
 
     @classmethod
     def clear_current(cls) -> None:
         """Clear the current active container."""
+        _logger.debug("Clearing current container from context")
         cls._context_var.set(None)
         if hasattr(cls._thread_local, "container"):
             delattr(cls._thread_local, "container")
@@ -77,11 +87,13 @@ class ContainerContext:
         Yields:
             None
         """
+        _logger.debug("Entering container context")
         old_container = cls.get_current()
         cls.set_current(container)
         try:
             yield
         finally:
+            _logger.debug("Exiting container context")
             if old_container is not None:
                 cls.set_current(old_container)
             else:
@@ -98,11 +110,13 @@ class ContainerContext:
         Yields:
             None
         """
+        _logger.debug("Entering async container context")
         old_container = cls.get_current()
         cls.set_current(container)
         try:
             yield
         finally:
+            _logger.debug("Exiting async container context")
             if old_container is not None:
                 cls.set_current(old_container)
             else:

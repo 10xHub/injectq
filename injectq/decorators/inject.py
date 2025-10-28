@@ -1,5 +1,6 @@
 import functools
 import inspect
+import logging
 from collections.abc import Callable
 from typing import Any, Generic, TypeVar, cast, overload
 
@@ -20,6 +21,9 @@ except ImportError:
 
 F = TypeVar("F", bound=Callable[..., Any])
 T = TypeVar("T")
+
+# Create a logger for the decorators module
+_logger = logging.getLogger("injectq.decorators")
 
 
 @overload
@@ -62,24 +66,29 @@ def inject(
     def _inject_decorator(f: F) -> F:
         if not callable(f):
             msg = "@inject can only be applied to callable objects"
+            _logger.exception(msg)
             raise InjectionError(msg)
 
         # Check if it's a function (not a class)
         if inspect.isclass(f):
             msg = "@inject can only be applied to functions, not classes"
+            _logger.exception(msg)
             raise InjectionError(msg)
 
         # Analyze function dependencies
         try:
             dependencies = get_function_dependencies(f)
+            _logger.debug("Dependencies analyzed for function: %s", f.__name__)
         except Exception as e:
             msg = f"Failed to analyze dependencies for {f.__name__}: {e}"
+            _logger.exception(msg)
             raise InjectionError(msg) from e
 
         if inspect.iscoroutinefunction(f):
 
             @functools.wraps(f)
             async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                _logger.debug("Calling async function: %s", f.__name__)
                 # Get the container at call time
                 target_container = container
                 if not target_container:
@@ -96,6 +105,7 @@ def inject(
 
         @functools.wraps(f)
         def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+            _logger.debug("Calling sync function: %s", f.__name__)
             # Get the container at call time
             target_container = container
             if not target_container:
@@ -110,9 +120,11 @@ def inject(
 
     # If called without arguments, return the decorator
     if func is None:
+        _logger.debug("Inject decorator called without arguments")
         return _inject_decorator
 
     # If called with a function, apply the decorator directly
+    _logger.debug("Inject decorator applied to function: %s", func.__name__)
     return _inject_decorator(func)
 
 
@@ -256,13 +268,28 @@ class Inject(Generic[T], metaclass=_InjectMeta):
         self.service_type = service_type
         # Use a special object to signify that the value has not been resolved yet.
         self._injected_value: Any = None
+        _logger.debug(
+            "Inject proxy created for service type: %s",
+            getattr(service_type, "__name__", str(service_type)),
+        )
 
     def _resolve(self) -> T:
         """Resolves the dependency from the container if it hasn't been already."""
         if self._injected_value is None:
             # Get the container at the last possible moment.
             container = InjectQ.get_instance()
-            self._injected_value = container.get(self.service_type)
+            try:
+                self._injected_value = container.get(self.service_type)
+                _logger.info(
+                    "Dependency resolved for service type: %s",
+                    getattr(self.service_type, "__name__", str(self.service_type)),
+                )
+            except Exception:
+                _logger.exception(
+                    "Failed to resolve dependency for service type: %s",
+                    getattr(self.service_type, "__name__", str(self.service_type)),
+                )
+                raise
         return self._injected_value
 
     @property
@@ -308,9 +335,18 @@ class Inject(Generic[T], metaclass=_InjectMeta):
             DependencyNotFoundError: If the dependency cannot be resolved
         """
         try:
-            return bool(self._resolve())
+            result = bool(self._resolve())
+            _logger.debug(
+                "__bool__ called on Inject proxy for %s: %s",
+                getattr(self.service_type, "__name__", str(self.service_type)),
+                result,
+            )
+            return result
         except DependencyNotFoundError:
-            # If the dependency cannot be found, the proxy is considered Falsy.
+            _logger.warning(
+                "Dependency not found for __bool__ check: %s",
+                getattr(self.service_type, "__name__", str(self.service_type)),
+            )
             return False
 
     def __eq__(self, other: object) -> bool:
