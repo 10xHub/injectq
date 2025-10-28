@@ -313,9 +313,9 @@ InjectQ demonstrates **exceptional performance** across all tested scenarios:
 ✅ **Production-ready** for high-performance applications  
 ✅ **Negligible overhead** compared to manual dependency injection  
 
-### Performance Grade: **A+**
 
 The library is suitable for:
+
 - High-traffic web applications (sub-millisecond request handling)
 - Microservices (efficient service resolution)
 - Real-time systems (predictable sub-microsecond latency)

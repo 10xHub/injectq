@@ -446,4 +446,3 @@ Key testing practices with InjectQ:
 - Keep tests fast and independent
 - Use pytest fixtures for common setup
 
-Ready to explore [API integrations](../integrations/overview.md)?
