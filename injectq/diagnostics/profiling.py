@@ -1,5 +1,6 @@
 """Performance monitoring and profiling for dependency injection."""
 
+import logging
 import statistics
 import threading
 import time
@@ -11,6 +12,9 @@ from typing import Any
 
 from injectq.utils.exceptions import InjectQError
 from injectq.utils.types import ServiceKey
+
+
+_logger = logging.getLogger("injectq.diagnostics")
 
 
 class ProfilingError(InjectQError):
@@ -115,11 +119,13 @@ class DependencyProfiler:
             self._aggregated.clear()
             self._active_resolutions.clear()
             self._resolution_stack.clear()
+            _logger.info("DependencyProfiler started")
 
     def stop(self) -> None:
         """Stop profiling."""
         with self._lock:
             self._is_active = False
+            _logger.info("DependencyProfiler stopped")
 
     def is_active(self) -> bool:
         """Check if profiler is active."""
@@ -137,6 +143,7 @@ class DependencyProfiler:
             self._active_resolutions[thread_id] = current_time
             if self._enable_stack_tracing:
                 self._resolution_stack[thread_id].append(service_type)
+            _logger.debug("Begin resolution for %s", service_type)
 
     def end_resolution(self, service_type: ServiceKey, cache_hit: bool = False) -> None:
         """Mark the end of a dependency resolution."""
@@ -174,6 +181,12 @@ class DependencyProfiler:
             if service_type not in self._aggregated:
                 self._aggregated[service_type] = AggregatedMetrics(service_type)
             self._aggregated[service_type].update(metrics)
+            _logger.debug(
+                "End resolution for %s (cache_hit=%s, time=%.4fs)",
+                service_type,
+                cache_hit,
+                resolution_time,
+            )
 
     @contextmanager
     def profile_resolution(

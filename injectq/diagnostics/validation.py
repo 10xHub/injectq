@@ -1,12 +1,16 @@
 """Dependency validation and early error detection."""
 
 import inspect
+import logging
 from collections import defaultdict
 from typing import Any, get_type_hints
 
 from injectq.core.container import InjectQ
 from injectq.utils.exceptions import InjectQError
 from injectq.utils.types import ServiceKey
+
+
+_logger = logging.getLogger("injectq.diagnostics")
 
 
 class ValidationError(InjectQError):
@@ -54,11 +58,13 @@ class DependencyValidator:
         self._dependency_graph: dict[ServiceKey, set[ServiceKey]] = defaultdict(set)
         self._binding_types: dict[ServiceKey, type] = {}
         self._validation_cache: dict[ServiceKey, bool] = {}
+        _logger.info("DependencyValidator initialized")
 
     def set_container(self, container: InjectQ) -> None:
         """Set the container to validate."""
         self.container = container
         self._clear_cache()
+        _logger.debug("Container set for validation")
 
     def _clear_cache(self) -> None:
         """Clear validation cache."""
@@ -73,6 +79,7 @@ class DependencyValidator:
             ValidationResult with errors and warnings
         """
         if not self.container:
+            _logger.error("No container set for validation")
             return ValidationResult(
                 errors=[ValidationError("No container set for validation")]
             )
@@ -81,6 +88,7 @@ class DependencyValidator:
 
         # Build dependency graph
         self._build_dependency_graph()
+        _logger.debug("Dependency graph built for validation")
 
         # Run validation checks
         self._validate_circular_dependencies(result)
@@ -89,6 +97,11 @@ class DependencyValidator:
         self._validate_scope_consistency(result)
         self._validate_factory_signatures(result)
 
+        _logger.info(
+            "Validation completed with %d errors and %d warnings",
+            len(result.errors),
+            len(result.warnings),
+        )
         return result
 
     def _build_dependency_graph(self) -> None:

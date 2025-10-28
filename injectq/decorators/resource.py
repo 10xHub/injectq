@@ -1,6 +1,7 @@
 """Resource decorator for InjectQ dependency injection library."""
 
 import inspect
+import logging
 import weakref
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Callable, Iterator
@@ -8,6 +9,10 @@ from contextlib import asynccontextmanager, contextmanager, suppress
 from typing import Any, TypeVar
 
 from injectq.utils import InjectQError
+
+
+# Create a logger for the decorators module
+_logger = logging.getLogger("injectq.decorators")
 
 
 T = TypeVar("T")
@@ -84,9 +89,14 @@ class SyncResourceLifecycle(ResourceLifecycle):
 
         except Exception as e:
             msg = f"Failed to initialize resource: {e}"
+            _logger.exception(msg)
             raise ResourceError(msg) from e
         else:
             self._initialized = True
+            _logger.info(
+                "Synchronous resource initialized: %s",
+                getattr(self.factory, "__name__", str(self.factory)),
+            )
             return self._resource
 
     def shutdown(self) -> None:
@@ -103,6 +113,7 @@ class SyncResourceLifecycle(ResourceLifecycle):
                     pass  # Expected for proper generator cleanup
                 except Exception as e:
                     msg = f"Error during generator cleanup: {e}"
+                    _logger.exception(msg)
                     raise ResourceError(msg) from e
                 finally:
                     self._generator = None
@@ -113,6 +124,7 @@ class SyncResourceLifecycle(ResourceLifecycle):
                     self._context_manager.__exit__(None, None, None)
                 except Exception as e:
                     msg = f"Error during context manager cleanup: {e}"
+                    _logger.exception(msg)
                     raise ResourceError(msg) from e
                 finally:
                     self._context_manager = None
@@ -120,6 +132,10 @@ class SyncResourceLifecycle(ResourceLifecycle):
         finally:
             self._initialized = False
             self._resource = None
+            _logger.info(
+                "Synchronous resource shutdown: %s",
+                getattr(self.factory, "__name__", str(self.factory)),
+            )
 
 
 class AsyncResourceLifecycle(ResourceLifecycle):
@@ -159,9 +175,14 @@ class AsyncResourceLifecycle(ResourceLifecycle):
 
         except Exception as e:
             msg = f"Failed to initialize async resource: {e}"
+            _logger.exception(msg)
             raise ResourceError(msg) from e
         else:
             self._initialized = True
+            _logger.info(
+                "Async resource initialized: %s",
+                getattr(self.factory, "__name__", str(self.factory)),
+            )
             return self._resource
 
     def shutdown(self) -> None:
@@ -183,6 +204,7 @@ class AsyncResourceLifecycle(ResourceLifecycle):
                     pass  # Expected for proper generator cleanup
                 except Exception as e:
                     msg = f"Error during async generator cleanup: {e}"
+                    _logger.exception(msg)
                     raise ResourceError(msg) from e
                 finally:
                     self._async_generator = None
@@ -193,6 +215,7 @@ class AsyncResourceLifecycle(ResourceLifecycle):
                     await self._context_manager.__aexit__(None, None, None)
                 except Exception as e:
                     msg = f"Error during async context manager cleanup: {e}"
+                    _logger.exception(msg)
                     raise ResourceError(msg) from e
                 finally:
                     self._context_manager = None
@@ -200,6 +223,10 @@ class AsyncResourceLifecycle(ResourceLifecycle):
         finally:
             self._initialized = False
             self._resource = None
+            _logger.info(
+                "Async resource shutdown: %s",
+                getattr(self.factory, "__name__", str(self.factory)),
+            )
 
 
 class ResourceManager:
