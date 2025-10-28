@@ -75,3 +75,6 @@ venv.bak/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+.ruff_cache/
+.mypy_cache/

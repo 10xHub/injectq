@@ -1,11 +1,16 @@
 """Singleton decorator for automatic service registration."""
 
+import logging
 from collections.abc import Callable
 from typing import TypeVar
 
 from injectq.core import InjectQ, ScopeType
 from injectq.core.context import ContainerContext
 from injectq.utils import BindingError
+
+
+# Create a logger for the decorators module
+_logger = logging.getLogger("injectq.decorators")
 
 
 T = TypeVar("T", bound=type)
@@ -32,6 +37,7 @@ def singleton(cls: T, container: InjectQ | None = None) -> T:
     """
     if not isinstance(cls, type):
         msg = "@singleton can only be applied to classes"
+        _logger.error(msg)
         raise BindingError(msg)
 
     # Get the global container
@@ -43,6 +49,7 @@ def singleton(cls: T, container: InjectQ | None = None) -> T:
 
     # Register the class as a singleton binding to itself
     target_container.bind(cls, cls, scope=ScopeType.SINGLETON)
+    _logger.info("Registered singleton: %s", getattr(cls, "__name__", str(cls)))
 
     return cls
 
@@ -68,6 +75,7 @@ def transient(cls: T, container: InjectQ | None = None) -> T:
     """
     if not isinstance(cls, type):
         msg = "@transient can only be applied to classes"
+        _logger.error(msg)
         raise BindingError(msg)
 
     target_container = container
@@ -78,6 +86,7 @@ def transient(cls: T, container: InjectQ | None = None) -> T:
 
     # Register the class as a transient binding to itself
     target_container.bind(cls, cls, scope=ScopeType.TRANSIENT)
+    _logger.info("Registered transient: %s", getattr(cls, "__name__", str(cls)))
 
     return cls
 
@@ -102,6 +111,7 @@ def scoped(scope_name: str, container: InjectQ | None = None) -> Callable:
     def decorator(cls: T) -> T:
         if not isinstance(cls, type):
             msg = f"@scoped('{scope_name}') can only be applied to classes"
+            _logger.error(msg)
             raise BindingError(msg)
 
         # Get the global container
@@ -115,6 +125,11 @@ def scoped(scope_name: str, container: InjectQ | None = None) -> Callable:
 
         # Register the class with the specified scope
         target_container.bind(cls, cls, scope=scope_name)
+        _logger.info(
+            "Registered scoped '%s': %s",
+            scope_name,
+            getattr(cls, "__name__", str(cls)),
+        )
 
         return cls
 
@@ -146,6 +161,7 @@ def register_as(
     def decorator(cls: T) -> T:
         if not isinstance(cls, type):
             msg = f"@register_as({service_type}) can only be applied to classes"
+            _logger.error(msg)
             raise BindingError(msg)
 
         # Get the global container
@@ -159,6 +175,12 @@ def register_as(
 
         # Register the class as implementation of service_type
         target_container.bind(service_type, cls, scope=scope)
+        _logger.info(
+            "Registered as %s with scope '%s': %s",
+            getattr(service_type, "__name__", str(service_type)),
+            scope,
+            getattr(cls, "__name__", str(cls)),
+        )
 
         return cls
 

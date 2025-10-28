@@ -12,9 +12,8 @@ Dependency: taskiq
 Not installed by default; install extra: `pip install injectq[taskiq]`.
 """
 
-from __future__ import annotations
-
 import importlib
+import logging
 from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
 from injectq.utils import InjectionError
@@ -23,12 +22,15 @@ from injectq.utils import InjectionError
 T = TypeVar("T")
 
 if TYPE_CHECKING:
-    from taskiq import Context, TaskiqDepends, TaskiqState
+    from taskiq import TaskiqState
 
     from injectq.core.container import InjectQ
 
 
-def get_injector_instance_taskiq(state: TaskiqState) -> InjectQ:
+_logger = logging.getLogger("injectq.taskiq")
+
+
+def get_injector_instance_taskiq(state: "TaskiqState") -> "InjectQ":
     """Get the InjectQ container from Taskiq state.
 
     Args:
@@ -46,11 +48,13 @@ def get_injector_instance_taskiq(state: TaskiqState) -> InjectQ:
             "No InjectQ container in current task context. Did you call "
             "setup_taskiq(broker, container)?"
         )
+        _logger.exception(msg)
         raise InjectionError(msg)
+    _logger.debug("Taskiq container retrieved from task context")
     return container  # type: ignore[return-value]
 
 
-def _attach_injectq_taskiq(state: TaskiqState, container: InjectQ) -> None:
+def _attach_injectq_taskiq(state: "TaskiqState", container: "InjectQ") -> None:
     """Attach an InjectQ container to Taskiq state.
 
     Args:
@@ -114,7 +118,7 @@ def InjectTaskiq(  # noqa: N802
 InjectTask = InjectTaskiq
 
 
-def setup_taskiq(container: InjectQ, broker: Any) -> None:
+def setup_taskiq(container: "InjectQ", broker: Any) -> None:
     """Register InjectQ with Taskiq broker for high-performance DI.
 
     Sets up context-based container propagation for tasks.
@@ -142,7 +146,9 @@ def setup_taskiq(container: InjectQ, broker: Any) -> None:
             "setup_taskiq requires the 'taskiq' package. Install with "
             "'pip install injectq[taskiq]' or 'pip install taskiq'."
         )
+        _logger.exception(msg)
         raise RuntimeError(msg) from exc
 
     state = broker.state  # type: ignore[attr-defined]
     _attach_injectq_taskiq(state, container)
+    _logger.info("InjectQ Taskiq container attached to broker")

@@ -1,6 +1,7 @@
 """Scope management for InjectQ dependency injection library."""
 
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
@@ -11,6 +12,9 @@ from injectq.utils import ScopeError, ThreadLocalStorage
 
 from .base_scope_manager import BaseScopeManager
 from .thread_safety import HybridLock
+
+
+_logger = logging.getLogger("injectq.core")
 
 
 class ScopeType(Enum):
@@ -72,7 +76,10 @@ class SingletonScope(Scope):
 
         def get_or_create() -> Any:
             if key not in self._instances:
+                _logger.debug("Creating singleton instance for key: %s", key)
                 self._instances[key] = factory()
+            else:
+                _logger.debug("Reusing singleton instance for key: %s", key)
             return self._instances[key]
 
         return self._safe_execute(get_or_create)
@@ -82,10 +89,13 @@ class SingletonScope(Scope):
 
         async def aget_or_create() -> Any:
             if key not in self._instances:
+                _logger.debug("Creating singleton instance (async) for key: %s", key)
                 result = factory()
                 if asyncio.iscoroutine(result):
                     result = await result
                 self._instances[key] = result
+            else:
+                _logger.debug("Reusing singleton instance (async) for key: %s", key)
             return self._instances[key]
 
         # For async, we don't use _safe_execute as it's sync
@@ -93,6 +103,7 @@ class SingletonScope(Scope):
 
     def clear(self) -> None:
         """Clear all singleton instances."""
+        _logger.debug("Clearing singleton scope")
         self._safe_execute(lambda: self._instances.clear())
 
 
@@ -102,12 +113,14 @@ class TransientScope(Scope):
     def __init__(self, thread_safe: bool = True) -> None:
         super().__init__("transient", thread_safe)
 
-    def get(self, key: Any, factory: Callable[[], Any]) -> Any:  # noqa: ARG002
+    def get(self, key: Any, factory: Callable[[], Any]) -> Any:
         """Always create a new instance."""
+        _logger.debug("Creating new transient instance for key: %s", key)
         return factory()
 
-    async def aget(self, key: Any, factory: Callable[[], Any]) -> Any:  # noqa: ARG002
+    async def aget(self, key: Any, factory: Callable[[], Any]) -> Any:
         """Always create a new instance asynchronously."""
+        _logger.debug("Creating new transient instance (async) for key: %s", key)
         result = factory()
         if asyncio.iscoroutine(result):
             return await result
@@ -115,6 +128,7 @@ class TransientScope(Scope):
 
     def clear(self) -> None:
         """Nothing to clear for transient scope."""
+        _logger.debug("Clear called on transient scope (no-op)")
 
 
 class ThreadLocalScope(Scope):

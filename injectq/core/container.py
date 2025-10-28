@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
@@ -22,6 +23,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
     from injectq.diagnostics import DependencyVisualizer
+
+
+_logger = logging.getLogger("injectq.core")
 
 
 class FactoryProxy:
@@ -80,6 +84,13 @@ class InjectQ:
             allow_override: Whether to allow overriding existing registrations
                           (default: True)
         """
+        _logger.info(
+            "Initializing InjectQ container "
+            "(async_scopes=%s, thread_safe=%s, allow_override=%s)",
+            use_async_scopes,
+            thread_safe,
+            allow_override,
+        )
         self._allow_override = allow_override
         self._registry = ServiceRegistry()
         self._resolver = DependencyResolver(self._registry)
@@ -173,12 +184,14 @@ class InjectQ:
 
     def __getitem__(self, service_type: ServiceKey) -> Any:
         """Get a service instance using dict syntax."""
+        _logger.debug("Getting service via __getitem__: %s", service_type)
         return self._ensure_thread_safe(lambda: self.get(service_type))
 
     def __delitem__(self, service_type: ServiceKey) -> None:
         """Remove a service binding using dict syntax."""
 
         def remove_binding() -> None:
+            _logger.debug("Removing binding: %s", service_type)
             if not self._registry.remove_binding(service_type):
                 msg = f"No binding registered for {service_type}"
                 raise KeyError(msg)
@@ -187,6 +200,7 @@ class InjectQ:
 
     def __contains__(self, service_type: ServiceKey) -> bool:
         """Check if a service is registered."""
+        _logger.debug("Checking if service registered: %s", service_type)
         return self._ensure_thread_safe(lambda: service_type in self._registry)
 
     def bind(
@@ -209,6 +223,13 @@ class InjectQ:
             allow_concrete: Whether to auto-register concrete types when
                           registering instances (default: True)
         """
+        scope_str = scope.value if isinstance(scope, ScopeType) else scope
+        _logger.debug(
+            "Binding service: %s -> %s (scope: %s)",
+            service_type,
+            implementation if implementation is not _UNSET else "self",
+            scope_str,
+        )
         self._ensure_thread_safe(
             lambda: self._registry.bind(
                 service_type,
@@ -237,6 +258,8 @@ class InjectQ:
             allow_concrete: Whether to auto-register concrete types when
                           registering instances (default: True)
         """
+        instance_type = type(instance).__name__ if instance else "None"
+        _logger.debug("Binding instance: %s (%s)", service_type, instance_type)
         self._ensure_thread_safe(
             lambda: self._registry.bind_instance(
                 service_type,
@@ -260,6 +283,10 @@ class InjectQ:
             allow_concrete: Whether to auto-register concrete types when
                           registering instances (default: True)
         """
+        factory_name = (
+            factory.__name__ if hasattr(factory, "__name__") else str(factory)
+        )
+        _logger.debug("Binding factory: %s -> %s", service_type, factory_name)
         self._ensure_thread_safe(
             lambda: self._registry.bind_factory(
                 service_type,
@@ -276,10 +303,12 @@ class InjectQ:
     # Resolution methods
     def get(self, service_type: ServiceKey) -> Any:
         """Get a service instance."""
+        _logger.debug("Resolving service: %s", service_type)
         return self._ensure_thread_safe(lambda: self._resolver.resolve(service_type))
 
     async def aget(self, service_type: ServiceKey) -> Any:
         """Get a service instance asynchronously."""
+        _logger.debug("Resolving service async: %s", service_type)
         return await self._ensure_thread_safe(
             lambda: self._resolver.resolve_async(service_type)
         )
@@ -660,6 +689,8 @@ class InjectQ:
         """Install a module into the container."""
 
         def install() -> None:
+            module_name = getattr(module, "__name__", str(module))
+            _logger.info("Installing module: %s", module_name)
             if hasattr(module, "configure"):
                 binder = ModuleBinder(self)
                 module.configure(binder)
@@ -674,6 +705,7 @@ class InjectQ:
         """Validate all dependencies for consistency and resolvability."""
 
         def validate() -> None:
+            _logger.info("Validating container dependencies")
             self._registry.validate()
             self._resolver.validate_dependencies()
 

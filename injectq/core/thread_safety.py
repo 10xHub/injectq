@@ -1,11 +1,15 @@
 """Thread safety utilities for InjectQ dependency injection library."""
 
 import asyncio
+import logging
 import threading
 import weakref
 from collections.abc import AsyncIterator, Callable, Iterator
 from contextlib import asynccontextmanager, contextmanager
 from typing import Any, Generic, TypeVar, cast
+
+
+_logger = logging.getLogger("injectq.core")
 
 
 T = TypeVar("T")

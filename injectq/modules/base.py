@@ -1,5 +1,6 @@
 """Base module classes for InjectQ dependency injection library."""
 
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from contextlib import suppress
@@ -7,6 +8,9 @@ from typing import Any, get_type_hints
 
 from injectq.core import ModuleBinder, ScopeType
 from injectq.utils import BindingError, ServiceKey, get_function_dependencies
+
+
+_logger = logging.getLogger("injectq.modules")
 
 
 class Module(ABC):
@@ -48,6 +52,12 @@ class SimpleModule(Module):
         Returns:
             Self for fluent API
         """
+        _logger.debug(
+            "Adding binding to SimpleModule: %s -> %s (scope: %s)",
+            service_type,
+            implementation or to,
+            scope,
+        )
         self._bindings.append(("bind", service_type, implementation, scope, to))
         return self
 
@@ -61,6 +71,11 @@ class SimpleModule(Module):
         Returns:
             Self for fluent API
         """
+        _logger.debug(
+            "Adding instance binding to SimpleModule: %s -> %s",
+            service_type,
+            type(instance).__name__,
+        )
         self._bindings.append(("bind_instance", service_type, instance))
         return self
 
@@ -76,11 +91,18 @@ class SimpleModule(Module):
         Returns:
             Self for fluent API
         """
+        factory_name = getattr(factory, "__name__", repr(factory))
+        _logger.debug(
+            "Adding factory binding to SimpleModule: %s -> %s",
+            service_type,
+            factory_name,
+        )
         self._bindings.append(("bind_factory", service_type, factory))
         return self
 
     def configure(self, binder: ModuleBinder) -> None:
         """Configure all bindings in this module."""
+        _logger.info("Configuring SimpleModule with %d bindings", len(self._bindings))
         for binding in self._bindings:
             method_name = binding[0]
             args = binding[1:]
@@ -119,11 +141,20 @@ class ProviderModule(Module):
 
     def configure(self, binder: ModuleBinder) -> None:
         """Configure bindings from provider methods."""
+        _logger.info("Configuring ProviderModule: %s", self.__class__.__name__)
         # Find all provider methods
+        provider_count = 0
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
             if callable(attr) and hasattr(attr, "_is_provider"):
+                provider_count += 1
+                _logger.debug("Found provider method: %s", attr_name)
                 self._configure_provider(binder, attr)
+        _logger.info(
+            "Configured %d provider method(s) in %s",
+            provider_count,
+            self.__class__.__name__,
+        )
 
     def _configure_provider(
         self, binder: ModuleBinder, provider_method: Callable
@@ -138,12 +169,24 @@ class ProviderModule(Module):
             if return_type is None:
                 msg = f"Provider method {provider_method.__name__} must"
                 msg += " have a return type annotation"
+                _logger.error(msg)
                 raise BindingError(msg)  # noqa: TRY301
+
+            _logger.debug(
+                "Configuring provider: %s -> %s",
+                provider_method.__name__,
+                return_type,
+            )
 
             # Create a factory function that manually resolves dependencies
             def factory() -> Any:
                 # Get dependencies for the provider method
                 dependencies = get_function_dependencies(provider_method)
+                _logger.debug(
+                    "Resolving %d dependencies for provider %s",
+                    len(dependencies),
+                    provider_method.__name__,
+                )
 
                 # Resolve dependencies from the container
                 resolved_args = {}
@@ -154,10 +197,18 @@ class ProviderModule(Module):
                             resolved_args[param_name] = binder._container.get(  # noqa: SLF001
                                 param_name
                             )
+                            _logger.debug(
+                                "Resolved dependency '%s' by name", param_name
+                            )
                         else:
                             # Fall back to type-based resolution
                             resolved_args[param_name] = binder._container.get(  # noqa: SLF001
                                 param_type
+                            )
+                            _logger.debug(
+                                "Resolved dependency '%s' by type: %s",
+                                param_name,
+                                param_type,
                             )
 
                 # Call the provider method (it's already bound to self)
@@ -165,9 +216,15 @@ class ProviderModule(Module):
 
             # Bind the factory
             binder.bind_factory(return_type, factory)
+            _logger.debug(
+                "Successfully configured provider %s for type %s",
+                provider_method.__name__,
+                return_type,
+            )
 
         except Exception as e:
             msg = f"Failed to configure provider {provider_method.__name__}: {e}"
+            _logger.exception(msg)
             raise BindingError(msg) from e
 
 
@@ -181,13 +238,26 @@ class ConfigurationModule(Module):
             config_dict: Dictionary of configuration key-value pairs
         """
         self.config = config_dict
+        _logger.debug(
+            "Initializing ConfigurationModule with %d configuration values",
+            len(config_dict),
+        )
 
     def configure(self, binder: ModuleBinder) -> None:
         """Bind all configuration values."""
+        _logger.info("Configuring ConfigurationModule with %d values", len(self.config))
         for key, value in self.config.items():
             # Bind string keys directly
             if isinstance(key, str | type):
+                _logger.debug("Binding configuration: %s -> %s", key, value)
                 binder.bind_instance(key, value)
             else:
                 # Convert other keys to strings
-                binder.bind_instance(str(key), value)
+                str_key = str(key)
+                _logger.debug(
+                    "Binding configuration: %s (converted from %s) -> %s",
+                    str_key,
+                    key,
+                    value,
+                )
+                binder.bind_instance(str_key, value)

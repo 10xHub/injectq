@@ -1,5 +1,9 @@
 """Dependency graph visualization and analysis."""
 
+import logging
+
+_logger = logging.getLogger("injectq.diagnostics")
+_logger.debug("visualization module initialized")
 import inspect
 from collections import defaultdict
 from pathlib import Path
@@ -46,11 +50,13 @@ class DependencyVisualizer:
         self.container = container
         self._dependency_graph: dict[ServiceKey, set[ServiceKey]] = defaultdict(set)
         self._service_info: dict[ServiceKey, dict] = {}
+        _logger.info("DependencyVisualizer initialized")
 
     def set_container(self, container: InjectQ | None) -> None:
         """Set the container to visualize."""
         self.container = container
         self._analyze_dependencies()
+        _logger.debug("Container set for visualization")
 
     def _analyze_dependencies(self) -> None:
         """Analyze the container to build dependency graph."""
@@ -69,6 +75,7 @@ class DependencyVisualizer:
         # Analyze factories
         for service_key, factory in registry._factories.items():  # noqa: SLF001
             self._analyze_factory(service_key, factory)
+        _logger.debug("Dependency graph analyzed for visualization")
 
     def _analyze_binding(self, service_key: ServiceKey, binding: Any) -> None:
         """Analyze a service binding for dependencies."""

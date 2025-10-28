@@ -26,11 +26,8 @@ Example:
 import logging
 
 
-# Logger name for the InjectQ library
-LOGGER_NAME = "injectq"
-
 # Create logger instance
-logger = logging.getLogger(LOGGER_NAME)
+logger = logging.getLogger("injectq")
 
 # Add NullHandler by default to prevent "No handlers found" warnings
 # Users can configure their own handlers as needed
@@ -38,6 +35,5 @@ logger.addHandler(logging.NullHandler())
 
 
 __all__ = [
-    "LOGGER_NAME",
     "logger",
 ]

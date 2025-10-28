@@ -2,6 +2,7 @@
 
 import asyncio
 import inspect
+import logging
 from collections.abc import Callable
 from typing import Any
 
@@ -19,6 +20,9 @@ from injectq.utils import (
 from .base_scope_manager import BaseScopeManager
 from .registry import ServiceBinding, ServiceRegistry
 from .scopes import get_scope_manager
+
+
+_logger = logging.getLogger("injectq.core")
 
 
 class DependencyResolver:
@@ -51,9 +55,11 @@ class DependencyResolver:
         if service_type in self._resolution_stack:
             cycle_start = self._resolution_stack.index(service_type)
             cycle = [*self._resolution_stack[cycle_start:], service_type]
+            _logger.debug("Circular dependency detected: %s", cycle)
             raise CircularDependencyError(cycle)  # type: ignore  # noqa: PGH003
 
         try:
+            _logger.debug("Resolving service: %s", service_type)
             self._resolution_stack.append(service_type)
             return self._do_resolve(service_type)
         finally:
@@ -77,9 +83,11 @@ class DependencyResolver:
         if service_type in self._resolution_stack:
             cycle_start = self._resolution_stack.index(service_type)
             cycle = [*self._resolution_stack[cycle_start:], service_type]
+            _logger.debug("Circular dependency detected (async): %s", cycle)
             raise CircularDependencyError(cycle)  # type: ignore  # noqa: PGH003
 
         try:
+            _logger.debug("Resolving service (async): %s", service_type)
             self._resolution_stack.append(service_type)
             return await self._do_resolve_async(service_type)
         finally:
