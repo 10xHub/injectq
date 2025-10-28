@@ -1,13 +1,13 @@
 site_name: InjectQ Documentation
 site_description: Modern Python dependency injection library
 site_author: InjectQ Contributors
-site_url: https://iamsdt.github.io/injectq/
+site_url: https://10xhub.github.io/injectq/
 
-repo_name: Iamsdt/injectq
-repo_url: https://github.com/Iamsdt/injectq
+repo_name: 10xhub/injectq
+repo_url: https://github.com/10xhub/injectq
 edit_uri: edit/main/docs/
 
-copyright: Copyright &copy; 2024 InjectQ Contributors
+copyright: Copyright &copy; 10xHub
 
 theme:
   name: material
