@@ -12,9 +12,8 @@ Dependency: taskiq
 Not installed by default; install extra: `pip install injectq[taskiq]`.
 """
 
-from __future__ import annotations
-
 import importlib
+import logging
 from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
 from injectq.utils import InjectionError
@@ -23,9 +22,12 @@ from injectq.utils import InjectionError
 T = TypeVar("T")
 
 if TYPE_CHECKING:
-    from taskiq import Context, TaskiqDepends, TaskiqState
+    from taskiq import TaskiqState
 
     from injectq.core.container import InjectQ
+
+
+_logger = logging.getLogger("injectq.taskiq")
 
 
 def get_injector_instance_taskiq(state: TaskiqState) -> InjectQ:
@@ -46,7 +48,9 @@ def get_injector_instance_taskiq(state: TaskiqState) -> InjectQ:
             "No InjectQ container in current task context. Did you call "
             "setup_taskiq(broker, container)?"
         )
+        _logger.exception(msg)
         raise InjectionError(msg)
+    _logger.debug("Taskiq container retrieved from task context")
     return container  # type: ignore[return-value]
 
 
@@ -142,7 +146,9 @@ def setup_taskiq(container: InjectQ, broker: Any) -> None:
             "setup_taskiq requires the 'taskiq' package. Install with "
             "'pip install injectq[taskiq]' or 'pip install taskiq'."
         )
+        _logger.exception(msg)
         raise RuntimeError(msg) from exc
 
     state = broker.state  # type: ignore[attr-defined]
     _attach_injectq_taskiq(state, container)
+    _logger.info("InjectQ Taskiq container attached to broker")

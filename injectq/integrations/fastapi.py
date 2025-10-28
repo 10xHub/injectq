@@ -11,13 +11,15 @@ Dependency: fastapi (and starlette)
 Not installed by default; install extra: `pip install injectq[fastapi]`.
 """
 
-from __future__ import annotations
-
 import contextvars
 import importlib
+import logging
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from injectq.utils import InjectionError
+
+
+_logger = logging.getLogger("injectq.fastapi")
 
 
 T = TypeVar("T")
@@ -48,7 +50,9 @@ def get_container_fastapi() -> InjectQ:
             "No InjectQ container in current request context. Did you call "
             "setup_fastapi(app, container)?"
         )
+        _logger.error(msg)
         raise InjectionError(msg)
+    _logger.debug("FastAPI container retrieved from request context")
     return container  # type: ignore[return-value]
 
 
@@ -161,6 +165,8 @@ def setup_fastapi(container: InjectQ, app: Any) -> None:
             "setup_fastapi requires the 'fastapi' package. Install with "
             "'pip install injectq[fastapi]' or 'pip install fastapi'."
         )
+        _logger.error(msg)
         raise RuntimeError(msg) from exc
 
     app.add_middleware(InjectQRequestMiddleware, container=container)
+    _logger.info("InjectQ FastAPI middleware registered")
