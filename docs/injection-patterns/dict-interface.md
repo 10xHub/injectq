@@ -127,7 +127,6 @@ def test_user_service():
         result = service.get_user(1)
         assert result is not None
 ```
-```
 
 ## ⚖️ When to Use Dict Interface
 
@@ -151,8 +150,6 @@ The dict-like interface is:
 - **Fast** — Quick setup for small projects
 
 Ready to explore [the @inject decorator](inject-decorator.md)?
-
-```
 
 ## ⚖️ When to Use Dict Interface
 

@@ -2,7 +2,7 @@
 [![PyPI version](https://badge.fury.io/py/injectq.svg)](https://pypi.org/project/injectq/)
 [![Python versions](https://img.shields.io/pypi/pyversions/injectq.svg)](https://pypi.org/project/injectq/)
 [![License](https://img.shields.io/github/license/Iamsdt/injectq.svg)](https://github.com/Iamsdt/injectq/blob/main/LICENSE)
-[![Coverage](https://img.shields.io/badge/coverage-73%25-yellow.svg)](#)
+[![Coverage](https://img.shields.io/badge/coverage-80%25-yellow.svg)](#)
 
 
 InjectQ is a modern, lightweight Python dependency injection library focused on clarity, type-safety, and seamless framework integration.
@@ -191,3 +191,27 @@ python -m pytest
 ```
 
 Coverage reports are written to `htmlcov/` and `coverage.xml`.
+
+## Performance Benchmarks
+
+InjectQ includes comprehensive performance benchmarks to ensure production-ready performance:
+
+```bash
+# Run all benchmarks
+pytest tests/test_benchmarks.py --benchmark-only
+
+# Run with verbose statistics
+pytest tests/test_benchmarks.py --benchmark-only --benchmark-verbose
+
+# Save results for comparison
+pytest tests/test_benchmarks.py --benchmark-only --benchmark-autosave
+```
+
+### Performance Highlights
+- **Ultra-fast operations:** Basic operations (bind, get, has) execute in 270-780 nanoseconds
+- **Efficient resolution:** Dependency resolution completes in ~1 microsecond
+- **Excellent scalability:** Handles 1,000+ operations with sub-millisecond performance
+- **Thread-safe:** Concurrent access with minimal overhead (~24 μs)
+- **Production-ready:** Web request simulation (10 services) completes in 142 microseconds
+
+📊 See `BENCHMARK_REPORT.md` for detailed analysis and `BENCHMARK_QUICK_GUIDE.md` for usage guide.

@@ -155,25 +155,6 @@ def use_service(service: UserService) -> None:
 
 ## 🔧 Integration Patterns
 
-### With FastAPI
-
-```python
-from fastapi import FastAPI
-from injectq.integrations.fastapi import Injected
-
-app = FastAPI()
-
-@app.get("/users/{user_id}")
-@inject
-def get_user(user_id: int, service: UserService) -> User:
-    return service.get_user(user_id)
-
-# Or using Injected type
-@app.get("/users/{user_id}")
-def get_user(user_id: int, service: Injected[UserService]) -> User:
-    return service.get_user(user_id)
-```
-
 ### With Classes
 
 Use `@inject` on `__init__` methods:

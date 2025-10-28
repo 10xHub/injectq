@@ -20,7 +20,6 @@ class ScopeType(Enum):
     TRANSIENT = "transient"
     REQUEST = "request"
     ACTION = "action"
-    APP = "app"
 
 
 class Scope(ABC):

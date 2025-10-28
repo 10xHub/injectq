@@ -124,6 +124,9 @@ nav:
   - Testing:
       - Testing Overview: testing/overview.md
       - Testing Patterns: testing/testing-patterns.md
+  - Performance:
+      - Benchmark Report: benchmark-report.md
+      - Quick Guide: benchmark-guide.md
   - API Reference:
       - Overview: api-reference/index.md
       - Quick Reference: api-reference/quick-reference.md
