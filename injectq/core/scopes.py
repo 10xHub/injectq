@@ -1,11 +1,11 @@
 """Scope management for InjectQ dependency injection library."""
 
+import asyncio
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from enum import Enum
 from typing import Any
-import asyncio
 
 from injectq.utils import ScopeError, ThreadLocalStorage
 
