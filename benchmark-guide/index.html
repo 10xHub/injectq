@@ -12,11 +12,13 @@
         <meta name="author" content="InjectQ Contributors">
       
       
-        <link rel="canonical" href="https://10xhub.github.io/injectq/changelog/">
+        <link rel="canonical" href="https://10xhub.github.io/injectq/benchmark-guide/">
       
       
-        <link rel="prev" href="../contributing/">
+        <link rel="prev" href="../benchmark-report/">
       
+      
+        <link rel="next" href="../api-reference/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -24,7 +26,7 @@
     
     
       
-        <title>Changelog - InjectQ Documentation</title>
+        <title>Quick Guide - InjectQ Documentation</title>
       
     
     
@@ -76,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#changelog" class="md-skip">
+        <a href="#injectq-performance-benchmarks-quick-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Changelog
+              Quick Guide
             
           </span>
         </div>
@@ -1167,8 +1169,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -1187,13 +1191,11 @@
     
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
         
           
           <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
@@ -1209,7 +1211,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_9">
             <span class="md-nav__icon md-icon"></span>
             Performance
@@ -1243,10 +1245,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../benchmark-guide/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Quick Guide
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1257,6 +1281,554 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#running-benchmarks" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚀 Running Benchmarks
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 Running Benchmarks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-benchmark-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Benchmark Run
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verbose-output-with-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verbose Output with Statistics
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save-results-for-historical-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Save Results for Historical Tracking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare-two-benchmark-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Compare Two Benchmark Runs
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-specific-benchmark" class="md-nav__link">
+    <span class="md-ellipsis">
+      Run Specific Benchmark
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-regular-tests-skip-benchmarks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Run Regular Tests (Skip Benchmarks)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-summary-tldr" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 Performance Summary (TL;DR)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benchmark-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Benchmark Categories
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎯 Benchmark Categories">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-basic-container-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Basic Container Operations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-service-retrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Service Retrieval
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-dependency-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Dependency Resolution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-factory-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Factory Functions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-scope-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Scope Performance
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-load-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Load Testing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-thread-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Thread Safety
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-real-world-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Real-World Scenarios
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-stress-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Stress Tests
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-performance-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      📈 Key Performance Metrics
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📈 Key Performance Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ultra-fast-1-s" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ultra-Fast (&lt; 1 μs)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fast-1-10-s" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fast (1-10 μs)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moderate-10-100-s" class="md-nav__link">
+    <span class="md-ellipsis">
+      Moderate (10-100 μs)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#load-operations-100-s" class="md-nav__link">
+    <span class="md-ellipsis">
+      Load Operations (100+ μs)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-the-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔬 Understanding the Results
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔬 Understanding the Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#time-units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Time Units
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operations-per-second-ops" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operations Per Second (OPS)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#outliers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Outliers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison-operators" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comparison Operators
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      💡 Performance Tips
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="💡 Performance Tips">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#do" class="md-nav__link">
+    <span class="md-ellipsis">
+      ✅ DO
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#consider" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚠️ CONSIDER
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#avoid" class="md-nav__link">
+    <span class="md-ellipsis">
+      ❌ AVOID
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visualizing-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎨 Visualizing Results
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎨 Visualizing Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generate-histogram-requires-optional-dependency" class="md-nav__link">
+    <span class="md-ellipsis">
+      Generate Histogram (requires optional dependency)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare-runs-with-charts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Compare Runs with Charts
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#view-saved-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      View Saved Results
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      📁 Output Files
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📁 Output Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#benchmark-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Benchmark Data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reports
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-your-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      🧪 Testing Your Changes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🧪 Testing Your Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#before-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Before Optimization
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#after-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      After Optimization
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Compare Results
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cicd-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 CI/CD Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎯 CI/CD Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fail-on-regression" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fail on Regression
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Save Baseline
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-against-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Against Baseline
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      🐛 Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🐛 Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#benchmark-takes-too-long" class="md-nav__link">
+    <span class="md-ellipsis">
+      Benchmark Takes Too Long
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#high-variance-in-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      High Variance in Results
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skip-slow-benchmarks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Skip Slow Benchmarks
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      📚 Resources
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1389,32 +1961,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Changelog
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
         
   
   
@@ -1425,392 +1975,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#040-unreleased" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.4.0] - Unreleased
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.4.0] - Unreleased">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Added">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#factory-enhancements" class="md-nav__link">
-    <span class="md-ellipsis">
-      Factory Enhancements
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#registration-control" class="md-nav__link">
-    <span class="md-ellipsis">
-      Registration Control
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#framework-tools" class="md-nav__link">
-    <span class="md-ellipsis">
-      Framework &amp; Tools
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#changed" class="md-nav__link">
-    <span class="md-ellipsis">
-      Changed
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
-    <span class="md-ellipsis">
-      Fixed
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#documentation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Documentation
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#033-2024-12-15" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.3.3] - 2024-12-15
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.3.3] - 2024-12-15">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fixed_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      Fixed
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#030-2024-11-01" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.3.0] - 2024-11-01
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.3.0] - 2024-11-01">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#changed_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      Changed
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#020-2024-09-15" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.2.0] - 2024-09-15
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.2.0] - 2024-09-15">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#changed_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      Changed
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#010-2024-01-15" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.1.0] - 2024-01-15
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.1.0] - 2024-01-15">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Features
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#release-notes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Release Notes
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Release Notes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#version-040-upcoming" class="md-nav__link">
-    <span class="md-ellipsis">
-      Version 0.4.0 (Upcoming)
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Version 0.4.0 (Upcoming)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#key-highlights" class="md-nav__link">
-    <span class="md-ellipsis">
-      🚀 Key Highlights
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#whats-included" class="md-nav__link">
-    <span class="md-ellipsis">
-      📦 What's Included
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#breaking-changes" class="md-nav__link">
-    <span class="md-ellipsis">
-      ⚠️ Breaking Changes
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#documentation_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      📚 Documentation
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#upgrade-guide" class="md-nav__link">
-    <span class="md-ellipsis">
-      Upgrade Guide
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Upgrade Guide">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#from-03x-to-040" class="md-nav__link">
-    <span class="md-ellipsis">
-      From 0.3.x to 0.4.0
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#contributing" class="md-nav__link">
-    <span class="md-ellipsis">
-      Contributing
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Contributing">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#reporting-issues" class="md-nav__link">
-    <span class="md-ellipsis">
-      Reporting Issues
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#development" class="md-nav__link">
-    <span class="md-ellipsis">
-      Development
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#support" class="md-nav__link">
-    <span class="md-ellipsis">
-      Support
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#license" class="md-nav__link">
-    <span class="md-ellipsis">
-      License
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#acknowledgments" class="md-nav__link">
-    <span class="md-ellipsis">
-      Acknowledgments
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1834,222 +1998,289 @@
   
 
 
-<h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Anchor link to this section for reference">&para;</a></h1>
-<p>All notable changes to InjectQ are documented in this file.</p>
-<p>The format is based on <a href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>,
-and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
-<hr />
-<h2 id="040-unreleased">[0.4.0] - Unreleased<a class="headerlink" href="#040-unreleased" title="Anchor link to this section for reference">&para;</a></h2>
-<p><strong>🎯 Focus:</strong> Enhanced factory methods, improved type safety, and better async support.</p>
-<h3 id="added">Added<a class="headerlink" href="#added" title="Anchor link to this section for reference">&para;</a></h3>
-<h4 id="factory-enhancements">Factory Enhancements<a class="headerlink" href="#factory-enhancements" title="Anchor link to this section for reference">&para;</a></h4>
-<ul>
-<li><strong>Hybrid factory methods</strong>: <code>invoke()</code> and <code>ainvoke()</code> combine dependency injection with manual arguments
-  <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Inject dependencies, provide custom args</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">UserService</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">container</span><span class="o">.</span><span class="n">ainvoke</span><span class="p">(</span><span class="n">AsyncService</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;custom&quot;</span><span class="p">)</span>
-</span></code></pre></div></li>
-<li><strong>Async factory methods</strong>: <code>aget_factory()</code> and <code>acall_factory()</code> for async operations</li>
-<li>Smart parameter resolution: by name first, then by type (non-primitives only)</li>
-</ul>
-<h4 id="registration-control">Registration Control<a class="headerlink" href="#registration-control" title="Anchor link to this section for reference">&para;</a></h4>
-<ul>
-<li><strong>Auto-registration</strong>: <code>allow_concrete=True</code> (default) automatically registers concrete types
-  <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_instance</span><span class="p">(</span><span class="n">Animal</span><span class="p">,</span> <span class="n">dog</span><span class="p">)</span>  <span class="c1"># Both Animal and Dog are now resolvable</span>
-</span></code></pre></div></li>
-<li><strong>Override control</strong>: <code>allow_override=True</code> (default) controls registration overwrites</li>
-<li>New <code>AlreadyRegisteredError</code> exception for conflict detection</li>
-<li>Enhanced <code>bind()</code>, <code>bind_instance()</code>, and <code>bind_factory()</code> methods</li>
-</ul>
-<h4 id="framework-tools">Framework &amp; Tools<a class="headerlink" href="#framework-tools" title="Anchor link to this section for reference">&para;</a></h4>
-<ul>
-<li>Comprehensive documentation with MkDocs</li>
-<li>Plugin system for extensibility</li>
-<li>Advanced middleware support</li>
-<li>Resource management utilities</li>
-<li>Performance profiling tools</li>
-<li>Diagnostic and validation utilities</li>
-<li>Migration guides from other DI libraries</li>
-</ul>
-<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li><strong>Breaking</strong>: All binding methods now accept <code>allow_concrete</code> parameter</li>
-<li>Improved subclass injection - both base and concrete types are resolvable</li>
-<li>Enhanced type safety and mypy compliance</li>
-<li>Better error messages with detailed debugging info</li>
-<li>Optimized dependency graph resolution</li>
-</ul>
-<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li>Subclass injection issues with concrete type resolution</li>
-<li>Various stability improvements</li>
-</ul>
-<h3 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li>Complete API reference</li>
-<li>Framework integration guides (FastAPI, Taskiq)</li>
-<li>Testing best practices</li>
-<li>Performance optimization guide</li>
-<li>Migration guides</li>
-</ul>
-<hr />
-<h2 id="033-2024-12-15">[0.3.3] - 2024-12-15<a class="headerlink" href="#033-2024-12-15" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li>Async scope support with <code>async with container.scope()</code></li>
-<li>Enhanced testing utilities</li>
-<li>Performance benchmarks</li>
-</ul>
-<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li>Memory leaks in scoped services</li>
-<li>Thread safety issues in async contexts</li>
-</ul>
-<hr />
-<h2 id="030-2024-11-01">[0.3.0] - 2024-11-01<a class="headerlink" href="#030-2024-11-01" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="added_2">Added<a class="headerlink" href="#added_2" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li>Custom scope support</li>
-<li>Module system with <code>@provider</code> decorator</li>
-<li>FastAPI integration with <code>InjectFastAPI</code></li>
-<li>Taskiq integration with <code>InjectTaskiq</code></li>
-</ul>
-<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li>Improved container API</li>
-<li>Better error messages</li>
-</ul>
-<hr />
-<h2 id="020-2024-09-15">[0.2.0] - 2024-09-15<a class="headerlink" href="#020-2024-09-15" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="added_3">Added<a class="headerlink" href="#added_3" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li>Scoped services with <code>@scoped</code> decorator</li>
-<li>Resource management with <code>@resource</code></li>
-<li>Testing utilities: <code>test_container()</code>, <code>override_dependency()</code></li>
-</ul>
-<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li>Enhanced type resolution</li>
-<li>Performance improvements</li>
-</ul>
-<hr />
-<h2 id="010-2024-01-15">[0.1.0] - 2024-01-15<a class="headerlink" href="#010-2024-01-15" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="added_4">Added<a class="headerlink" href="#added_4" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li>Initial stable release</li>
-<li>Core dependency injection with <code>InjectQ</code> container</li>
-<li>Service scopes: <code>@singleton</code>, <code>@transient</code></li>
-<li><code>@inject</code> decorator for automatic injection</li>
-<li>Dict-like container interface</li>
-<li>Type safety with mypy support</li>
-<li>Thread-safe operations</li>
-<li>Basic testing utilities</li>
-</ul>
-<h3 id="features">Features<a class="headerlink" href="#features" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li>Automatic dependency resolution</li>
-<li>Circular dependency detection</li>
-<li>Lifecycle hooks</li>
-<li>Comprehensive documentation</li>
-</ul>
-<hr />
-<h2 id="release-notes">Release Notes<a class="headerlink" href="#release-notes" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="version-040-upcoming">Version 0.4.0 (Upcoming)<a class="headerlink" href="#version-040-upcoming" title="Anchor link to this section for reference">&para;</a></h3>
-<p><strong>InjectQ 0.4.0</strong> introduces powerful factory enhancements and improved control over service registration.</p>
-<h4 id="key-highlights">🚀 Key Highlights<a class="headerlink" href="#key-highlights" title="Anchor link to this section for reference">&para;</a></h4>
-<p><strong>Hybrid Factories</strong>: Combine DI with manual arguments
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Auto-inject Database, provide custom user_id</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">UserService</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
-</span></code></pre></div></p>
-<p><strong>Async Support</strong>: Full async factory operations
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">container</span><span class="o">.</span><span class="n">ainvoke</span><span class="p">(</span><span class="n">AsyncService</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;custom&quot;</span><span class="p">)</span>
-</span></code></pre></div></p>
-<p><strong>Smart Registration</strong>: Automatic concrete type registration
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_instance</span><span class="p">(</span><span class="n">Animal</span><span class="p">,</span> <span class="n">dog</span><span class="p">)</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1"># Both Animal and Dog are now available</span>
-</span></code></pre></div></p>
-<p><strong>Better Control</strong>: Prevent accidental overwrites
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">container</span> <span class="o">=</span> <span class="n">InjectQ</span><span class="p">(</span><span class="n">allow_override</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Service</span><span class="p">,</span> <span class="n">impl1</span><span class="p">)</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Service</span><span class="p">,</span> <span class="n">impl2</span><span class="p">)</span>  <span class="c1"># Raises AlreadyRegisteredError</span>
-</span></code></pre></div></p>
-<h4 id="whats-included">📦 What's Included<a class="headerlink" href="#whats-included" title="Anchor link to this section for reference">&para;</a></h4>
-<ul>
-<li>23 new tests for factory methods (all passing)</li>
-<li>Comprehensive documentation updates</li>
-<li>Performance optimizations</li>
-<li>Enhanced error messages</li>
-<li>Migration guides from other DI libraries</li>
-</ul>
-<h4 id="breaking-changes">⚠️ Breaking Changes<a class="headerlink" href="#breaking-changes" title="Anchor link to this section for reference">&para;</a></h4>
-<ul>
-<li>All binding methods now accept <code>allow_concrete</code> parameter (default: <code>True</code>)</li>
-<li>InjectQ constructor now accepts <code>allow_override</code> parameter (default: <code>True</code>)</li>
-</ul>
-<h4 id="documentation_1">📚 Documentation<a class="headerlink" href="#documentation_1" title="Anchor link to this section for reference">&para;</a></h4>
-<ul>
-<li>Complete API reference at <a href="https://iamsdt.github.io/injectq/">docs.injectq.dev</a></li>
-<li><a href="core-concepts/factory-pattern.md">Factory Methods Guide</a></li>
-<li><a href="migration/from-kink.md">Migration Guide</a></li>
-<li><a href="../testing/overview/">Testing Guide</a></li>
-</ul>
-<hr />
-<h2 id="upgrade-guide">Upgrade Guide<a class="headerlink" href="#upgrade-guide" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="from-03x-to-040">From 0.3.x to 0.4.0<a class="headerlink" href="#from-03x-to-040" title="Anchor link to this section for reference">&para;</a></h3>
-<p><strong>No changes required</strong> for most users. The new features are backward compatible.</p>
-<p><strong>Optional upgrades</strong>:
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Use hybrid factories for cleaner code</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># Before:</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">service</span> <span class="o">=</span> <span class="n">UserService</span><span class="p">(</span><span class="n">db</span><span class="o">=</span><span class="n">container</span><span class="p">[</span><span class="n">Database</span><span class="p">],</span> <span class="n">user_id</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># After:</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">UserService</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
-</span></code></pre></div></p>
-<p><strong>If you need strict registration</strong>:
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Prevent accidental overwrites</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">container</span> <span class="o">=</span> <span class="n">InjectQ</span><span class="p">(</span><span class="n">allow_override</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</span></code></pre></div></p>
-<hr />
-<h2 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Anchor link to this section for reference">&para;</a></h2>
-<p>We welcome contributions! See <a href="../contributing/">CONTRIBUTING.md</a> for details.</p>
-<h3 id="reporting-issues">Reporting Issues<a class="headerlink" href="#reporting-issues" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li><strong>Bug Reports</strong>: <a href="https://github.com/Iamsdt/injectq/issues">GitHub Issues</a></li>
-<li><strong>Feature Requests</strong>: <a href="https://github.com/Iamsdt/injectq/discussions">GitHub Discussions</a></li>
-</ul>
-<h3 id="development">Development<a class="headerlink" href="#development" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Clone repository</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Iamsdt/injectq.git
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="nb">cd</span><span class="w"> </span>injectq
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="c1"># Install dependencies</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1"># Run tests</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>pytest
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>
-</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="c1"># Run type checking</span>
-</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>mypy<span class="w"> </span>injectq
+<h1 id="injectq-performance-benchmarks-quick-guide">InjectQ Performance Benchmarks - Quick Guide<a class="headerlink" href="#injectq-performance-benchmarks-quick-guide" title="Anchor link to this section for reference">&para;</a></h1>
+<h2 id="running-benchmarks">🚀 Running Benchmarks<a class="headerlink" href="#running-benchmarks" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="basic-benchmark-run">Basic Benchmark Run<a class="headerlink" href="#basic-benchmark-run" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only
+</span></code></pre></div>
+<h3 id="verbose-output-with-statistics">Verbose Output with Statistics<a class="headerlink" href="#verbose-output-with-statistics" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-verbose
+</span></code></pre></div>
+<h3 id="save-results-for-historical-tracking">Save Results for Historical Tracking<a class="headerlink" href="#save-results-for-historical-tracking" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-autosave
+</span></code></pre></div>
+<h3 id="compare-two-benchmark-runs">Compare Two Benchmark Runs<a class="headerlink" href="#compare-two-benchmark-runs" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Run first benchmark</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-autosave<span class="w"> </span>--benchmark-name<span class="o">=</span>baseline
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Make changes to code...</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># Run second benchmark</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-autosave<span class="w"> </span>--benchmark-name<span class="o">=</span>optimized
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="c1"># Compare results</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>pytest-benchmark<span class="w"> </span>compare<span class="w"> </span>baseline<span class="w"> </span>optimized
+</span></code></pre></div>
+<h3 id="run-specific-benchmark">Run Specific Benchmark<a class="headerlink" href="#run-specific-benchmark" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pytest<span class="w"> </span>tests/test_benchmarks.py::test_benchmark_container_creation<span class="w"> </span>--benchmark-only
+</span></code></pre></div>
+<h3 id="run-regular-tests-skip-benchmarks">Run Regular Tests (Skip Benchmarks)<a class="headerlink" href="#run-regular-tests-skip-benchmarks" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w">  </span><span class="c1"># Runs without detailed timing</span>
 </span></code></pre></div>
 <hr />
-<h2 id="support">Support<a class="headerlink" href="#support" title="Anchor link to this section for reference">&para;</a></h2>
+<h2 id="performance-summary-tldr">📊 Performance Summary (TL;DR)<a class="headerlink" href="#performance-summary-tldr" title="Anchor link to this section for reference">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Performance</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Basic Operations</strong></td>
+<td>270-780 ns</td>
+<td>Container lookups, bindings</td>
+</tr>
+<tr>
+<td><strong>Dependency Resolution</strong></td>
+<td>1-2 μs</td>
+<td>Service instantiation</td>
+</tr>
+<tr>
+<td><strong>Factory Functions</strong></td>
+<td>3-6 μs</td>
+<td>Lazy initialization</td>
+</tr>
+<tr>
+<td><strong>Load (100 services)</strong></td>
+<td>779 μs</td>
+<td>Bulk registration</td>
+</tr>
+<tr>
+<td><strong>Load (1000 gets)</strong></td>
+<td>739 μs</td>
+<td>High-frequency access</td>
+</tr>
+<tr>
+<td><strong>Web Request (10 svcs)</strong></td>
+<td>142 μs</td>
+<td>Typical API request</td>
+</tr>
+<tr>
+<td><strong>Thread-Safe Ops</strong></td>
+<td>24 μs</td>
+<td>Concurrent access</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verdict:</strong> ✅ Production-ready for high-performance applications</p>
+<hr />
+<h2 id="benchmark-categories">🎯 Benchmark Categories<a class="headerlink" href="#benchmark-categories" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="1-basic-container-operations">1. Basic Container Operations<a class="headerlink" href="#1-basic-container-operations" title="Anchor link to this section for reference">&para;</a></h3>
 <ul>
-<li>📖 <strong>Documentation</strong>: <a href="https://iamsdt.github.io/injectq/">iamsdt.github.io/injectq</a></li>
-<li>💬 <strong>Discussions</strong>: <a href="https://github.com/Iamsdt/injectq/discussions">GitHub Discussions</a></li>
-<li>🐛 <strong>Issues</strong>: <a href="https://github.com/Iamsdt/injectq/issues">GitHub Issues</a></li>
-<li>💡 <strong>Examples</strong>: <a href="https://github.com/Iamsdt/injectq/tree/main/examples">examples/</a></li>
+<li><code>test_benchmark_container_creation</code> - Creating new containers</li>
+<li><code>test_benchmark_bind_simple_class</code> - Binding classes</li>
+<li><code>test_benchmark_bind_instance</code> - Binding instances</li>
+<li><code>test_benchmark_bind_factory</code> - Binding factories</li>
+<li><code>test_benchmark_container_clear</code> - Clearing container</li>
+<li><code>test_benchmark_has_service</code> - Checking service existence</li>
+<li><code>test_benchmark_container_getitem</code> - Accessing via <code>container[Type]</code></li>
+</ul>
+<h3 id="2-service-retrieval">2. Service Retrieval<a class="headerlink" href="#2-service-retrieval" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><code>test_benchmark_get_simple_service</code> - Basic service retrieval</li>
+<li><code>test_benchmark_get_singleton</code> - Singleton scope retrieval</li>
+<li><code>test_benchmark_get_transient</code> - Transient scope retrieval</li>
+</ul>
+<h3 id="3-dependency-resolution">3. Dependency Resolution<a class="headerlink" href="#3-dependency-resolution" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><code>test_benchmark_resolve_simple_dependency</code> - Single dependency</li>
+<li><code>test_benchmark_resolve_nested_dependencies</code> - 3-level nesting</li>
+<li><code>test_benchmark_resolve_multiple_dependencies</code> - 3 dependencies</li>
+<li><code>test_benchmark_resolve_deep_dependency_tree</code> - 5-level tree</li>
+</ul>
+<h3 id="4-factory-functions">4. Factory Functions<a class="headerlink" href="#4-factory-functions" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><code>test_benchmark_factory_simple</code> - Simple factory</li>
+<li><code>test_benchmark_factory_with_dependency</code> - Factory with deps</li>
+</ul>
+<h3 id="5-scope-performance">5. Scope Performance<a class="headerlink" href="#5-scope-performance" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><code>test_benchmark_singleton_scope_cached</code> - Cached singleton</li>
+<li><code>test_benchmark_transient_scope_creation</code> - New instance creation</li>
+<li><code>test_benchmark_request_scope</code> - Request-scoped services</li>
+</ul>
+<h3 id="6-load-testing">6. Load Testing<a class="headerlink" href="#6-load-testing" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><code>test_benchmark_load_many_services</code> - 100 service registrations</li>
+<li><code>test_benchmark_load_repeated_gets</code> - 1,000 get operations</li>
+<li><code>test_benchmark_load_transient_creation</code> - 1,000 transient instances</li>
+<li><code>test_benchmark_load_complex_graph</code> - Complex dependency graph</li>
+</ul>
+<h3 id="7-thread-safety">7. Thread Safety<a class="headerlink" href="#7-thread-safety" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><code>test_benchmark_thread_safe_container</code> - Thread-safe operations</li>
+<li><code>test_benchmark_concurrent_gets</code> - 10 threads × 100 operations</li>
+</ul>
+<h3 id="8-real-world-scenarios">8. Real-World Scenarios<a class="headerlink" href="#8-real-world-scenarios" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><code>test_benchmark_web_request_simulation</code> - Web request with 10 services</li>
+<li><code>test_benchmark_api_service_stack</code> - 4-layer API stack</li>
+<li><code>test_benchmark_override_context</code> - Context override patterns</li>
+</ul>
+<h3 id="9-stress-tests">9. Stress Tests<a class="headerlink" href="#9-stress-tests" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><code>test_benchmark_stress_sequential_binds</code> - 500 sequential binds</li>
+<li><code>test_benchmark_stress_resolution_mix</code> - 100 mixed operations</li>
 </ul>
 <hr />
-<h2 id="license">License<a class="headerlink" href="#license" title="Anchor link to this section for reference">&para;</a></h2>
-<p>MIT License - see <a href="../LICENSE">LICENSE</a> for details.</p>
+<h2 id="key-performance-metrics">📈 Key Performance Metrics<a class="headerlink" href="#key-performance-metrics" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="ultra-fast-1-s">Ultra-Fast (&lt; 1 μs)<a class="headerlink" href="#ultra-fast-1-s" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>has_service:        272 ns   ⚡ 3.67M ops/sec
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>bind_factory:       271 ns   ⚡ 3.68M ops/sec
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>bind_instance:      784 ns   ⚡ 1.28M ops/sec
+</span></code></pre></div>
+<h3 id="fast-1-10-s">Fast (1-10 μs)<a class="headerlink" href="#fast-1-10-s" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>get_singleton:      1.02 μs  ⚡ 976K ops/sec
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>resolve_simple:     1.05 μs  ⚡ 955K ops/sec
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>resolve_nested:     1.01 μs  ⚡ 990K ops/sec
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>api_service_stack:  1.06 μs  ⚡ 944K ops/sec
+</span></code></pre></div>
+<h3 id="moderate-10-100-s">Moderate (10-100 μs)<a class="headerlink" href="#moderate-10-100-s" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>container_creation: 24.3 μs  ⚡ 41.2K ops/sec
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>thread_safe_ops:    24.7 μs  ⚡ 40.5K ops/sec
+</span></code></pre></div>
+<h3 id="load-operations-100-s">Load Operations (100+ μs)<a class="headerlink" href="#load-operations-100-s" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>web_request (10):    142 μs  ⚡ 7,037 ops/sec
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>100 services:        779 μs  ⚡ 1,283 ops/sec
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>1000 gets:           739 μs  ⚡ 1,352 ops/sec
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>1000 transients:    24.8 ms  ⚡ 40 ops/sec
+</span></code></pre></div>
 <hr />
-<h2 id="acknowledgments">Acknowledgments<a class="headerlink" href="#acknowledgments" title="Anchor link to this section for reference">&para;</a></h2>
-<p>Thanks to all contributors who helped make InjectQ better:
-- Core development team
-- Community contributors
-- Beta testers and early adopters
-- Documentation reviewers</p>
-<p><strong>Special thanks</strong> to everyone who provided feedback and feature requests!</p>
+<h2 id="understanding-the-results">🔬 Understanding the Results<a class="headerlink" href="#understanding-the-results" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="time-units">Time Units<a class="headerlink" href="#time-units" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><strong>ns</strong> (nanosecond) = 0.000001 milliseconds</li>
+<li><strong>μs</strong> (microsecond) = 0.001 milliseconds  </li>
+<li><strong>ms</strong> (millisecond) = 0.001 seconds</li>
+</ul>
+<h3 id="operations-per-second-ops">Operations Per Second (OPS)<a class="headerlink" href="#operations-per-second-ops" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li>Higher is better</li>
+<li>Calculated as <code>1 / mean_time</code></li>
+<li>Shows throughput capacity</li>
+</ul>
+<h3 id="outliers">Outliers<a class="headerlink" href="#outliers" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><strong>1.5 IQR:</strong> Moderate outliers (expected)</li>
+<li><strong>1 StdDev:</strong> Significant outliers (investigate if many)</li>
+</ul>
+<h3 id="comparison-operators">Comparison Operators<a class="headerlink" href="#comparison-operators" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><strong>(1.0)</strong> = Baseline (fastest test)</li>
+<li><strong>(2.5)</strong> = 2.5× slower than baseline</li>
+<li><strong>(&gt;1000.0)</strong> = More than 1000× slower</li>
+</ul>
+<hr />
+<h2 id="performance-tips">💡 Performance Tips<a class="headerlink" href="#performance-tips" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="do">✅ DO<a class="headerlink" href="#do" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li>Use <strong>singleton scope</strong> for shared services (1 μs cached)</li>
+<li>Use <strong>factory bindings</strong> for lazy init (271 ns)</li>
+<li>Batch <strong>service registrations</strong> at startup (779 μs for 100)</li>
+<li>Check with <strong>has_service</strong> before complex ops (272 ns)</li>
+</ul>
+<h3 id="consider">⚠️ CONSIDER<a class="headerlink" href="#consider" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><strong>Transient scope</strong> adds overhead (4.7 μs vs 1 μs)</li>
+<li><strong>Thread-safe</strong> container is 24× slower (still fast at 24.7 μs)</li>
+<li><strong>Deep dependency trees</strong> perform well (1 μs for 5 levels)</li>
+</ul>
+<h3 id="avoid">❌ AVOID<a class="headerlink" href="#avoid" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li>Creating containers in hot paths (24.3 μs each)</li>
+<li>Overusing transient scope for shared services</li>
+<li>Unnecessary thread-safe containers (use only when needed)</li>
+</ul>
+<hr />
+<h2 id="visualizing-results">🎨 Visualizing Results<a class="headerlink" href="#visualizing-results" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="generate-histogram-requires-optional-dependency">Generate Histogram (requires optional dependency)<a class="headerlink" href="#generate-histogram-requires-optional-dependency" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pytest-benchmark<span class="o">[</span>histogram<span class="o">]</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-histogram
+</span></code></pre></div>
+<h3 id="compare-runs-with-charts">Compare Runs with Charts<a class="headerlink" href="#compare-runs-with-charts" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>pytest-benchmark<span class="w"> </span>compare<span class="w"> </span><span class="m">0001</span><span class="w"> </span><span class="m">0002</span><span class="w"> </span>--histogram
+</span></code></pre></div>
+<h3 id="view-saved-results">View Saved Results<a class="headerlink" href="#view-saved-results" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>ls<span class="w"> </span>-la<span class="w"> </span>.benchmarks/Darwin-CPython-3.13-64bit/
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>cat<span class="w"> </span>.benchmarks/Darwin-CPython-3.13-64bit/0001_*.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq
+</span></code></pre></div>
+<hr />
+<h2 id="output-files">📁 Output Files<a class="headerlink" href="#output-files" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="benchmark-data">Benchmark Data<a class="headerlink" href="#benchmark-data" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><strong>Location:</strong> <code>.benchmarks/Darwin-CPython-3.13-64bit/</code></li>
+<li><strong>Format:</strong> JSON with full statistics</li>
+<li><strong>Naming:</strong> <code>XXXX_&lt;commit_hash&gt;_&lt;timestamp&gt;.json</code></li>
+</ul>
+<h3 id="reports">Reports<a class="headerlink" href="#reports" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><strong>BENCHMARK_REPORT.md</strong> - Comprehensive analysis</li>
+<li><strong>BENCHMARK_QUICK_GUIDE.md</strong> - This file</li>
+<li><strong>benchmark_results.json</strong> - Latest run results</li>
+</ul>
+<hr />
+<h2 id="testing-your-changes">🧪 Testing Your Changes<a class="headerlink" href="#testing-your-changes" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="before-optimization">Before Optimization<a class="headerlink" href="#before-optimization" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-autosave<span class="w"> </span>--benchmark-name<span class="o">=</span>before
+</span></code></pre></div>
+<h3 id="after-optimization">After Optimization<a class="headerlink" href="#after-optimization" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-autosave<span class="w"> </span>--benchmark-name<span class="o">=</span>after
+</span></code></pre></div>
+<h3 id="compare-results">Compare Results<a class="headerlink" href="#compare-results" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>pytest-benchmark<span class="w"> </span>compare<span class="w"> </span>before<span class="w"> </span>after
+</span></code></pre></div>
+<p>Look for:
+- ✅ <strong>Green</strong> = Faster (good!)
+- ❌ <strong>Red</strong> = Slower (regression)
+- <strong>Percentage change</strong> = Performance delta</p>
+<hr />
+<h2 id="cicd-integration">🎯 CI/CD Integration<a class="headerlink" href="#cicd-integration" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="fail-on-regression">Fail on Regression<a class="headerlink" href="#fail-on-regression" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-compare<span class="o">=</span><span class="m">0001</span><span class="w"> </span>--benchmark-compare-fail<span class="o">=</span>mean:10%
+</span></code></pre></div>
+<h3 id="save-baseline">Save Baseline<a class="headerlink" href="#save-baseline" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-autosave<span class="w"> </span>--benchmark-save<span class="o">=</span>baseline
+</span></code></pre></div>
+<h3 id="check-against-baseline">Check Against Baseline<a class="headerlink" href="#check-against-baseline" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-compare<span class="o">=</span>baseline
+</span></code></pre></div>
+<hr />
+<h2 id="troubleshooting">🐛 Troubleshooting<a class="headerlink" href="#troubleshooting" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="benchmark-takes-too-long">Benchmark Takes Too Long<a class="headerlink" href="#benchmark-takes-too-long" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Reduce max time per benchmark</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-max-time<span class="o">=</span><span class="m">0</span>.1
+</span></code></pre></div>
+<h3 id="high-variance-in-results">High Variance in Results<a class="headerlink" href="#high-variance-in-results" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Increase rounds for stability</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-min-rounds<span class="o">=</span><span class="m">100</span>
+</span></code></pre></div>
+<h3 id="skip-slow-benchmarks">Skip Slow Benchmarks<a class="headerlink" href="#skip-slow-benchmarks" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Skip load tests</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>pytest<span class="w"> </span>tests/test_benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>-k<span class="w"> </span><span class="s2">&quot;not load&quot;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="resources">📚 Resources<a class="headerlink" href="#resources" title="Anchor link to this section for reference">&para;</a></h2>
+<ul>
+<li><strong>Full Report:</strong> See <code>BENCHMARK_REPORT.md</code></li>
+<li><strong>Test Code:</strong> <code>tests/test_benchmarks.py</code></li>
+<li><strong>pytest-benchmark docs:</strong> https://pytest-benchmark.readthedocs.io/</li>
+<li><strong>InjectQ docs:</strong> See <code>docs/</code> directory</li>
+</ul>
+<hr />
+<p><strong>Quick Stats:</strong> 30 benchmarks | ~56s runtime | All passing ✅</p>
 
 
 
@@ -2087,7 +2318,7 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../contributing/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Contributing">
+          <a href="../benchmark-report/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Benchmark Report">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -2097,11 +2328,27 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
                 Previous
               </span>
               <div class="md-ellipsis">
-                Contributing
+                Benchmark Report
               </div>
             </div>
           </a>
         
+        
+          
+          <a href="../api-reference/" class="md-footer__link md-footer__link--next" aria-label="Next: Overview">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Overview
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
         
       </nav>
     
