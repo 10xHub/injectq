@@ -8,7 +8,7 @@ from .async_scopes import (
 )
 from .base_scope_manager import BaseScopeManager
 from .container import InjectQ, ModuleBinder
-from .context import ContainerContext, get_active_container
+from .context import ContainerContext
 from .registry import ServiceBinding, ServiceRegistry
 from .resolver import DependencyResolver
 from .scopes import Scope, ScopeManager, ScopeType, get_scope_manager
@@ -33,7 +33,6 @@ __all__ = [
     "ServiceRegistry",
     "ThreadSafeDict",
     "create_enhanced_scope_manager",
-    "get_active_container",
     "get_scope_manager",
     "thread_safe",
 ]

@@ -1,760 +1,449 @@
 # FastAPI Integration
 
-**FastAPI integration** provides seamless dependency injection for FastAPI applications, enabling automatic service resolution with proper request scoping and lifecycle management.
+InjectQ provides seamless dependency injection for FastAPI using a lightweight, context-based approach with zero global state.
 
+## Installation
 
-## 🎯 Getting Started
+```bash
+pip install injectq[fastapi]
+```
 
-### Modern Middleware-Based Setup (Recommended)
-
-InjectQ's FastAPI integration uses a high-performance, middleware-based approach for dependency injection. This avoids global container state and leverages per-request ContextVars for true request scoping and isolation.
-
-**Key benefits:**
-- No global container state or manual access
-- Request-scoped caching and lifecycle
-- Lazy-by-default injection: dependencies are only resolved when first accessed
-- Type-safe: static analysis tools (Pylance, MyPy) see the correct type
-- Middleware sets up context for every request with O(1) overhead
-
-#### Example Usage
+## Quick Start
 
 ```python
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from injectq import InjectQ, singleton, inject
-from injectq.integrations import InjectAPI, setup_fastapi
+from injectq.integrations.fastapi import setup_fastapi, InjectAPI
 
-@singleton
-class UserRepo:
-    ...
-
+# Define your services
 @singleton
 class UserService:
-    @inject
-    def __init__(self, user_repo: UserRepo):
-        self.user_repo = user_repo
-    ...
+    def get_user(self, user_id: int) -> dict:
+        return {"id": user_id, "name": f"User {user_id}"}
 
+# Create and setup
 app = FastAPI()
 container = InjectQ.get_instance()
+container[UserService] = UserService
+
 setup_fastapi(container, app)
-
-# Dependency variable at module scope (recommended for static typing)
-@app.post("/users/{user_id}")
-def create_user(
-    user_id: str, user_service: Annotated[UserService, InjectAPI(UserService)]
-):
-    user_service.create_user(user_id, {"name": "John Doe"})
-    return {"message": "User created successfully"}
-
-
-@app.get("/users/{user_id}")
-def get_user(user_id: str, user_service: UserService = InjectAPI[UserService]):
-    user = user_service.retrieve_user(user_id)
-    if user:
-        return user
-    raise HTTPException(status_code=404, detail="User not found")
-```
-
-#### Why This Is a Better Approach
-
-- **Middleware-based context propagation**: The integration uses a Starlette middleware to set per-request ContextVars, ensuring each request gets its own isolated container and cache. This avoids the performance overhead of entering container context managers for every request and eliminates global state.
-- **Lazy-by-default injection**: InjectAPI returns a proxy that only resolves the dependency when you first access it (attribute or call). This means you pay zero cost for unused dependencies, and heavy objects are only created if needed.
-- **Type safety and static analysis**: By using a module-level dependency variable (e.g., `user_service_dep = InjectAPI(UserService)`), you avoid Pylance and MyPy errors about mismatched types. The InjectAPI class is designed to spoof the type for static analysis, so your endpoint signatures remain correct and IDEs provide full type hints.
-- **Request-scoped caching**: If you use `InjectAPI(Service, scope="request")`, the same instance is reused for the lifetime of the request, ideal for expensive or stateful services.
-- **No manual container access**: You never need to reach into a global container in your endpoints. All resolution is automatic and per-request.
-- **Performance**: ContextVar set/reset is O(1) and extremely fast. No per-request context manager entry/exit.
-
-#### Pylance and Static Typing
-
-If you use InjectAPI as a type annotation (e.g., `user_service: InjectAPI[UserService]`), Pylance will complain that the type is not assignable to `UserService`. The recommended pattern is to use a module-level dependency variable as the default value:
-
-```python
-user_service_dep = InjectAPI(UserService)
-
-def endpoint(..., user_service: UserService = user_service_dep):
-    ...
-```
-
-This ensures type safety and avoids IDE errors.
-
-#### Advanced: Scopes and Lazy
-
-- `InjectAPI(Service, scope="request")` enables request-local caching.
-- `InjectAPI(Service, lazy=False)` disables lazy proxy and resolves eagerly.
-- Helpers: `Singleton(Service)`, `RequestScoped(Service)`, `Transient(Service)`.
-
-#### Testing
-
-You can stub InjectAPI in tests or use the same pattern with FastAPI's TestClient. The middleware ensures each test request is isolated.
-
-
-### Service Definitions
-
-```python
-from typing import Protocol
-
-# Define service interfaces
-class IUserService(Protocol):
-    def get_user(self, user_id: int) -> User: ...
-    def create_user(self, user_data: UserCreate) -> User: ...
-
-class IOrderService(Protocol):
-    def create_order(self, order_data: OrderCreate) -> Order: ...
-    def get_order(self, order_id: int) -> Order: ...
-
-# Implement services
-class UserService:
-    def __init__(self, db: IDatabaseConnection):
-        self.db = db
-
-    def get_user(self, user_id: int) -> User:
-        return self.db.query(User).filter(id=user_id).first()
-
-    def create_user(self, user_data: UserCreate) -> User:
-        user = User(**user_data.dict())
-        self.db.add(user)
-        self.db.commit()
-        return user
-
-class OrderService:
-    def __init__(self, db: IDatabaseConnection, user_service: IUserService):
-        self.db = db
-        self.user_service = user_service
-
-    def create_order(self, order_data: OrderCreate) -> Order:
-        # Validate user exists
-        user = self.user_service.get_user(order_data.user_id)
-
-        order = Order(**order_data.dict())
-        self.db.add(order)
-        self.db.commit()
-        return order
-
-    def get_order(self, order_id: int) -> Order:
-        return self.db.query(Order).filter(id=order_id).first()
-```
-
-## 🔧 Advanced Configuration
-
-### Custom Container Setup
-
-```python
-from injectq import InjectQ, Module
-
-class ApplicationModule(Module):
-    def __init__(self, config: AppConfig):
-        self.config = config
-
-    def configure(self, binder):
-        # Database
-        binder.bind(IDatabaseConnection, create_database_connection(self.config.database))
-
-        # Services
-        binder.bind(IUserService, UserService())
-        binder.bind(IOrderService, OrderService())
-
-        # External services
-        binder.bind(IEmailService, SmtpEmailService(self.config.email))
-        binder.bind(IPaymentService, StripePaymentService(self.config.payment))
-
-def create_app(config: AppConfig) -> FastAPI:
-    # Create container with modules
-    container = InjectQ()
-    container.install(ApplicationModule(config))
-
-    # Create FastAPI app
-    app = FastAPI(
-        title=config.app_name,
-        version=config.version,
-        debug=config.debug
-    )
-
-    # Set up integration
-    setup_fastapi_integration(app, container)
-
-    return app
-
-# Usage
-config = AppConfig.from_env()
-app = create_app(config)
-```
-
-### Environment-Specific Setup
-
-```python
-def create_container_for_env(env: str) -> InjectQ:
-    container = InjectQ()
-
-    if env == "production":
-        container.install(ProductionDatabaseModule())
-        container.install(RedisCacheModule())
-        container.install(SmtpEmailModule())
-    elif env == "testing":
-        container.install(TestDatabaseModule())
-        container.install(InMemoryCacheModule())
-        container.install(MockEmailModule())
-    else:  # development
-        container.install(DevDatabaseModule())
-        container.install(InMemoryCacheModule())
-        container.install(ConsoleEmailModule())
-
-    return container
-
-def create_app() -> FastAPI:
-    env = os.getenv("ENV", "development")
-    container = create_container_for_env(env)
-
-    app = FastAPI()
-    setup_fastapi_integration(app, container)
-
-    return app
-```
-
-## 🎨 Dependency Injection Patterns
-
-### Constructor Injection
-
-```python
-# Services with dependencies
-@singleton
-class DatabaseConnection:
-    def __init__(self, config: DatabaseConfig):
-        self.config = config
-        self.connection = create_connection(config)
-
-@scoped
-class UserService:
-    def __init__(self, db: IDatabaseConnection, cache: ICache):
-        self.db = db
-        self.cache = cache
-
-# Bind in module
-class ServiceModule(Module):
-    def configure(self, binder):
-        binder.bind(DatabaseConfig, DatabaseConfig.from_env())
-        binder.bind(IDatabaseConnection, DatabaseConnection())
-        binder.bind(ICache, RedisCache())
-        binder.bind(IUserService, UserService())
 
 # Use in endpoints
 @app.get("/users/{user_id}")
-async def get_user(
-    user_id: int,
-    user_service: IUserService = InjectQDependency(IUserService)
-):
-    return user_service.get_user(user_id)
+def get_user(user_id: int, service: UserService = InjectAPI[UserService]):
+    return service.get_user(user_id)
 ```
 
-### Request-Scoped Services
+## How It Works
+
+The FastAPI integration uses:
+1. **ContextVars** for per-request container propagation (O(1) overhead)
+2. **Middleware** that sets the container context for each request
+3. **InjectAPI** as a FastAPI Depends marker for type-safe injection
+
+## Core API
+
+### `setup_fastapi(container, app)`
+
+Registers the InjectQ middleware with your FastAPI application.
 
 ```python
+from injectq import InjectQ
+from injectq.integrations.fastapi import setup_fastapi
+from fastapi import FastAPI
+
+container = InjectQ.get_instance()
+app = FastAPI()
+
+# Register middleware
+setup_fastapi(container, app)
+```
+
+### `InjectAPI[ServiceType]`
+
+Type-safe dependency marker for FastAPI endpoints.
+
+```python
+from injectq.integrations.fastapi import InjectAPI
+
+# In endpoint signature
+@app.get("/users/{user_id}")
+def get_user(user_id: int, service: UserService = InjectAPI[UserService]):
+    return service.get_user(user_id)
+```
+
+### Scope Helpers
+
+Convenience functions for common scopes:
+
+```python
+from injectq.integrations.fastapi import Singleton, RequestScoped, Transient
+
+# Singleton - shared across requests (default)
+@app.get("/config")
+def get_config(service: ConfigService = Singleton(ConfigService)):
+    return service.get_config()
+
+# Request-scoped - new instance per request with caching within request
+@app.get("/data")
+def get_data(service: DataService = RequestScoped(DataService)):
+    return service.get_data()
+
+# Transient - new instance each time
+@app.get("/item")
+def get_item(service: ItemService = Transient(ItemService)):
+    return service.get_item()
+```
+
+## Basic Example
+
+```python
+from fastapi import FastAPI
+from injectq import InjectQ, singleton, inject
+from injectq.integrations.fastapi import setup_fastapi, InjectAPI
+
+# Define services
+@singleton
+class Database:
+    def __init__(self):
+        print("Database initialized")
+        self.data = {"users": []}
+
+    def get_users(self):
+        return self.data["users"]
+
+@singleton
+class UserService:
+    def __init__(self, db: Database):
+        self.db = db
+
+    def list_users(self):
+        return self.db.get_users()
+
+    def create_user(self, name: str):
+        user = {"id": len(self.db.data["users"]) + 1, "name": name}
+        self.db.data["users"].append(user)
+        return user
+
+# Setup FastAPI
+app = FastAPI()
+container = InjectQ.get_instance()
+
+# Register services
+container[Database] = Database
+container[UserService] = UserService
+
+# Setup injection
+setup_fastapi(container, app)
+
+# Define endpoints
+@app.get("/users")
+def list_users(service: UserService = InjectAPI[UserService]):
+    """List all users"""
+    return service.list_users()
+
+@app.post("/users")
+def create_user(name: str, service: UserService = InjectAPI[UserService]):
+    """Create a new user"""
+    return service.create_user(name)
+
+# Run with: uvicorn main:app --reload
+```
+
+## Using with Modules
+
+Organize complex applications with modules:
+
+```python
+from injectq import Module, InjectQ
+from injectq.integrations.fastapi import setup_fastapi
+from fastapi import FastAPI
+
+# Define modules
+class DatabaseModule(Module):
+    def configure(self, binder):
+        binder.bind(Database, Database())
+
+class ServiceModule(Module):
+    def configure(self, binder):
+        binder.bind(UserService, UserService())
+        binder.bind(OrderService, OrderService())
+
+# Setup
+app = FastAPI()
+container = InjectQ(modules=[
+    DatabaseModule(),
+    ServiceModule()
+])
+
+setup_fastapi(container, app)
+
+# Services are automatically available
+@app.get("/users")
+def get_users(service: UserService = InjectAPI[UserService]):
+    return service.list_users()
+
+@app.get("/orders")
+def get_orders(service: OrderService = InjectAPI[OrderService]):
+    return service.list_orders()
+```
+
+## Request-Scoped Services
+
+Use request-scoped services for data that should be isolated per HTTP request:
+
+```python
+from injectq import scoped
+from injectq.integrations.fastapi import RequestScoped
+from fastapi import FastAPI, Request
+import uuid
+
+# Request-scoped context
 @scoped
 class RequestContext:
     def __init__(self):
         self.request_id = str(uuid.uuid4())
-        self.start_time = time.time()
-        self.user_id = None
+        self.created_at = None
 
-    def set_user(self, user_id: int):
-        self.user_id = user_id
-        self.request_time = time.time() - self.start_time
-
-@scoped
-class RequestCache:
-    def __init__(self):
-        self.data = {}
-
-    def get(self, key: str):
-        return self.cache.get(key)
-
-    def set(self, key: str, value):
-        self.cache[key] = value
-
-# Automatic request scoping
-@app.get("/users/{user_id}")
-async def get_user(
-    user_id: int,
-    ctx: RequestContext = InjectQDependency(RequestContext),
-    cache: RequestCache = InjectQDependency(RequestCache),
-    user_service: IUserService = InjectQDependency(IUserService)
-):
-    ctx.set_user(user_id)  # Context is scoped to this request
-
-    # Cache is also scoped to this request
-    cache_key = f"user:{user_id}"
-    user = cache.get(cache_key)
-
-    if user is None:
-        user = user_service.get_user(user_id)
-        cache.set(cache_key, user)
-
-    return user
+# Use in endpoints
+@app.get("/debug")
+def debug_info(ctx: RequestContext = RequestScoped(RequestContext)):
+    """Each request gets its own RequestContext instance"""
+    return {"request_id": ctx.request_id}
 ```
 
-### Authentication Integration
+## Testing
+
+Test endpoints with mocked dependencies:
 
 ```python
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import pytest
+from fastapi.testclient import TestClient
+from injectq import InjectQ
+from injectq.integrations.fastapi import setup_fastapi
+
+class MockUserService:
+    def list_users(self):
+        return [{"id": 1, "name": "Mock User"}]
+
+    def create_user(self, name: str):
+        return {"id": 999, "name": name}
+
+@pytest.fixture
+def test_app():
+    """Create test app with mocked services"""
+    app = FastAPI()
+    container = InjectQ()
+    
+    # Use mocks instead of real services
+    container[UserService] = MockUserService
+    
+    setup_fastapi(container, app)
+    
+    @app.get("/users")
+    def list_users(service: UserService = InjectAPI[UserService]):
+        return service.list_users()
+    
+    return app
+
+def test_list_users(test_app):
+    client = TestClient(test_app)
+    response = client.get("/users")
+    
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]["name"] == "Mock User"
+```
+
+## Common Patterns
+
+### Database Connection
+
+```python
+from injectq import singleton
+
+@singleton
+class DatabaseConnection:
+    def __init__(self):
+        # Initialize once
+        self.connection = create_db_connection()
+
+@app.get("/items")
+def list_items(db: DatabaseConnection = InjectAPI[DatabaseConnection]):
+    return db.query("SELECT * FROM items")
+```
+
+### Configuration
+
+```python
+from injectq import singleton
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    database_url: str
+    api_key: str
+
+@singleton
+class Config:
+    def __init__(self):
+        self.settings = Settings()
+
+@app.get("/config")
+def get_config(config: Config = InjectAPI[Config]):
+    return {"db_url": config.settings.database_url}
+```
+
+### Logging
+
+```python
+from injectq import singleton
+import logging
+
+@singleton
+class Logger:
+    def __init__(self):
+        self.logger = logging.getLogger("app")
+
+@app.get("/logs")
+def get_logs(logger: Logger = InjectAPI[Logger]):
+    logger.logger.info("Fetching logs")
+    return {"status": "ok"}
+```
+
+### Authentication
+
+```python
 from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from injectq import singleton
 
 security = HTTPBearer()
 
 @singleton
 class AuthService:
-    def __init__(self, jwt_secret: str):
-        self.jwt_secret = jwt_secret
-
-    def verify_token(self, token: str) -> User:
-        try:
-            payload = jwt.decode(token, self.jwt_secret, algorithms=["HS256"])
-            return User(id=payload["user_id"], email=payload["email"])
-        except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=401, detail="Token expired")
-        except jwt.InvalidTokenError:
-            raise HTTPException(status_code=401, detail="Invalid token")
+    def verify_token(self, token: str) -> dict:
+        # Verify JWT or similar
+        if token == "valid":
+            return {"user_id": 1, "email": "user@example.com"}
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    auth_service: IAuthService = InjectQDependency(IAuthService)
-) -> User:
-    return auth_service.verify_token(credentials.credentials)
+    auth: AuthService = InjectAPI[AuthService]
+) -> dict:
+    return auth.verify_token(credentials.credentials)
 
 @app.get("/me")
-async def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
-
-@app.get("/users/{user_id}")
-async def get_user(
-    user_id: int,
-    current_user: User = Depends(get_current_user),
-    user_service: IUserService = InjectQDependency(IUserService)
-):
-    # current_user is authenticated user from JWT
-    # user_service is injected from container
-    if current_user.id != user_id and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    return user_service.get_user(user_id)
+async def get_me(user: dict = Depends(get_current_user)):
+    return user
 ```
 
-## 🧪 Testing FastAPI Integration
-
-### Unit Testing Endpoints
-
-```python
-import pytest
-from fastapi.testclient import TestClient
-from injectq.integrations.fastapi import setup_fastapi_integration
-
-@pytest.fixture
-def test_app():
-    # Create test container
-    container = InjectQ()
-    container.bind(IUserService, MockUserService())
-    container.bind(IOrderService, MockOrderService())
-
-    # Create test app
-    app = FastAPI()
-    setup_fastapi_integration(app, container)
-
-    @app.get("/users/{user_id}")
-    async def get_user(
-        user_id: int,
-        user_service: IUserService = InjectQDependency(IUserService)
-    ):
-        return user_service.get_user(user_id)
-
-    return app
-
-def test_get_user(test_app):
-    client = TestClient(test_app)
-
-    response = client.get("/users/123")
-
-    assert response.status_code == 200
-    assert response.json()["id"] == 123
-
-def test_request_scoping(test_app):
-    client = TestClient(test_app)
-
-    # Each request should be isolated
-    response1 = client.get("/users/1")
-    response2 = client.get("/users/2")
-
-    # Both should succeed (no state leakage)
-    assert response1.status_code == 200
-    assert response2.status_code == 200
-```
-
-### Integration Testing
-
-```python
-@pytest.fixture
-def integration_app():
-    # Real container with test database
-    container = InjectQ()
-    container.install(TestDatabaseModule())
-    container.install(UserModule())
-    container.install(OrderModule())
-
-    app = FastAPI()
-    setup_fastapi_integration(app, container)
-
-    @app.post("/users")
-    async def create_user(
-        user_data: UserCreate,
-        user_service: IUserService = InjectQDependency(IUserService)
-    ):
-        return user_service.create_user(user_data)
-
-    @app.post("/orders")
-    async def create_order(
-        order_data: OrderCreate,
-        order_service: IOrderService = InjectQDependency(IOrderService)
-    ):
-        return order_service.create_order(order_data)
-
-    return app
-
-def test_user_order_workflow(integration_app):
-    client = TestClient(integration_app)
-
-    # Create user
-    user_response = client.post("/users", json={
-        "name": "Test User",
-        "email": "test@example.com"
-    })
-    assert user_response.status_code == 201
-    user_id = user_response.json()["id"]
-
-    # Create order for user
-    order_response = client.post("/orders", json={
-        "user_id": user_id,
-        "items": [{"product_id": 1, "quantity": 2}]
-    })
-    assert order_response.status_code == 201
-
-    order = order_response.json()
-    assert order["user_id"] == user_id
-```
-
-### Mock Testing
-
-```python
-class MockUserService:
-    def __init__(self):
-        self.users = {}
-        self.call_count = 0
-
-    def get_user(self, user_id: int):
-        self.call_count += 1
-        return self.users.get(user_id, {"id": user_id, "name": "Mock User"})
-
-    def create_user(self, user_data):
-        user_id = len(self.users) + 1
-        user = {"id": user_id, **user_data.dict()}
-        self.users[user_id] = user
-        return user
-
-def test_with_mocks():
-    container = InjectQ()
-    mock_user_service = MockUserService()
-    container.bind(IUserService, mock_user_service)
-
-    app = FastAPI()
-    setup_fastapi_integration(app, container)
-
-    @app.get("/users/{user_id}")
-    async def get_user(
-        user_id: int,
-        user_service: IUserService = InjectQDependency(IUserService)
-    ):
-        return user_service.get_user(user_id)
-
-    client = TestClient(app)
-
-    # Test endpoint
-    response = client.get("/users/123")
-    assert response.status_code == 200
-
-    # Verify mock was called
-    assert mock_user_service.call_count == 1
-```
-
-## 🚨 Common Patterns and Pitfalls
+## Best Practices
 
 ### ✅ Good Patterns
 
-#### 1. Proper Scoping
-
+**1. Use singleton for shared resources**
 ```python
-# ✅ Good: Use scoped for request-specific data
-@scoped
-class RequestMetrics:
-    def __init__(self):
-        self.start_time = time.time()
-        self.queries = []
-
-    def record_query(self, query: str, duration: float):
-        self.queries.append({"query": query, "duration": duration})
-
-# ✅ Good: Use singleton for shared resources
 @singleton
 class DatabasePool:
-    def __init__(self, config: DatabaseConfig):
-        self.pool = create_pool(config)
+    pass
 
-# ✅ Good: Use transient for stateless operations
-@transient
-class PasswordHasher:
-    def hash(self, password: str) -> str:
-        return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+@singleton
+class CacheService:
+    pass
 ```
 
-#### 2. Error Handling
-
+**2. Use dependency injection in endpoints**
 ```python
-# ✅ Good: Handle service errors gracefully
-@app.get("/users/{user_id}")
-async def get_user(
-    user_id: int,
-    user_service: IUserService = InjectQDependency(IUserService)
-):
-    try:
-        return user_service.get_user(user_id)
-    except UserNotFoundError:
-        raise HTTPException(status_code=404, detail="User not found")
-    except ServiceError:
-        raise HTTPException(status_code=500, detail="Internal server error")
+@app.get("/users")
+def list_users(service: UserService = InjectAPI[UserService]):
+    return service.list_users()
 ```
 
-#### 3. Middleware Integration
-
+**3. Organize with modules**
 ```python
-# ✅ Good: Use middleware for cross-cutting concerns
-from fastapi import Request
-
-@app.middleware("http")
-async def logging_middleware(request: Request, call_next):
-    start_time = time.time()
-
-    # Get request-scoped logger if available
-    try:
-        logger = get_request_container(request).get(ILogger)
-        logger.info(f"Request started: {request.method} {request.url}")
-    except:
-        pass  # Logger not available, continue
-
-    response = await call_next(request)
-
-    duration = time.time() - start_time
-    print(f"Request completed in {duration:.2f}s")
-
-    return response
+container = InjectQ(modules=[
+    DatabaseModule(),
+    ServiceModule(),
+    CacheModule()
+])
 ```
 
 ### ❌ Bad Patterns
 
-#### 1. Manual Container Access
-
+**1. Don't access container directly in endpoints**
 ```python
-# ❌ Bad: Manual container access in endpoints
-container = InjectQ()  # Global container
+# ❌ Bad
+@app.get("/users")
+def list_users():
+    service = container.get(UserService)  # Manual access
+    return service.list_users()
 
-@app.get("/users/{user_id}")
-async def get_user(user_id: int):
-    user_service = container.get(IUserService)  # Manual resolution
-    return user_service.get_user(user_id)
-
-# ✅ Good: Use dependency injection
-@app.get("/users/{user_id}")
-async def get_user(
-    user_id: int,
-    user_service: IUserService = InjectQDependency(IUserService)
-):
-    return user_service.get_user(user_id)
+# ✅ Good
+@app.get("/users")
+def list_users(service: UserService = InjectAPI[UserService]):
+    return service.list_users()
 ```
 
-#### 2. Singleton Abuse
-
+**2. Don't use singleton for request-specific data**
 ```python
-# ❌ Bad: Singleton for request-specific data
+# ❌ Bad - shared across all requests!
 @singleton
-class CurrentUser:
+class RequestContext:
     def __init__(self):
-        self.user = None
+        self.user_id = None
 
-    def set_user(self, user):
-        self.user = user  # Shared across requests!
-
-# ❌ Bad: Singleton for mutable state
-@singleton
-class RequestCache:
-    def __init__(self):
-        self.data = {}  # Shared and accumulates forever!
-
-# ✅ Good: Scoped for request-specific data
+# ✅ Good - isolated per request
 @scoped
-class CurrentUser:
+class RequestContext:
     def __init__(self):
-        self.user = None
-
-@scoped
-class RequestCache:
-    def __init__(self):
-        self.data = {}  # Isolated per request
+        self.user_id = None
 ```
 
-#### 3. Heavy Services per Request
-
+**3. Don't mix lazy and eager without understanding**
 ```python
-# ❌ Bad: Heavy service per request
-@transient
-class MLModelService:
-    def __init__(self):
-        self.model = load_ml_model()  # 2GB model loaded per request!
+# ✅ Default is lazy=True (deferred resolution)
+service: UserService = InjectAPI[UserService]
 
-# ✅ Good: Singleton for heavy resources
-@singleton
-class MLModelService:
-    def __init__(self):
-        self.model = load_ml_model()  # Loaded once
-
-    def predict(self, data):
-        return self.model.predict(data)
+# Only use lazy=False if you need immediate resolution
+service: UserService = InjectAPI(UserService, lazy=False)
 ```
 
-## ⚡ Advanced Features
+## Limitations & Notes
 
-### Custom Dependency Resolver
+### No Global Container Access
 
-```python
-from injectq.integrations.fastapi import InjectQDependencyResolver
+The `setup_fastapi()` middleware does not provide a way to access the container directly in endpoints. Use `InjectAPI` instead.
 
-class CustomResolver(InjectQDependencyResolver):
-    def resolve_dependency(self, dependency_type: Type[T]) -> T:
-        # Custom resolution logic
-        if dependency_type == ISpecialService:
-            # Create special service with custom logic
-            return SpecialServiceImpl(custom_config)
+### Per-Request Isolation
 
-        # Fall back to container resolution
-        return super().resolve_dependency(dependency_type)
+Each HTTP request gets its own container context via ContextVars. Services are isolated per request based on their scope.
 
-# Use custom resolver
-setup_fastapi_integration(app, container, resolver=CustomResolver())
-```
+### Type Checking
 
-### Request Container Access
+`InjectAPI[ServiceType]` appears as `ServiceType` to type checkers, so you get full IDE support and static type checking.
 
-```python
-from injectq.integrations.fastapi import get_request_container
-
-@app.get("/debug")
-async def debug_endpoint(request: Request):
-    # Get the request-scoped container
-    request_container = get_request_container(request)
-
-    # Access request-scoped services
-    ctx = request_container.get(RequestContext)
-    cache = request_container.get(RequestCache)
-
-    return {
-        "request_id": ctx.request_id,
-        "cache_size": len(cache.data),
-        "services": list(request_container._bindings.keys())
-    }
-```
-
-### Background Tasks Integration
-
-```python
-from fastapi import BackgroundTasks
-
-@singleton
-class BackgroundTaskService:
-    def __init__(self, email_service: IEmailService):
-        self.email_service = email_service
-
-    async def send_welcome_email(self, user_email: str):
-        await self.email_service.send_email(
-            to=user_email,
-            subject="Welcome!",
-            body="Welcome to our platform!"
-        )
-
-@app.post("/users")
-async def create_user(
-    user_data: UserCreate,
-    background_tasks: BackgroundTasks,
-    user_service: IUserService = InjectQDependency(IUserService),
-    task_service: BackgroundTaskService = InjectQDependency(BackgroundTaskService)
-):
-    # Create user
-    user = user_service.create_user(user_data)
-
-    # Send welcome email in background
-    background_tasks.add_task(
-        task_service.send_welcome_email,
-        user.email
-    )
-
-    return user
-```
-
-### WebSocket Support
-
-```python
-from fastapi import WebSocket
-
-@app.websocket("/ws/{client_id}")
-async def websocket_endpoint(
-    websocket: WebSocket,
-    client_id: str,
-    ws_service: IWebSocketService = InjectQDependency(IWebSocketService)
-):
-    await websocket.accept()
-
-    # WebSocket connection gets its own scoped services
-    ctx = websocket.scope.get("injectq_container")
-    if ctx:
-        # Services are scoped to this WebSocket connection
-        session_service = ctx.get(ISessionService)
-        session_service.set_client_id(client_id)
-
-    while True:
-        data = await websocket.receive_text()
-        # Handle WebSocket messages with injected services
-        response = ws_service.process_message(client_id, data)
-        await websocket.send_text(response)
-```
-
-## 🎯 Summary
+## Summary
 
 FastAPI integration provides:
 
-- **Automatic dependency injection** - No manual container management
-- **Request-scoped services** - Proper isolation per HTTP request
-- **Type-driven injection** - Just add type hints to endpoint parameters
-- **Framework lifecycle integration** - Automatic cleanup and resource management
-- **Testing support** - Easy mocking and test isolation
+- **Simple setup** - Just `setup_fastapi(container, app)`
+- **Type-safe injection** - Use `InjectAPI[ServiceType]` in endpoints
+- **Request isolation** - Each request has its own container context
+- **Zero global state** - No singleton container pollution
+- **Performance** - ContextVars provide O(1) overhead
+- **Testing** - Easy to mock dependencies
 
-
-**Key features:**
-- Seamless integration with FastAPI's dependency system
-- Support for all InjectQ scopes (singleton, scoped, transient)
-- Request-scoped container access
-- Custom dependency resolvers
-- Background task integration
-- WebSocket support
-- **Lazy-by-default injection for optimal performance**
+**Key components:**
+- `setup_fastapi(container, app)` - Register middleware
+- `InjectAPI[ServiceType]` - Inject dependencies in endpoints
+- `Singleton()`, `RequestScoped()`, `Transient()` - Scope helpers
 
 **Best practices:**
-- Use scoped services for request-specific data
-- Use singleton for shared resources and heavy objects
-- Use transient for stateless operations
-- Handle errors gracefully in endpoints
-- Test thoroughly with mocked dependencies
-- Avoid manual container access in endpoints
+- Use dependency injection in all endpoints
+- Use singleton for shared resources (database, cache, config)
+- Use scoped for request-specific data
+- Test with mocked dependencies
+- Organize services with modules
 
-Ready to explore [Taskiq integration](taskiq-integration.md)?
+Ready to explore [Taskiq integration](taskiq.md)?

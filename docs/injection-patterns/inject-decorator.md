@@ -220,35 +220,24 @@ def process_with_transaction(service: UserService) -> None:
 
 ## 🧪 Testing with @inject
 
-### Mock Dependencies
+Test your injected functions easily:
 
 ```python
-from injectq import InjectQ
-from injectq.testing import override_dependency
+from injectq.testing import test_container
+from injectq import inject
 
 def test_user_service():
-    mock_service = MockUserService()
-
-    with override_dependency(UserService, mock_service):
-        # @inject decorated functions use the mock
-        result = get_user(user_id=1)
-        assert result.name == "Mock User"
-```
-
-### Test Containers
-
-```python
-from injectq import InjectQ
-from injectq.testing import test_container
-
-def test_with_isolation():
     with test_container() as container:
         # Set up test dependencies
-        container.bind(UserService, MockUserService)
-        container.bind(Database, MockDatabase)
+        container[UserService] = MockUserService
+        container[Database] = MockDatabase
 
         # Test the function
-        result = get_user(user_id=1)
+        @inject
+        def get_user(service: UserService) -> User:
+            return service.get_user(1)
+        
+        result = get_user()
         assert result is not None
 ```
 
@@ -288,38 +277,6 @@ def use_a(a: A) -> None:
 
 # Will raise CircularDependencyError
 use_a()
-```
-
-## ⚡ Performance Considerations
-
-### Compilation
-
-For better performance in production:
-
-```python
-# Pre-compile dependency resolution
-container.compile()
-
-# Now @inject functions resolve faster
-@inject
-def fast_function(service: UserService) -> None:
-    pass
-```
-
-### Caching
-
-Resolved instances are cached based on scope:
-
-```python
-@inject
-def use_service(service: UserService) -> None:
-    pass
-
-# First call - creates UserService
-use_service()
-
-# Second call - reuses cached UserService (if singleton)
-use_service()
 ```
 
 ## 🏆 Best Practices
@@ -427,19 +384,6 @@ def process_user(user_id: int) -> User:
     return service.get_user(user_id)
 
 # @inject - automatic resolution
-@inject
-def process_user(service: UserService, user_id: int) -> User:
-    return service.get_user(user_id)
-```
-
-### @inject vs Inject() Function
-
-```python
-# Inject() function - explicit injection
-def process_user(user_id: int, service=Inject(UserService)) -> User:
-    return service.get_user(user_id)
-
-# @inject - implicit injection
 @inject
 def process_user(service: UserService, user_id: int) -> User:
     return service.get_user(user_id)

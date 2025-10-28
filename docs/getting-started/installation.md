@@ -59,4 +59,6 @@ pip install -e .[dev]
 
 ## Next steps
 
-Now explore the [Quick Start](../examples) and the `docs/` pages for patterns like the dict-like interface, `@inject` usage, and integrations.
+Now explore the [Quick Start](quick-start.md) to get started with InjectQ!
+
+````

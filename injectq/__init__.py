@@ -26,7 +26,6 @@ from .core import (
     InjectQ,
     Scope,
     ScopeType,
-    get_active_container,
 )
 
 # Decorator exports

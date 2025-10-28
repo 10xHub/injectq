@@ -1,103 +1,425 @@
 # Taskiq Integration
 
-**Taskiq integration** enables dependency injection for background tasks and workers, providing automatic service resolution with proper task scoping and lifecycle management.
+InjectQ provides seamless dependency injection for Taskiq background tasks using a lightweight, context-based approach.
 
-## 🎯 Getting Started
+## Installation
 
-### Basic Setup
-
-```python
-from taskiq import TaskiqScheduler
-from injectq import InjectQ
-from injectq.integrations.taskiq import setup_taskiq_integration, InjectQDependency
-
-# 1. Create container and bind services
-container = InjectQ()
-container.bind(IEmailService, EmailService())
-container.bind(IUserService, UserService())
-container.bind(INotificationService, NotificationService())
-
-# 2. Create Taskiq scheduler
-scheduler = TaskiqScheduler()
-
-# 3. Set up integration
-setup_taskiq_integration(scheduler, container)
-
-# 4. Use dependency injection in tasks
-@scheduler.task
-async def send_welcome_email(
-    user_id: int,
-    email_service: IEmailService = InjectQDependency(IEmailService),
-    user_service: IUserService = InjectQDependency(IUserService)
-):
-    user = user_service.get_user(user_id)
-    await email_service.send_welcome_email(user.email)
-
-@scheduler.task
-async def process_order(
-    order_id: int,
-    notification_svc: INotificationService = InjectQDependency(INotificationService)
-):
-    # Process order logic
-    await notification_svc.send_order_confirmation(order_id)
-
-# 5. Schedule tasks
-await scheduler.schedule_task(send_welcome_email, user_id=123)
-await scheduler.schedule_task(process_order, order_id=456)
+```bash
+pip install injectq[taskiq]
 ```
 
-### Service Definitions
+## Quick Start
 
 ```python
-from typing import Protocol
+from taskiq import InMemoryBroker
+from injectq import InjectQ, singleton
+from injectq.integrations.taskiq import setup_taskiq, InjectTask
 
-# Define service interfaces
-class IEmailService(Protocol):
-    async def send_welcome_email(self, email: str) -> None: ...
-    async def send_order_confirmation(self, email: str, order_id: int) -> None: ...
-
-class IUserService(Protocol):
-    def get_user(self, user_id: int) -> User: ...
-    def update_user_status(self, user_id: int, status: str) -> None: ...
-
-class INotificationService(Protocol):
-    async def send_order_confirmation(self, order_id: int) -> None: ...
-    async def send_payment_failed(self, user_id: int) -> None: ...
-
-# Implement services
+# Define your services
+@singleton
 class EmailService:
-    def __init__(self, smtp_config: SMTPConfig):
-        self.smtp_config = smtp_config
+    def send_email(self, to: str, subject: str) -> None:
+        print(f"Sending email to {to}: {subject}")
 
-    async def send_welcome_email(self, email: str) -> None:
-        # Send welcome email logic
-        print(f"Sending welcome email to {email}")
+# Setup
+container = InjectQ.get_instance()
+container[EmailService] = EmailService
 
-    async def send_order_confirmation(self, email: str, order_id: int) -> None:
-        # Send order confirmation logic
-        print(f"Sending order confirmation to {email} for order {order_id}")
+broker = InMemoryBroker()
+setup_taskiq(container, broker)
 
-class UserService:
-    def __init__(self, db: IDatabaseConnection):
+# Define tasks with dependency injection
+@broker.task
+async def send_welcome_email(
+    user_email: str,
+    service: EmailService = InjectTask[EmailService]
+):
+    service.send_email(user_email, "Welcome!")
+
+# Schedule task
+await broker(send_welcome_email)("user@example.com")
+```
+
+## How It Works
+
+The Taskiq integration uses:
+1. **ContextVars** for per-task container propagation
+2. **Task wrapping** that sets the container context for each task execution
+3. **InjectTask** as a Taskiq dependency marker for type-safe injection
+
+## Core API
+
+### `setup_taskiq(container, broker)`
+
+Registers the InjectQ integration with your Taskiq broker.
+
+```python
+from injectq import InjectQ
+from injectq.integrations.taskiq import setup_taskiq
+from taskiq import InMemoryBroker
+
+container = InjectQ.get_instance()
+broker = InMemoryBroker()
+
+# Register integration
+setup_taskiq(container, broker)
+```
+
+### `InjectTask[ServiceType]`
+
+Type-safe dependency marker for Taskiq tasks.
+
+```python
+from injectq.integrations.taskiq import InjectTask
+
+# In task definition
+@broker.task
+async def process_data(
+    data: dict,
+    service: DataService = InjectTask[DataService]
+):
+    return service.process(data)
+```
+
+### Scope Helpers
+
+Convenience functions for common scopes:
+
+```python
+from injectq.integrations.taskiq import TaskScoped, Singleton, Transient
+
+# Singleton - shared across tasks
+@broker.task
+async def get_config(service: ConfigService = Singleton(ConfigService)):
+    return service.get_config()
+
+# Task-scoped - cached within single task execution
+@broker.task
+async def process_batch(service: BatchService = TaskScoped(BatchService)):
+    return service.process()
+
+# Transient - new instance per task
+@broker.task
+async def create_record(service: RecordService = Transient(RecordService)):
+    return service.create()
+```
+
+## Basic Example
+
+```python
+from taskiq import InMemoryBroker
+from injectq import InjectQ, singleton
+from injectq.integrations.taskiq import setup_taskiq, InjectTask
+
+# Define services
+@singleton
+class Database:
+    def __init__(self):
+        print("Database initialized")
+        self.data = {"orders": []}
+
+    def get_orders(self):
+        return self.data["orders"]
+
+    def save_order(self, order: dict):
+        self.data["orders"].append(order)
+
+@singleton
+class EmailService:
+    def send_email(self, to: str, subject: str, body: str):
+        print(f"Email to {to}: {subject}")
+
+@singleton
+class OrderService:
+    def __init__(self, db: Database, email: EmailService):
         self.db = db
+        self.email = email
 
-    def get_user(self, user_id: int) -> User:
-        return self.db.query(User).filter(id=user_id).first()
+    def process_order(self, order_id: int):
+        order = {"id": order_id, "status": "processing"}
+        self.db.save_order(order)
+        self.email.send_email("admin@example.com", f"Order {order_id}", "New order")
+        return order
 
-    def update_user_status(self, user_id: int, status: str) -> None:
-        user = self.get_user(user_id)
-        user.status = status
-        self.db.commit()
+# Setup
+container = InjectQ.get_instance()
+container[Database] = Database
+container[EmailService] = EmailService
+container[OrderService] = OrderService
 
-class NotificationService:
-    def __init__(self, email_svc: IEmailService, user_svc: IUserService):
-        self.email_svc = email_svc
-        self.user_svc = user_svc
+broker = InMemoryBroker()
+setup_taskiq(container, broker)
 
-    async def send_order_confirmation(self, order_id: int) -> None:
-        # Get order and user
-        order = self.db.get_order(order_id)
-        user = self.user_svc.get_user(order.user_id)
+# Define tasks
+@broker.task
+async def process_new_order(order_id: int, service: OrderService = InjectTask[OrderService]):
+    """Process a new order"""
+    return service.process_order(order_id)
+
+@broker.task
+async def send_notification(user_email: str, service: EmailService = InjectTask[EmailService]):
+    """Send notification email"""
+    service.send_email(user_email, "Notification", "Your order is ready!")
+
+# Schedule tasks
+async def main():
+    await broker(process_new_order)(order_id=123)
+    await broker(send_notification)(user_email="user@example.com")
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+```
+
+## Using with Modules
+
+Organize task services with modules:
+
+```python
+from injectq import Module, InjectQ
+from injectq.integrations.taskiq import setup_taskiq
+from taskiq import InMemoryBroker
+
+# Define modules
+class DatabaseModule(Module):
+    def configure(self, binder):
+        binder.bind(Database, Database())
+
+class ServiceModule(Module):
+    def configure(self, binder):
+        binder.bind(EmailService, EmailService())
+        binder.bind(OrderService, OrderService())
+
+# Setup
+container = InjectQ(modules=[
+    DatabaseModule(),
+    ServiceModule()
+])
+
+broker = InMemoryBroker()
+setup_taskiq(container, broker)
+
+# Tasks use services from modules
+@broker.task
+async def process_order(order_id: int, service: OrderService = InjectTask[OrderService]):
+    return service.process_order(order_id)
+
+@broker.task
+async def send_email(to: str, service: EmailService = InjectTask[EmailService]):
+    service.send_email(to, "Update", "Your order status changed")
+```
+
+## Common Patterns
+
+### Scheduled Tasks
+
+```python
+from injectq import singleton
+from taskiq import CronSchedule
+
+@singleton
+class ReportService:
+    def generate_daily_report(self):
+        return {"date": "today", "status": "generated"}
+
+@broker.task(schedule=[CronSchedule("0 0 * * *")])  # Daily at midnight
+async def generate_report(service: ReportService = InjectTask[ReportService]):
+    """Generate daily report"""
+    return service.generate_daily_report()
+```
+
+### Error Handling
+
+```python
+@broker.task(max_retries=3)
+async def retry_task(
+    item_id: int,
+    service: ProcessingService = InjectTask[ProcessingService]
+):
+    """Task with retry logic"""
+    try:
+        return service.process_item(item_id)
+    except ProcessingError as e:
+        # Taskiq handles retries
+        raise
+```
+
+### Task Results
+
+```python
+@broker.task
+async def long_running_task(
+    data: dict,
+    service: DataService = InjectTask[DataService]
+) -> dict:
+    """Task that returns a result"""
+    result = service.process(data)
+    return result
+
+# In your app
+async def run_task():
+    task_result = await broker(long_running_task)(data={"key": "value"})
+    print(f"Task result: {task_result}")
+```
+
+### Batch Processing
+
+```python
+@broker.task
+async def process_batch(
+    batch_ids: list,
+    service: BatchService = InjectTask[BatchService]
+):
+    """Process multiple items"""
+    results = []
+    for batch_id in batch_ids:
+        result = service.process(batch_id)
+        results.append(result)
+    return results
+```
+
+## Testing
+
+Test tasks with mocked dependencies:
+
+```python
+import pytest
+from injectq import InjectQ
+from injectq.integrations.taskiq import setup_taskiq
+from taskiq import InMemoryBroker
+
+class MockEmailService:
+    def __init__(self):
+        self.sent_emails = []
+
+    def send_email(self, to: str, subject: str, body: str):
+        self.sent_emails.append({"to": to, "subject": subject})
+        return True
+
+@pytest.fixture
+def test_broker():
+    """Create test broker with mocked services"""
+    broker = InMemoryBroker()
+    container = InjectQ()
+    
+    # Use mocks instead of real services
+    container[EmailService] = MockEmailService
+    
+    setup_taskiq(container, broker)
+    return broker
+
+@pytest.mark.asyncio
+async def test_send_email(test_broker):
+    @test_broker.task
+    async def send_welcome(email: str, service: EmailService = InjectTask[EmailService]):
+        service.send_email(email, "Welcome", "Welcome to our app!")
+
+    await test_broker(send_welcome)(email="test@example.com")
+    
+    # Verify email was "sent"
+    service = test_broker.injectq_container[EmailService]
+    assert len(service.sent_emails) == 1
+    assert service.sent_emails[0]["to"] == "test@example.com"
+```
+
+## Best Practices
+
+### ✅ Good Patterns
+
+**1. Use singleton for shared resources**
+```python
+@singleton
+class DatabaseConnection:
+    pass
+
+@singleton
+class CacheService:
+    pass
+```
+
+**2. Use dependency injection in all tasks**
+```python
+@broker.task
+async def my_task(service: MyService = InjectTask[MyService]):
+    return service.do_something()
+```
+
+**3. Organize with modules**
+```python
+container = InjectQ(modules=[
+    DatabaseModule(),
+    ServiceModule(),
+    ExternalAPIModule()
+])
+```
+
+### ❌ Bad Patterns
+
+**1. Don't access container directly**
+```python
+# ❌ Bad
+@broker.task
+async def my_task():
+    service = container.get(MyService)
+    return service.do_something()
+
+# ✅ Good
+@broker.task
+async def my_task(service: MyService = InjectTask[MyService]):
+    return service.do_something()
+```
+
+**2. Don't use singleton for task-specific data**
+```python
+# ❌ Bad - shared across tasks!
+@singleton
+class TaskContext:
+    def __init__(self):
+        self.data = {}
+
+# ✅ Good - isolated per task
+@scoped
+class TaskContext:
+    def __init__(self):
+        self.data = {}
+```
+
+## Limitations & Notes
+
+### No Global Container Access
+
+The `setup_taskiq()` integration does not provide direct container access. Use `InjectTask` instead.
+
+### Per-Task Isolation
+
+Each task execution gets its own container context via ContextVars. Services are isolated per task based on their scope.
+
+### Type Checking
+
+`InjectTask[ServiceType]` appears as `ServiceType` to type checkers, so you get full IDE support.
+
+## Summary
+
+Taskiq integration provides:
+
+- **Simple setup** - Just `setup_taskiq(container, broker)`
+- **Type-safe injection** - Use `InjectTask[ServiceType]` in tasks
+- **Task isolation** - Each task has its own container context
+- **Zero global state** - No singleton container pollution
+- **Performance** - ContextVars provide minimal overhead
+- **Testing** - Easy to mock dependencies
+
+**Key components:**
+- `setup_taskiq(container, broker)` - Register integration
+- `InjectTask[ServiceType]` - Inject dependencies in tasks
+- `Singleton()`, `TaskScoped()`, `Transient()` - Scope helpers
+
+**Best practices:**
+- Use dependency injection in all tasks
+- Use singleton for shared resources
+- Use scoped for task-specific data
+- Test with mocked dependencies
+- Organize services with modules
 
         # Send notification
         await self.email_svc.send_order_confirmation(user.email, order_id)

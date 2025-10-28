@@ -1,27 +1,26 @@
 
+
 # Dict-like Interface
 
-The dict-like interface is the simplest way to start with InjectQ. Use `InjectQ.get_instance()` to get the container — it prefers the active container context if present and falls back to a global singleton.
+The dict-like interface is the simplest way to register and retrieve services. Use `InjectQ.get_instance()` to get the container.
 
-## Basic usage
+## Basic Usage
 
 ```python
 from injectq import InjectQ
 
 container = InjectQ.get_instance()
 
-# Bind simple values
+# Register simple values
 container[str] = "Hello, InjectQ!"
 container[int] = 42
 container["database_url"] = "postgresql://localhost/db"
 
 # Retrieve services
-message = container[str]      # "Hello, InjectQ!"
-number = container[int]       # 42
-db_url = container["database_url"]  # "postgresql://localhost/db"
-```
-
-## 🏗️ Class Registration
+message = container[str]
+number = container[int]
+db_url = container["database_url"]
+```## Class Registration
 
 Register classes for automatic instantiation:
 
@@ -31,10 +30,9 @@ from injectq import InjectQ
 container = InjectQ.get_instance()
 
 class DatabaseConfig:
-    def __init__(self, host: str = "localhost", port: int = 5432):
-        self.host = host
-        self.port = port
-        self.url = f"postgresql://{host}:{port}/mydb"
+    def __init__(self):
+        self.host = "localhost"
+        self.port = 5432
 
 class Database:
     def __init__(self, config: DatabaseConfig):
@@ -44,13 +42,13 @@ class UserRepository:
     def __init__(self, db: Database):
         self.db = db
 
-# Register bindings
-container[DatabaseConfig] = DatabaseConfig()
+# Register classes
+container[DatabaseConfig] = DatabaseConfig
 container[Database] = Database
 container[UserRepository] = UserRepository
 
 # Automatic dependency resolution
-repo = container[UserRepository]  # Creates DatabaseConfig, Database, then UserRepository
+repo = container[UserRepository]
 ```
 
 ## Key operations
@@ -113,171 +111,47 @@ assert str not in container
 assert Database not in container
 ```
 
-## 🎨 Advanced Patterns
+## Testing with Dict Interface
 
-### Factory functions
-
-Use `bind_factory` or the `factories` proxy for factory bindings (examples below show simple lambdas). For async factories, use `get_async`.
+Use the testing utilities to create test containers:
 
 ```python
-from injectq import InjectQ
-
-container = InjectQ.get_instance()
-
-import uuid
-from datetime import datetime
-
-# Simple factory-like binding (synchronous)
-container["request_id"] = lambda: str(uuid.uuid4())
-
-# For more advanced factories use bind_factory
-container.bind_factory("timestamp", lambda: datetime.now().isoformat())
-
-# Accessing factories returns created values
-id1 = container["request_id"]
-id2 = container["request_id"]
-print(f"IDs are different: {id1 != id2}")
-```
-
-### Conditional Registration
-
-Register services based on environment:
-
-```python
-from injectq import InjectQ
-
-container = InjectQ.get_instance()
-
-if environment == "production":
-    container[Database] = PostgreSQLDatabase
-    container["cache"] = RedisCache(host="prod-redis")
-elif environment == "testing":
-    container[Database] = SQLiteDatabase
-    container["cache"] = MemoryCache()
-else:
-    container[Database] = InMemoryDatabase
-    container["cache"] = MemoryCache()
-```
-
-### Named Services
-
-Use strings as keys for multiple implementations:
-
-```python
-from injectq import InjectQ
-
-container = InjectQ.get_instance()
-
-# Multiple cache implementations
-container["redis_cache"] = RedisCache(host="localhost")
-container["memory_cache"] = MemoryCache()
-container["file_cache"] = FileCache(path="/tmp/cache")
-
-# Usage
-cache = container["redis_cache"]
-backup_cache = container["memory_cache"]
-```
-
-### Integration with decorators
-
-The dict-style bindings work with the `@inject` decorator and `Inject[T]` markers.
-
-```python
-from injectq import inject, singleton, InjectQ
-
-container = InjectQ.get_instance()
-
-# Register services
-container[Database] = Database
-container["config"] = AppConfig()
-
-@inject
-def process_data(db: Database, config: dict) -> None:
-    # db and config automatically injected
-    print(f"Processing with config: {config}")
-
-process_data()
-```
-
-## Testing with dict interface
-
-Use the testing utilities to create disposable containers for unit tests.
-
-```python
-from injectq import InjectQ
 from injectq.testing import test_container
 
 def test_user_service():
     with test_container() as container:
         container[Database] = MockDatabase()
-        container["config"] = {"test": True}
+        container[UserService] = UserService
 
         service = container[UserService]
         result = service.get_user(1)
         assert result is not None
 ```
+```
 
+## ⚖️ When to Use Dict Interface
 
-## Real-world example
+**Good for:**
+- Simple applications with few services
+- Configuration values (strings, numbers, settings)
+- Prototyping and learning DI
+- Quick setup projects
 
-```python
-from injectq import InjectQ
-from typing import List, Optional
-from dataclasses import dataclass
+**Not ideal for:**
+- Large applications with many dependencies
+- Complex interdependent services
+- Advanced scoping requirements
+- Large teams needing explicit contracts
 
-container = InjectQ.get_instance()
+## 🎯 Summary
 
-@dataclass
-class User:
-    id: int
-    name: str
-    email: str
+The dict-like interface is:
+- **Simple** — Easy to understand and use
+- **Flexible** — Store any type of value or service
+- **Fast** — Quick setup for small projects
 
-class UserRepository:
-    def __init__(self, db_url: str):
-        self.db_url = db_url
-        self.users = {}
+Ready to explore [the @inject decorator](inject-decorator.md)?
 
-    def save(self, user: User) -> User:
-        self.users[user.id] = user
-        return user
-
-    def find_by_id(self, user_id: int) -> Optional[User]:
-        return self.users.get(user_id)
-
-    def find_all(self) -> List[User]:
-        return list(self.users.values())
-
-class UserService:
-    def __init__(self, repo: UserRepository, cache_timeout: int):
-        self.repo = repo
-        self.cache_timeout = cache_timeout
-
-    def create_user(self, name: str, email: str) -> User:
-        user_id = len(self.repo.users) + 1
-        user = User(id=user_id, name=name, email=email)
-        return self.repo.save(user)
-
-    def get_user(self, user_id: int) -> Optional[User]:
-        return self.repo.find_by_id(user_id)
-
-# Application setup
-container[str] = "postgresql://localhost:5432/myapp"  # Database URL
-container[int] = 300  # Cache timeout in seconds
-
-container[UserRepository] = UserRepository
-container[UserService] = UserService
-
-service = container[UserService]
-
-user1 = service.create_user("John Doe", "john@example.com")
-user2 = service.create_user("Jane Smith", "jane@example.com")
-
-found_user = service.get_user(1)
-print(f"Found user: {found_user}")
-
-all_users = container[UserRepository].find_all()
-print(f"All users: {all_users}")
 ```
 
 ## ⚖️ When to Use Dict Interface

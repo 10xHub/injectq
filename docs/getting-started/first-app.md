@@ -440,7 +440,7 @@ async def create_user(self, request: CreateUserRequest) -> User:
 ```python
 # tests/test_user_service.py
 import pytest
-from injectq.testing import test_container, override_dependency
+from injectq.testing import test_container
 
 from ..service import UserService
 from ..models import CreateUserRequest
@@ -451,30 +451,50 @@ class MockRepository:
 
     async def create(self, request):
         # Mock implementation
-        pass
+        from ..models import User
+        from datetime import datetime
+        user = User(
+            id=len(self.users) + 1,
+            username=request.username,
+            email=request.email,
+            created_at=datetime.now()
+        )
+        self.users[user.id] = user
+        return user
 
     async def get_by_id(self, user_id):
         return self.users.get(user_id)
 
-def test_create_user():
+@pytest.mark.asyncio
+async def test_create_user():
     with test_container() as container:
-        # Override repository with mock
+        # Bind mock repository
         mock_repo = MockRepository()
-        container.bind_instance("UserRepository", mock_repo)
+        container[UserRepository] = mock_repo
 
-        service = container.get(UserService)
+        # Bind service
+        container[UserService] = UserService
+
+        service = container[UserService]
 
         # Test user creation
         request = CreateUserRequest(username="test", email="test@example.com")
-        # ... test implementation
+        user = await service.create_user(request)
+        
+        assert user.username == "test"
+        assert user.email == "test@example.com"
 
-def test_get_user_not_found():
+@pytest.mark.asyncio
+async def test_get_user_not_found():
     with test_container() as container:
         mock_repo = MockRepository()
-        container.bind_instance("UserRepository", mock_repo)
+        container[UserRepository] = mock_repo
+        container[UserService] = UserService
 
-        service = container.get(UserService)
+        service = container[UserService]
 
+        # Should raise error for non-existent user
+        from ..service import UserNotFoundError
         with pytest.raises(UserNotFoundError):
             await service.get_user(999)
 ```
@@ -483,11 +503,10 @@ def test_get_user_not_found():
 
 Congratulations! You've built a complete application with InjectQ. Here are some next steps:
 
-1. **[Add FastAPI Integration](../integrations/fastapi.md)**: Turn this into a REST API
-2. **[Add Database Integration](../examples/advanced-patterns.md)**: Use a real database
-3. **[Add Authentication](../examples/real-world-apps.md)**: Secure your API
-4. **[Add Testing](../testing/testing-overview.md)**: Write comprehensive tests
-5. **[Explore Advanced Features](../advanced/resource-management.md)**: Add caching, logging, etc.
+1. **[FastAPI Integration](../integrations/fastapi.md)**: Turn this into a REST API
+2. **[Taskiq Integration](../integrations/taskiq.md)**: Add background job processing
+3. **[Testing Patterns](../testing/testing-patterns.md)**: Write comprehensive tests
+4. **[Modules & Organization](../modules/overview.md)**: Organize larger applications
 
 ## 💡 Key Takeaways
 

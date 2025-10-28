@@ -543,4 +543,6 @@ Modules provide:
 - Clear naming conventions
 - Comprehensive documentation
 
-Ready to explore [framework integrations](../framework-integrations/overview.md)?
+Ready to explore [framework integrations](../integrations/overview.md)?
+
+````

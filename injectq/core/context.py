@@ -107,14 +107,3 @@ class ContainerContext:
                 cls.set_current(old_container)
             else:
                 cls.clear_current()
-
-
-def get_active_container() -> InjectQ | None:
-    """Get the currently active container.
-
-    This is a convenience function that delegates to ContainerContext.get_current().
-
-    Returns:
-        The current active container or None if no container is active.
-    """
-    return ContainerContext.get_current()
