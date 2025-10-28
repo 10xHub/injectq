@@ -12,7 +12,7 @@ T = TypeVar("T")
 
 
 class ReentrantAsyncLock:
-    """A reentrant asyncio lock that allows the same task to acquire it multiple times."""
+    """Reentrant asyncio lock that allows the same task to acquire it multiple times."""
 
     def __init__(self) -> None:
         self._lock = asyncio.Lock()
@@ -33,8 +33,9 @@ class ReentrantAsyncLock:
 
     def release(self) -> None:
         """Release the lock."""
+        msg = "Lock not owned by current task"
         if self._owner is not asyncio.current_task():
-            raise RuntimeError("Lock not owned by current task")
+            raise RuntimeError(msg)
 
         self._count -= 1
         if self._count == 0:
@@ -325,7 +326,7 @@ def is_main_thread() -> bool:
 class ThreadSafetyMixin:
     """Mixin class that adds thread safety to any class."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._safety_lock = HybridLock()
 
@@ -355,13 +356,13 @@ def thread_safe(
 
     if asyncio.iscoroutinefunction(func):
 
-        async def async_wrapper(*args, **kwargs) -> Any:
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             async with lock.async_lock():
                 return await func(*args, **kwargs)
 
         return async_wrapper  # type: ignore  # noqa: PGH003
 
-    def sync_wrapper(*args, **kwargs) -> Any:
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
         with lock.sync_lock():
             return func(*args, **kwargs)
 

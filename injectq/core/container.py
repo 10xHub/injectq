@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
@@ -20,7 +19,7 @@ from .thread_safety import HybridLock
 
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
     from injectq.diagnostics import DependencyVisualizer
 
@@ -111,13 +110,15 @@ class InjectQ:
     @classmethod
     def get_instance(cls) -> InjectQ:
         """Returns the current instance of the InjectQ container.
+
         This method first attempts to retrieve the current container context using
         `ContainerContext.get_current()`. If a context is available, it returns that
         context. Otherwise, it checks if a singleton instance of the container exists;
         if not, it creates one and returns it.
 
         Returns:
-            InjectQ: The current container instance, either from the context or as a singleton.
+            InjectQ: The current container instance, either from the context
+            or as a singleton.
         """
         from .context import ContainerContext
 

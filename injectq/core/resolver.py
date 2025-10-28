@@ -172,7 +172,9 @@ class DependencyResolver:
         return await self._create_instance_async(binding.implementation)
 
     async def _resolve_factory_async(
-        self, service_type: ServiceKey, factory: Callable[..., Any]
+        self,
+        service_type: ServiceKey,  # noqa: ARG002
+        factory: Callable[..., Any],
     ) -> Any:
         """Resolve a service from a factory function asynchronously."""
         # Check if factory is async and handle appropriately

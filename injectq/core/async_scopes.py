@@ -85,7 +85,7 @@ class AsyncActionScope(AsyncScope):
 
 
 class HybridScope(Scope):
-    """Hybrid scope that uses contextvars for async contexts and thread-local for sync contexts.
+    """Hybrid scope using contextvars for async and thread-local for sync contexts.
 
     Automatically detects the execution environment and uses
     appropriate storage.

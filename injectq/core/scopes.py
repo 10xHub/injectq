@@ -45,10 +45,10 @@ class Scope(ABC):
     def clear(self) -> None:
         """Clear all instances in this scope."""
 
-    def enter(self) -> None:
+    def enter(self) -> None:  # noqa: B027
         """Called when entering the scope context."""
 
-    def exit(self) -> None:
+    def exit(self) -> None:  # noqa: B027
         """Called when exiting the scope context."""
 
     def _safe_execute(self, operation: Callable) -> Any:
@@ -102,11 +102,11 @@ class TransientScope(Scope):
     def __init__(self, thread_safe: bool = True) -> None:
         super().__init__("transient", thread_safe)
 
-    def get(self, key: Any, factory: Callable[[], Any]) -> Any:
+    def get(self, key: Any, factory: Callable[[], Any]) -> Any:  # noqa: ARG002
         """Always create a new instance."""
         return factory()
 
-    async def aget(self, key: Any, factory: Callable[[], Any]) -> Any:
+    async def aget(self, key: Any, factory: Callable[[], Any]) -> Any:  # noqa: ARG002
         """Always create a new instance asynchronously."""
         result = factory()
         if asyncio.iscoroutine(result):
@@ -216,7 +216,7 @@ class ScopeManager(BaseScopeManager):
     def get_scope(self, scope_name: str) -> Scope:
         """Get a scope by name."""
 
-        def get():
+        def get() -> Scope:
             if scope_name not in self._scopes:
                 msg = f"Unknown scope: {scope_name}"
                 raise ScopeError(msg)

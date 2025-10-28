@@ -103,7 +103,7 @@ class DependencyProfiler:
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
         """Exit profiling context."""
         self.stop()
 
@@ -191,7 +191,7 @@ class DependencyProfiler:
     def profile_method(self, func: Callable) -> Callable:
         """Decorator for profiling method calls."""
 
-        def wrapper(*args, **kwargs) -> Any:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             method_name = f"{func.__module__}.{func.__qualname__}"
             with self.profile_resolution(method_name):
                 return func(*args, **kwargs)
@@ -313,7 +313,7 @@ class DependencyProfiler:
                     lines.append(f"    Total time: {metrics.total_time:.4f}s")
                     lines.append(f"    Average time: {metrics.average_time:.4f}s")
                     lines.append(
-                        f"    Min/Max time: {metrics.min_time:.4f}s / {metrics.max_time:.4f}s"
+                        f"    Min/Max time: {metrics.min_time:.4f}s / {metrics.max_time:.4f}s"  # noqa: E501
                     )
                     lines.append(f"    Cache hit rate: {metrics.cache_hit_rate:.2%}")
 
@@ -352,6 +352,7 @@ class DependencyProfiler:
     def export_json(self, filename: str) -> None:
         """Export metrics to JSON file."""
         import json
+        from pathlib import Path
 
         data = {
             "timing_statistics": self.get_timing_statistics(),
@@ -383,7 +384,7 @@ class DependencyProfiler:
             ],
         }
 
-        with open(filename, "w") as jsonfile:
+        with Path(filename).open("w") as jsonfile:
             json.dump(data, jsonfile, indent=2)
 
 
@@ -393,13 +394,13 @@ _global_profiler: DependencyProfiler | None = None
 
 def get_global_profiler() -> DependencyProfiler:
     """Get or create the global profiler instance."""
-    global _global_profiler
+    global _global_profiler  # noqa: PLW0603
     if _global_profiler is None:
         _global_profiler = DependencyProfiler()
     return _global_profiler
 
 
-def profile_resolution(service_type: ServiceKey, cache_hit: bool = False):
+def profile_resolution(service_type: ServiceKey, cache_hit: bool = False) -> Any:
     """Context manager for profiling using the global profiler."""
     return get_global_profiler().profile_resolution(service_type, cache_hit)
 

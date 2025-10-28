@@ -323,7 +323,10 @@ class ComponentRegistry:
             )
 
         # Ensure name is not None - at this point name should be a string
-        assert name is not None, "Component name cannot be None"
+        if name is None:
+            msg = f"Component name could not be determined for {component_class}"
+            raise ComponentError(msg)
+
         component_name: str = name
 
         # Extract component metadata

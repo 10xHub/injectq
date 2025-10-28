@@ -136,7 +136,7 @@ class DependencyValidator:
     def _analyze_factory_dependencies(
         self,
         service_key: ServiceKey,
-        factory,
+        factory: Any,
     ) -> None:
         """Analyze dependencies for a factory function."""
         try:
@@ -172,8 +172,9 @@ class DependencyValidator:
                 # Found circular dependency
                 cycle_start = path.index(service_key)
                 cycle = [*path[cycle_start:], service_key]
-                # Convert to string for error message since CircularDependencyError expects Type list
-                error_msg = f"Circular dependency detected: {' -> '.join(str(s) for s in cycle)}"
+                # Convert to string for error message since CircularDependencyError
+                # expects Type list
+                error_msg = f"Circular dependency detected: {' -> '.join(str(s) for s in cycle)}"  # noqa: E501
                 result.errors.append(ValidationError(error_msg))
                 return False
 

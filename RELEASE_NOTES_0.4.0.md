@@ -1,6 +1,6 @@
 # InjectQ 0.4.0 Release Notes
 
-**Release Date:** TBD  
+**Release Date:** TBD
 **Status:** 🚧 In Development
 
 ---

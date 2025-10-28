@@ -61,39 +61,32 @@ def normalize_type(type_hint: object) -> type[Any] | str:
 
     Returns either a type or a string for forward references.
     """
+    result: type[Any] | str | None = None
+
     # Handle string type annotations (forward references)
     if isinstance(type_hint, str):
-        # For forward references, return as-is and handle resolution at injection time
-        return type_hint
-
+        result = type_hint
     # Handle both Python 3.10+ UnionType and typing.Union
-    if (hasattr(types, "UnionType") and isinstance(type_hint, types.UnionType)) or (
+    elif (hasattr(types, "UnionType") and isinstance(type_hint, types.UnionType)) or (
         get_origin(type_hint) is Union
     ):
         args = get_args(type_hint)
-        # Filter out NoneType to get the actual type for injection
         non_none_args = [arg for arg in args if arg is not type(None)]
-        if len(non_none_args) == 1:
-            # This is Union[T, None] - return T for injection
-            return normalize_type(non_none_args[0])
-        # Multiple non-None types, return first one for simplicity
-        if len(non_none_args) > 1:
-            return normalize_type(non_none_args[0])
-        # Only None type, return None
-        return type(None)
-
+        if len(non_none_args) >= 1:
+            result = normalize_type(non_none_args[0])
+        else:
+            result = type(None)
     # Handle other generic types by getting the origin
-    origin = get_origin(type_hint)
-    if origin is not None:
-        # Return origin for other generic types
-        return origin  # type: ignore[return-value]
-
+    elif get_origin(type_hint) is not None:
+        result = get_origin(type_hint)  # type: ignore[return-value]
     # Return the type as-is if it's already a proper type
-    if isinstance(type_hint, type):
-        return type_hint
-
+    elif isinstance(type_hint, type):
+        result = type_hint
     # For other cases, convert to string representation
-    return str(type_hint)
+    else:
+        result = str(type_hint)
+
+    return result  # type: ignore  # noqa: PGH003
 
 
 def resolve_forward_ref(
@@ -123,7 +116,7 @@ def resolve_forward_ref(
         locals_dict = {}
 
     try:
-        return eval(type_hint, globals_dict, locals_dict)  # noqa: S307
+        return eval(type_hint, globals_dict, locals_dict)  # noqa: S307  # nosec B307
     except (NameError, AttributeError, SyntaxError) as e:
         msg = f"Cannot resolve forward reference '{type_hint}': {e}"
         raise TypeError(msg) from e
