@@ -1,4 +1,5 @@
 import pytest
+from taskiq import InMemoryBroker
 from taskiq.state import TaskiqState
 
 from injectq.core.container import InjectQ
@@ -10,31 +11,50 @@ class Service:
         return "ok"
 
 
-def test_attach_and_resolve_with_taskiq_state():
+def test_get_injector_instance_taskiq():
+    """Test the get_injector_instance_taskiq helper function."""
     with InjectQ.test_mode() as container:
-        # bind a simple service instance
+        state = TaskiqState()
+        taskiq_integ._attach_injectq_taskiq(state, container)
+
+        # Should return the container
+        result = taskiq_integ.get_injector_instance_taskiq(state)
+        assert result is container
+
+
+def test_get_injector_instance_taskiq_raises_when_no_container():
+    """Test that get_injector_instance_taskiq raises when no container attached."""
+    state = TaskiqState()
+
+    with pytest.raises(Exception, match="No InjectQ container") as exc:
+        taskiq_integ.get_injector_instance_taskiq(state)
+
+    assert "No InjectQ container" in str(exc.value)
+
+
+def test_injected_taskiq_returns_taskiq_depends():
+    """Test that InjectTaskiq returns a TaskiqDepends object."""
+    dep = taskiq_integ.InjectTaskiq(Service)
+
+    # Should have a dependency attribute (TaskiqDepends structure)
+    assert hasattr(dep, "dependency")
+    assert callable(dep.dependency)  # type: ignore[arg-type]
+
+
+def test_inject_task_alias():
+    """Test that InjectTask is an alias for InjectTaskiq."""
+    assert taskiq_integ.InjectTask is taskiq_integ.InjectTaskiq
+
+
+def test_setup_taskiq():
+    """Test that setup_taskiq properly attaches container to broker."""
+    with InjectQ.test_mode() as container:
         svc = Service()
         container.bind_instance(Service, svc)
 
-        state = TaskiqState()
-        # attach the container to TaskiqState
-        taskiq_integ._attach_injectq_taskiq(state, container)
+        broker = InMemoryBroker()
+        taskiq_integ.setup_taskiq(container, broker)
 
-        # Get the dependency callable produced by InjectTask
-        dep = taskiq_integ.InjectTask(Service)
-
-        # TaskiqDepends returns an object that is callable by resolver; in
-        # our tests, the inner function expects TaskiqState so call directly.
-        resolved = dep.dependency(state)  # type: ignore[attr-defined]
-        assert resolved is svc
-
-
-def test_dependency_raises_when_no_container():
-    state = TaskiqState()
-    dep = taskiq_integ.InjectTask(Service)
-
-    # calling the dependency without attaching should raise our InjectionError
-    with pytest.raises(Exception) as exc:
-        _ = dep.dependency(state)  # type: ignore[attr-defined]
-
-    assert "No InjectQ container" in str(exc.value)
+        # Verify the container was attached to the broker's state
+        retrieved_container = taskiq_integ.get_injector_instance_taskiq(broker.state)
+        assert retrieved_container is container

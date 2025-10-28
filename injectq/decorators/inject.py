@@ -1,7 +1,7 @@
 import functools
 import inspect
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Generic, Type, TypeVar, cast, overload
+from typing import Any, Generic, TypeVar, cast, overload
 
 from injectq.core import InjectQ
 from injectq.utils import (
@@ -15,7 +15,6 @@ from injectq.utils import (
 try:
     from injectq.core.context import ContainerContext
 except ImportError:
-    # Handle circular import case if needed
     ContainerContext = None
 
 

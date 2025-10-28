@@ -1,12 +1,11 @@
 """FastAPI integration for InjectQ (optional dependency).
 
-High-performance integration using per-request context propagation.
+Simple and clean integration using per-request context propagation.
 
 Key characteristics:
 - No global container state
-- ContextVar-based request container lookup (very low overhead)
-- Optional request-scoped caching
-- Class-based dependency marker with type-accurate behavior at type-check time
+- ContextVar-based request container lookup (O(1) overhead)
+- Clean and maintainable code
 
 Dependency: fastapi (and starlette)
 Not installed by default; install extra: `pip install injectq[fastapi]`.
@@ -16,138 +15,84 @@ from __future__ import annotations
 
 import contextvars
 import importlib
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from injectq.utils import InjectionError
 
 
 T = TypeVar("T")
 
-# Per-request context for active container and a request-local cache
+# Per-request context for active container
 _request_container: contextvars.ContextVar[Any | None] = contextvars.ContextVar(
     "injectq_request_container",
     default=None,
-)
-_request_cache: contextvars.ContextVar[dict[type[Any], Any] | None] = (
-    contextvars.ContextVar("injectq_request_cache", default=None)
 )
 
 
 if TYPE_CHECKING:
     from injectq.core.container import InjectQ
 
-    # Type-only base class to make InjectAPI appear as T to type checkers
-    class _InjectAPIBase(Generic[T]):
-        def __new__(
-            cls, *_args: Any, **_kwargs: Any
-        ) -> T:  # pragma: no cover - never called at runtime
-            _ = (_args, _kwargs)
-            return super().__new__(cls)  # type: ignore[return-value]
-else:
-    _InjectAPIBase = Generic
 
+def get_container_fastapi() -> InjectQ:
+    """Get the InjectQ container from the current request context.
 
-class _InjectAPIMeta(type):
-    """Metaclass to enable the `InjectAPI[ServiceType]` syntax."""
+    Returns:
+        InjectQ container instance
 
-    def __getitem__(cls, item: type[T]) -> T:
-        return cls(item)
-
-
-class InjectAPI(_InjectAPIBase[T], metaclass=_InjectAPIMeta):
-    """FastAPI dependency injector for InjectQ.
-
-    Class-based marker that behaves like the target type to type checkers and
-    returns a FastAPI Depends at runtime. Supports optional request-scoped caching
-    and lazy evaluation.
+    Raises:
+        InjectionError: If no container is attached to the request context
     """
+    container = _request_container.get()
+    if container is None:
+        msg = (
+            "No InjectQ container in current request context. Did you call "
+            "setup_fastapi(app, container)?"
+        )
+        raise InjectionError(msg)
+    return container  # type: ignore[return-value]
 
-    def __init__(
-        self,
-        service_type: type[T],
-        *,
-        scope: str = "singleton",
-        lazy: bool = True,
-    ) -> None:
-        self.service_type = service_type
-        self.scope = scope
-        self.lazy = lazy
 
-    def __new__(
-        cls, service_type: type[T], *, scope: str = "singleton", lazy: bool = False
-    ) -> Any:
-        if TYPE_CHECKING:
-            return service_type  # type: ignore[return-value]
+def InjectFastAPI(interface: type[T]) -> T:  # noqa: N802
+    """Inject dependency from InjectQ container in FastAPI routes.
 
-        try:
-            fastapi = importlib.import_module("fastapi")
-        except ImportError as exc:
-            msg = (
-                "InjectAPI requires the 'fastapi' package. Install with "
-                "'pip install injectq[fastapi]' or 'pip install fastapi'."
-            )
-            raise RuntimeError(msg) from exc
+    This is the recommended way to use dependency injection with FastAPI.
+    Uses ContextVars for async-safe, high-performance dependency resolution.
 
-        depends = fastapi.Depends
+    Args:
+        interface: The type/interface to inject
 
-        # Eager provider: resolves on dependency execution
-        def _provider() -> Any:
-            container = _request_container.get()
-            if container is None:
-                msg = (
-                    "No InjectQ container in current request context. Did you call "
-                    "setup_fastapi(app, container)?"
-                )
-                raise InjectionError(msg)
+    Returns:
+        FastAPI Depends object that will resolve to the requested type
 
-            # Request-scoped cache if requested
-            if scope == "request":
-                cache = _request_cache.get()
-                if cache is None:
-                    cache = {}
-                    _request_cache.set(cache)
-                inst = cache.get(service_type)  # type: ignore[arg-type]
-                if inst is None:
-                    inst = container.get(service_type)
-                    cache[service_type] = inst  # type: ignore[index]
-                return inst
+    Example:
+        ```python
+        from fastapi import FastAPI
+        from typing import Annotated
 
-            # For singleton/transient, rely on container binding scopes
-            return container.get(service_type)
+        @app.get("/users")
+        async def get_users(
+            service: Annotated[UserService, InjectFastAPI(UserService)],
+        ):
+            return service.get_all_users()
+        ```
+    """
+    try:
+        from fastapi import Depends  # noqa: PLC0415
+    except ImportError as exc:
+        msg = (
+            "InjectFastAPI requires the 'fastapi' package. Install with "
+            "'pip install injectq[fastapi]' or 'pip install fastapi'."
+        )
+        raise RuntimeError(msg) from exc
 
-        # Lazy provider: defers resolution and allows attribute access post-injection
-        if lazy:
+    def inject_dependency() -> T:
+        return get_container_fastapi().get(interface)
 
-            class _LazyProxy:
-                __slots__ = ("_resolved", "_value")
+    return Depends(inject_dependency)  # type: ignore[return-value]
 
-                def __init__(self) -> None:
-                    self._resolved = False
-                    self._value: Any = None
 
-                def _ensure(self) -> None:
-                    if not self._resolved:
-                        self._value = _provider()
-                        self._resolved = True
-
-                def __getattr__(self, name: str) -> Any:
-                    self._ensure()
-                    return getattr(self._value, name)
-
-                def __call__(self, *args: Any, **kwargs: Any) -> Any:
-                    self._ensure()
-                    return self._value(*args, **kwargs)
-
-                def __bool__(self) -> bool:
-                    self._ensure()
-                    return bool(self._value)
-
-            def _lazy_factory() -> Any:
-                return _LazyProxy()
-
-            return depends(_lazy_factory)
-
-        return depends(_provider)
+# Alias for backwards compatibility
+InjectAPI = InjectFastAPI
 
 
 # Optimized middleware using ContextVars for per-request container propagation
@@ -173,7 +118,7 @@ if _HAS_FASTAPI:
     class InjectQRequestMiddleware(BaseHTTPMiddlewareBase):
         """Lightweight middleware to set the active InjectQ container per request.
 
-        Uses ContextVar (O(1) set/reset) and maintains a per-request cache dict.
+        Uses ContextVar (O(1) set/reset) for high-performance context propagation.
         """
 
         def __init__(self, app: Any, *, container: InjectQ) -> None:
@@ -181,13 +126,11 @@ if _HAS_FASTAPI:
             self._container = container
 
         async def dispatch(self, request: Any, call_next: Any) -> Any:
-            token_container = _request_container.set(self._container)
-            token_cache = _request_cache.set({})
+            token = _request_container.set(self._container)
             try:
                 return await call_next(request)
             finally:
-                _request_cache.reset(token_cache)
-                _request_container.reset(token_container)
+                _request_container.reset(token)
 
 
 def setup_fastapi(container: InjectQ, app: Any) -> None:
@@ -195,6 +138,21 @@ def setup_fastapi(container: InjectQ, app: Any) -> None:
 
     Adds a minimal middleware to set the active container with ContextVars.
     No per-request context manager entry/exit overhead.
+
+    Args:
+        container: InjectQ container instance to use for dependency injection
+        app: FastAPI application instance
+
+    Example:
+        ```python
+        from fastapi import FastAPI
+        from injectq import InjectQ
+
+        app = FastAPI()
+        container = InjectQ()
+
+        setup_fastapi(container, app)
+        ```
     """
     try:
         importlib.import_module("fastapi")
@@ -206,18 +164,3 @@ def setup_fastapi(container: InjectQ, app: Any) -> None:
         raise RuntimeError(msg) from exc
 
     app.add_middleware(InjectQRequestMiddleware, container=container)
-
-
-# Convenience helpers mirroring common scopes
-def Singleton(service_type: type[T]) -> T:  # noqa: N802 - public API
-    return InjectAPI(service_type, scope="singleton")  # type: ignore[return-value]
-
-
-def RequestScoped(service_type: type[T]) -> T:  # noqa: N802 - public API
-    return InjectAPI(service_type, scope="request")  # type: ignore[return-value]
-
-
-def Transient(service_type: type[T]) -> T:  # noqa: N802 - public API
-    # Transient is governed by container bindings;
-    # here it's identical to singleton in retrieval semantics
-    return InjectAPI(service_type, scope="transient")  # type: ignore[return-value]

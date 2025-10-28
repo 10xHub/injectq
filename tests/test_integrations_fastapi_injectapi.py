@@ -5,7 +5,7 @@ from typing import Any
 from injectq.integrations import fastapi as fmod
 
 
-def test_injectapi_provider_and_request_cache(monkeypatch: Any) -> None:
+def test_injectapi_provider(monkeypatch: Any) -> None:
     # Stub fastapi.Depends to return the function itself
     stub_fastapi = SimpleNamespace(Depends=lambda fn: fn)
     monkeypatch.setitem(sys.modules, "fastapi", stub_fastapi)
@@ -23,26 +23,18 @@ def test_injectapi_provider_and_request_cache(monkeypatch: Any) -> None:
 
     # Set per-request context
     token_c = fmod._request_container.set(container)  # noqa: SLF001
-    token_cache = fmod._request_cache.set({})  # noqa: SLF001
     try:
-        # request scope -> should cache per service type
-        dep_req = fmod.InjectAPI(int, scope="request")
-        v1 = dep_req()  # type: ignore[call-arg]
-        v2 = dep_req()  # type: ignore[call-arg]
-        assert v1 == v2
-        assert container.calls == 1
-
-        # transient/singleton fall back to container's own scoping
-        dep_tr = fmod.InjectAPI(str, scope="transient")
-        _ = dep_tr()  # type: ignore[call-arg]
-        _ = dep_tr()  # type: ignore[call-arg]
-        assert container.calls >= 3
+        dep = fmod.InjectFastAPI(int)
+        v1 = dep()  # type: ignore[call-arg]
+        v2 = dep()  # type: ignore[call-arg]
+        # No caching, so calls twice
+        assert v1 != v2
+        assert container.calls == 2
     finally:
-        fmod._request_cache.reset(token_cache)  # noqa: SLF001
         fmod._request_container.reset(token_c)  # noqa: SLF001
 
 
-def test_injectapi_lazy_proxy(monkeypatch: Any) -> None:
+def test_injectapi_service(monkeypatch: Any) -> None:
     # Stub fastapi.Depends to return the function itself
     stub_fastapi = SimpleNamespace(Depends=lambda fn: fn)
     monkeypatch.setitem(sys.modules, "fastapi", stub_fastapi)
@@ -65,12 +57,10 @@ def test_injectapi_lazy_proxy(monkeypatch: Any) -> None:
 
     container = Dummy()
     token_c = fmod._request_container.set(container)  # noqa: SLF001
-    token_cache = fmod._request_cache.set({})  # noqa: SLF001
     try:
-        dep_lazy = fmod.InjectAPI(Svc, lazy=True)
-        proxy = dep_lazy()  # type: ignore[call-arg]
-        assert proxy.inc() == 42
-        assert proxy.x == 42
+        dep = fmod.InjectFastAPI(Svc)
+        svc = dep()  # type: ignore[call-arg]
+        assert svc.inc() == 42
+        assert svc.x == 42
     finally:
-        fmod._request_cache.reset(token_cache)  # noqa: SLF001
         fmod._request_container.reset(token_c)  # noqa: SLF001

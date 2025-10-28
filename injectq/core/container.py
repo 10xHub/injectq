@@ -309,6 +309,60 @@ class InjectQ:
         """Check if a service type can be resolved."""
         return self._ensure_thread_safe(lambda: service_type in self._registry)
 
+    def get_factory(self, service_type: ServiceKey) -> ServiceFactory:
+        """Get the raw factory function without invoking it.
+
+        This method returns the factory function itself, allowing you to call it
+        with custom arguments instead of relying on dependency injection.
+
+        Args:
+            service_type: The service type or key for the factory
+
+        Returns:
+            The factory function
+
+        Raises:
+            DependencyNotFoundError: If no factory is registered for the service type
+
+        Example:
+            >>> injector.bind_factory("data_store", lambda key: data[key])
+            >>> factory = injector.get_factory("data_store")
+            >>> result = factory("key1")  # Call with custom argument
+        """
+
+        def _get_factory() -> ServiceFactory:
+            factory = self._registry.get_factory(service_type)
+            if factory is None:
+                raise DependencyNotFoundError(service_type)  # type: ignore  # noqa: PGH003
+            return factory
+
+        return self._ensure_thread_safe(_get_factory)
+
+    def call_factory(self, service_type: ServiceKey, *args: Any, **kwargs: Any) -> Any:
+        """Get and call a factory function with custom arguments.
+
+        This is a convenience method that combines get_factory() and calling it
+        in a single step. It allows you to invoke a factory with your own arguments
+        instead of relying on dependency injection.
+
+        Args:
+            service_type: The service type or key for the factory
+            *args: Positional arguments to pass to the factory
+            **kwargs: Keyword arguments to pass to the factory
+
+        Returns:
+            The result of calling the factory function
+
+        Raises:
+            DependencyNotFoundError: If no factory is registered for the service type
+
+        Example:
+            >>> injector.bind_factory("data_store", lambda key: data[key])
+            >>> result = injector.call_factory("data_store", "key1")
+        """
+        factory = self.get_factory(service_type)
+        return factory(*args, **kwargs)
+
     # Scope management
     def scope(self, scope_name: str | ScopeType) -> Any:
         """Enter a scope context."""
