@@ -213,10 +213,15 @@ container.bind(IUserRepository, UserRepository)
 
 ### 3. Factory-based Configuration
 
-Use factories for complex creation logic:
+Use factories for complex creation logic. InjectQ supports both **DI-based factories** (no parameters) and **parameterized factories** (with arguments).
+
+#### Regular Factory (Dependency Injection)
+
+Create factories that are resolved automatically using DI:
 
 ```python
 def create_database(config: DatabaseConfig) -> IDatabase:
+    """Factory with DI - dependencies are injected."""
     if config.driver == "postgres":
         return PostgreSQLDatabase(config)
     elif config.driver == "mysql":
@@ -224,7 +229,123 @@ def create_database(config: DatabaseConfig) -> IDatabase:
     else:
         return SQLiteDatabase(config)
 
+# Bind the factory - DatabaseConfig is automatically injected
 container.bind_factory(IDatabase, create_database)
+
+# Get the instance - factory is called automatically
+db = container[IDatabase]
+```
+
+#### Parameterized Factory
+
+Create factories that accept arguments:
+
+```python
+# Factory that accepts parameters
+def create_connection_pool(db_name: str, max_conn: int = 10):
+    """Factory with parameters - no DI needed."""
+    return ConnectionPool(db_name, max_conn=max_conn)
+
+# Bind the parameterized factory
+container.bind_factory("db_pool", create_connection_pool)
+
+# Method 1: Get the factory function and call it
+factory = container.get_factory("db_pool")
+users_pool = factory("users_db", max_conn=20)
+
+# Method 2: Use call_factory shorthand
+orders_pool = container.call_factory("db_pool", "orders_db", max_conn=15)
+
+# Method 3: Chain the calls
+logs_pool = container.get_factory("db_pool")("logs_db")
+```
+
+#### Combining DI and Parameterized Factories
+
+Mix both patterns in the same container:
+
+```python
+# DI factory
+def create_logger() -> Logger:
+    """Factory with DI - dependencies injected."""
+    config = container[LogConfig]  # or through @inject
+    return Logger(config)
+
+# Parameterized factory
+def get_user_from_db(user_id: int):
+    """Factory with parameters - custom arguments."""
+    db = container[Database]  # Can still use DI
+    return db.get_user(user_id)
+
+# Bind both
+container.bind_factory(Logger, create_logger)        # DI factory
+container.bind_factory("get_user", get_user_from_db) # Parameterized
+
+# Use both
+logger = container[Logger]                    # No args needed
+user = container.call_factory("get_user", 42) # Pass args
+```
+
+#### 🆕 Hybrid Factories with invoke()
+
+The new `invoke()` method combines DI with manual arguments automatically:
+
+```python
+# Factory that needs BOTH DI dependencies and manual arguments
+def create_user_service(db: Database, cache: Cache, user_id: str):
+    """Hybrid factory - some deps injected, some provided manually."""
+    return UserService(db, cache, user_id)
+
+container.bind(Database, Database)
+container.bind(Cache, Cache)
+container.bind_factory("user_service", create_user_service)
+
+# ❌ Old way - verbose manual resolution
+db = container[Database]
+cache = container[Cache]
+service = container.call_factory("user_service", db, cache, "user123")
+
+# ✅ New way - automatic DI + manual args
+service = container.invoke("user_service", user_id="user123")
+# Database and Cache are auto-injected, only provide user_id!
+
+# Also works with async
+async_service = await container.ainvoke("async_service", batch_size=100)
+```
+
+**When to use invoke():**
+- Factory needs some dependencies from DI + some runtime arguments
+- You want cleaner code without manual resolution
+- Mix configuration from container with user input
+
+Learn more in [Factory Methods](../injection-patterns/factory-methods.md).
+
+#### Real-World Example: Multiple Database Connections
+
+```python
+class DatabasePool:
+    """Connection pool for a database."""
+    def __init__(self, db_name: str, max_connections: int = 10):
+        self.db_name = db_name
+        self.max_connections = max_connections
+        self.connections = []
+
+# Create a parameterized factory
+def create_db_pool(db_name: str, max_conn: int = 10) -> DatabasePool:
+    return DatabasePool(db_name, max_conn=max_conn)
+
+# Bind the factory
+container.bind_factory("db_pool", create_db_pool)
+
+# Create multiple pools with different parameters
+users_db = container.call_factory("db_pool", "users_db", max_conn=20)
+orders_db = container.call_factory("db_pool", "orders_db", max_conn=15)
+logs_db = container.call_factory("db_pool", "logs_db")  # Uses default max_conn=10
+
+# Each pool is independent
+assert users_db is not orders_db
+assert users_db.db_name == "users_db"
+assert orders_db.max_connections == 15
 ```
 
 ### 4. Module-based Configuration

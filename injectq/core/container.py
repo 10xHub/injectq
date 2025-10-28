@@ -363,6 +363,233 @@ class InjectQ:
         factory = self.get_factory(service_type)
         return factory(*args, **kwargs)
 
+    async def aget_factory(self, service_type: ServiceKey) -> ServiceFactory:
+        """Get the raw factory function without invoking it (async version).
+
+        This is the async equivalent of get_factory(). It returns the factory
+        function itself, allowing you to call it with custom arguments.
+
+        Args:
+            service_type: The service type or key for the factory
+
+        Returns:
+            The factory function
+
+        Raises:
+            DependencyNotFoundError: If no factory is registered for the service type
+
+        Example:
+            >>> injector.bind_factory("data_store", lambda key: data[key])
+            >>> factory = await injector.aget_factory("data_store")
+            >>> result = factory("key1")  # or await factory("key1") if async
+        """
+        return self.get_factory(service_type)  # Factory lookup is sync
+
+    async def acall_factory(
+        self, service_type: ServiceKey, *args: Any, **kwargs: Any
+    ) -> Any:
+        """Get and call a factory function with custom arguments (async version).
+
+        This is the async equivalent of call_factory(). It gets the factory
+        and calls it, handling both sync and async factories appropriately.
+
+        Args:
+            service_type: The service type or key for the factory
+            *args: Positional arguments to pass to the factory
+            **kwargs: Keyword arguments to pass to the factory
+
+        Returns:
+            The result of calling the factory function
+
+        Raises:
+            DependencyNotFoundError: If no factory is registered for the service type
+
+        Example:
+            >>> injector.bind_factory("data_store", async_loader)
+            >>> result = await injector.acall_factory("data_store", "key1")
+        """
+        import asyncio  # noqa: PLC0415
+
+        factory = await self.aget_factory(service_type)
+        if asyncio.iscoroutinefunction(factory):
+            return await factory(*args, **kwargs)
+        return factory(*args, **kwargs)
+
+    def invoke(self, service_type: ServiceKey, *args: Any, **kwargs: Any) -> Any:
+        """Invoke a factory with custom args, injecting remaining dependencies.
+
+        This is a hybrid method that combines manual argument provision with
+        automatic dependency injection. You provide some arguments explicitly,
+        and the container injects the rest based on type hints.
+
+        Note: Use keyword arguments for explicit parameters to avoid ambiguity.
+        Positional args are matched in order and may not trigger DI as expected.
+
+        Injection Strategy:
+        1. Parameters provided via args/kwargs are used as-is
+        2. Try to inject by parameter name (string key)
+        3. Try to inject by type annotation (only for non-primitive types)
+        4. Use default value if available
+        5. Raise error if required param cannot be resolved
+
+        Args:
+            service_type: The service type or key for the factory
+            *args: Positional arguments to pass to the factory
+            **kwargs: Keyword arguments to pass to the factory
+
+        Returns:
+            The result of calling the factory with mixed args
+
+        Raises:
+            DependencyNotFoundError: If no factory is registered or a required
+                                   dependency cannot be resolved
+
+        Example:
+            >>> # Factory signature: create_service(db: Database, user_id: str)
+            >>> injector.bind_factory("service", create_service)
+            >>> # Provide user_id, db will be injected automatically
+            >>> service = injector.invoke("service", user_id="123")
+        """
+        import inspect  # noqa: PLC0415
+
+        factory = self.get_factory(service_type)
+        sig = inspect.signature(factory)
+
+        # Build complete kwargs dict with DI for missing params
+        complete_kwargs = dict(kwargs)
+
+        # Track which params are already provided by positional args
+        param_list = list(sig.parameters.keys())
+        provided_by_position = set(param_list[: len(args)])
+
+        # Primitive types that we shouldn't auto-inject by type
+        # (to avoid ambiguous injections like int, str, bool)
+        primitive_types = (str, int, float, bool, bytes, type(None))
+
+        # Inject missing dependencies
+        for param_name, param in sig.parameters.items():
+            # Skip if already provided via args or kwargs
+            if param_name in provided_by_position or param_name in complete_kwargs:
+                continue
+
+            # Try to inject this parameter
+            injected = False
+            try:
+                # First try by parameter name (string key)
+                if self.has(param_name):
+                    complete_kwargs[param_name] = self.get(param_name)
+                    injected = True
+                # Then try by type annotation (but not for primitive types)
+                elif (
+                    param.annotation != inspect.Parameter.empty
+                    and param.annotation not in primitive_types
+                ):
+                    if self.has(param.annotation):
+                        complete_kwargs[param_name] = self.get(param.annotation)
+                        injected = True
+            except DependencyNotFoundError:
+                pass
+
+            # If not injected and required, raise error
+            if (
+                not injected
+                and param.default == inspect.Parameter.empty
+                and param.kind
+                not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
+            ):
+                raise DependencyNotFoundError(param.annotation)  # type: ignore  # noqa: PGH003
+
+        # Call the factory with positional args and complete kwargs
+        return factory(*args, **complete_kwargs)
+
+    async def ainvoke(self, service_type: ServiceKey, *args: Any, **kwargs: Any) -> Any:
+        """Invoke a factory with custom args, injecting remaining dependencies (async).
+
+        This is the async equivalent of invoke(). It combines manual argument
+        provision with automatic dependency injection, and handles both sync
+        and async factories appropriately.
+
+        Note: Use keyword arguments for explicit parameters to avoid ambiguity.
+        Positional args are matched in order and may not trigger DI as expected.
+
+        Injection Strategy:
+        1. Parameters provided via args/kwargs are used as-is
+        2. Try to inject by parameter name (string key)
+        3. Try to inject by type annotation (only for non-primitive types)
+        4. Use default value if available
+        5. Raise error if required param cannot be resolved
+
+        Args:
+            service_type: The service type or key for the factory
+            *args: Positional arguments to pass to the factory
+            **kwargs: Keyword arguments to pass to the factory
+
+        Returns:
+            The result of calling the factory with mixed args
+
+        Raises:
+            DependencyNotFoundError: If no factory is registered or a required
+                                   dependency cannot be resolved
+
+        Example:
+            >>> # Factory: async def create_service(db: Database, user_id: str)
+            >>> injector.bind_factory("service", create_service)
+            >>> service = await injector.ainvoke("service", user_id="123")
+        """
+        import asyncio  # noqa: PLC0415
+        import inspect  # noqa: PLC0415
+
+        factory = await self.aget_factory(service_type)
+        sig = inspect.signature(factory)
+
+        # Build complete kwargs dict with DI for missing params
+        complete_kwargs = dict(kwargs)
+
+        # Track which params are already provided by positional args
+        param_list = list(sig.parameters.keys())
+        provided_by_position = set(param_list[: len(args)])
+
+        # Primitive types that we shouldn't auto-inject by type
+        primitive_types = (str, int, float, bool, bytes, type(None))
+
+        # Inject missing dependencies
+        for param_name, param in sig.parameters.items():
+            # Skip if already provided via args or kwargs
+            if param_name in provided_by_position or param_name in complete_kwargs:
+                continue
+
+            # Try to inject this parameter
+            injected = False
+            try:
+                # First try by parameter name (string key)
+                if self.has(param_name):
+                    complete_kwargs[param_name] = await self.aget(param_name)
+                    injected = True
+                # Then try by type annotation (but not for primitive types)
+                elif (
+                    param.annotation != inspect.Parameter.empty
+                    and param.annotation not in primitive_types
+                ):
+                    if self.has(param.annotation):
+                        complete_kwargs[param_name] = await self.aget(param.annotation)
+                        injected = True
+            except DependencyNotFoundError:
+                pass
+
+            # If not injected and required, raise error
+            if (
+                not injected
+                and param.default == inspect.Parameter.empty
+                and param.kind
+                not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
+            ):
+                raise DependencyNotFoundError(param.annotation)  # type: ignore  # noqa: PGH003
+
+        # Call the factory with positional args and complete kwargs
+        if asyncio.iscoroutinefunction(factory):
+            return await factory(*args, **complete_kwargs)
+        return factory(*args, **complete_kwargs)
+
     # Scope management
     def scope(self, scope_name: str | ScopeType) -> Any:
         """Enter a scope context."""

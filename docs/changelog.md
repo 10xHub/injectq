@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **🆕 Hybrid factory methods**: New `invoke()` and `ainvoke()` methods that combine dependency injection with manual argument provision
+  - `invoke(service_type, *args, **kwargs)` - Sync hybrid invocation
+  - `ainvoke(service_type, *args, **kwargs)` - Async hybrid invocation
+  - Automatically injects missing dependencies while accepting custom arguments
+  - Smart resolution: by parameter name first, then by type annotation (non-primitives only)
+- **🆕 Async factory methods**: New async variants of factory operations
+  - `aget_factory(service_type)` - Async version of get_factory()
+  - `acall_factory(service_type, *args, **kwargs)` - Async version of call_factory()
+- Comprehensive factory method documentation with examples
+- 23 new tests for factory enhancements (all passing)
+- Factory API showcase example demonstrating all patterns
 - **Auto-registration of concrete types**: New `allow_concrete` parameter (default: True) 
   automatically registers concrete types when registering instances to base types
 - **Registration override control**: New `allow_override` parameter (default: True) 

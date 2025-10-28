@@ -132,6 +132,58 @@ def test_with_factory():
         assert result is not None
 ```
 
+### Testing Parameterized Factories
+
+Test factories that accept arguments:
+
+```python
+from injectq.testing import test_container
+
+def test_parameterized_factory():
+    """Test parameterized factory with different arguments."""
+    with test_container() as container:
+        # Bind a parameterized factory
+        def create_pool(db_name: str, max_conn: int = 10):
+            return ConnectionPool(db_name, max_conn=max_conn)
+        
+        container.bind_factory("pool", create_pool)
+        
+        # Test with different parameters
+        users_pool = container.call_factory("pool", "users_db", max_conn=20)
+        orders_pool = container.call_factory("pool", "orders_db", max_conn=15)
+        
+        # Verify each has correct parameters
+        assert users_pool.db_name == "users_db"
+        assert users_pool.max_connections == 20
+        
+        assert orders_pool.db_name == "orders_db"
+        assert orders_pool.max_connections == 15
+        
+        # Verify they are different instances
+        assert users_pool is not orders_pool
+
+def test_factory_with_mock_dependencies():
+    """Test parameterized factory that uses DI."""
+    with test_container() as container:
+        # Mock a dependency
+        mock_db = MockDatabase()
+        container[Database] = mock_db
+        
+        # Parameterized factory that uses DI
+        def get_user(user_id: int):
+            db = container[Database]
+            return db.get_user(user_id)
+        
+        container.bind_factory("get_user", get_user)
+        
+        # Mock the database response
+        mock_db.users = {1: {"id": 1, "name": "Alice"}}
+        
+        # Test with parameter
+        user = container.call_factory("get_user", 1)
+        assert user["name"] == "Alice"
+```
+
 ## Pytest Integration
 
 Use pytest fixtures for convenient test setup:

@@ -52,6 +52,22 @@ container.bind(UserService, UserService)
 container.bind(OptionalService, None, allow_none=True)
 ```
 
+### Bind Factory Method
+
+```python
+# Bind a DI factory (factory receives injected dependencies)
+def create_database(url: str) -> Database:
+    return Database(url)
+
+container.bind_factory(Database, create_database)
+
+# Bind a parameterized factory
+def create_pool(db_name: str, max_conn: int = 10):
+    return ConnectionPool(db_name, max_conn)
+
+container.bind_factory("pool", create_pool)
+```
+
 ## Retrieving Services
 
 ```python
@@ -61,6 +77,30 @@ config = container[str]
 
 # Using get method (legacy)
 service = container.get(UserService)
+```
+
+### Retrieving Factories
+
+```python
+# Get a factory function
+factory = container.get_factory("my_factory")
+instance = factory()  # Call with no args
+
+# Call a parameterized factory
+result = container.call_factory("my_factory", arg1, arg2, kwarg=value)
+
+# Get factory and call with args
+factory = container.get_factory("pool")
+pool = factory("users_db", max_conn=20)
+
+# 🆕 Hybrid: Provide some args, inject the rest
+result = container.invoke("my_factory", custom_arg="value")
+# Parameters not provided will be auto-injected from container
+
+# 🆕 Async factory methods
+factory = await container.aget_factory("async_factory")
+result = await container.acall_factory("async_factory", arg1, arg2)
+result = await container.ainvoke("async_factory", custom_arg="value")
 ```
 
 ## Decorators
@@ -332,17 +372,146 @@ with ContainerContext.create(container):
 
 ### Factory Pattern
 
+InjectQ supports both **regular factories** (with DI) and **parameterized factories** (with custom arguments).
+
+#### Regular Factory (Dependency Injection)
+
 ```python
-# Bind a factory lambda
-container[Database] = lambda: Database("postgresql://...")
+# Factory that uses dependency injection
+def create_database(config: str) -> Database:
+    """Factory with DI - config is injected from container."""
+    return Database(config)
 
-# Or use classes with factory-like methods
-class DatabaseFactory:
-    def __call__(self):
-        return Database("postgresql://...")
+# Bind the factory
+container.bind_factory(Database, create_database)
 
-container[Database] = DatabaseFactory()
+# Use it - factory is called automatically
+db = container[Database]
 ```
+
+#### Parameterized Factory
+
+```python
+# Factory that accepts parameters
+def create_cache(host: str, port: int = 6379):
+    """Factory with parameters - arguments provided at call time."""
+    return RedisCache(host, port)
+
+# Bind the parameterized factory
+container.bind_factory("cache", create_cache)
+
+# Method 1: Get factory and call
+factory = container.get_factory("cache")
+cache = factory("localhost", port=6380)
+
+# Method 2: Use call_factory shorthand (recommended)
+cache = container.call_factory("cache", "localhost", port=6380)
+
+# Method 3: Chain the calls
+cache = container.get_factory("cache")("localhost", 6380)
+```
+
+#### Factory with Multiple Parameters
+
+```python
+def create_connection_pool(
+    db_name: str,
+    host: str = "localhost",
+    port: int = 5432,
+    max_conn: int = 10
+) -> ConnectionPool:
+    """Factory with multiple parameters."""
+    return ConnectionPool(db_name, host=host, port=port, max_conn=max_conn)
+
+container.bind_factory("db_pool", create_connection_pool)
+
+# Call with positional and keyword arguments
+users_pool = container.call_factory("db_pool", "users_db", port=5433, max_conn=20)
+```
+
+#### Combining DI and Parameterized Factories
+
+```python
+def get_cached_user(user_id: int):
+    """Uses DI for dependencies, accepts parameters."""
+    db = container[Database]  # DI works here
+    cache = container[Cache]   # DI works here
+    return cache.get(f"user:{user_id}") or db.get_user(user_id)
+
+container.bind_factory("get_user", get_cached_user)
+
+# Call with parameter
+user = container.call_factory("get_user", 123)
+```
+
+#### 🆕 Hybrid Factory Invocation (invoke)
+
+The `invoke()` method combines DI and manual arguments in one call:
+
+```python
+# Factory with mixed dependencies
+def create_user_service(db: Database, cache: Cache, user_id: str):
+    """Factory needs both injected deps and manual args."""
+    return UserService(db, cache, user_id)
+
+container.bind_factory("user_service", create_user_service)
+
+# Before invoke() - manual and verbose
+db = container[Database]
+cache = container[Cache]
+factory = container.get_factory("user_service")
+service = factory(db, cache, "user123")  # 4 lines
+
+# With invoke() - clean and automatic
+service = container.invoke("user_service", user_id="user123")  # 1 line
+# db and cache are auto-injected, user_id is provided
+```
+
+**How invoke() Works:**
+
+1. Parameters you provide (args/kwargs) are used directly
+2. Missing parameters are injected by name (string keys) first
+3. Then by type annotation (for non-primitive types)
+4. Default values are used if parameter not provided or injected
+5. Raises error if required parameter cannot be resolved
+
+**Example with String Keys:**
+
+```python
+container.bind("api_key", "secret-123")
+container.bind("api_url", "https://api.example.com")
+
+def create_client(api_key: str, api_url: str, timeout: int):
+    return HTTPClient(api_key, api_url, timeout)
+
+container.bind_factory("client", create_client)
+
+# api_key and api_url injected by name, timeout provided
+client = container.invoke("client", timeout=30)
+```
+
+**Async Version:**
+
+```python
+async def create_async_service(db: Database, batch_size: int):
+    """Async factory with mixed dependencies."""
+    await asyncio.sleep(0.1)  # async work
+    return AsyncService(db, batch_size)
+
+container.bind_factory("async_service", create_async_service)
+
+# Use ainvoke for async factories
+service = await container.ainvoke("async_service", batch_size=100)
+# db is auto-injected
+```
+
+**When to Use invoke():**
+
+- ✅ Factory needs some DI dependencies and some runtime arguments
+- ✅ You want cleaner code without manual dependency resolution
+- ✅ You want to mix injected config with user-provided values
+- ❌ All parameters are in container (use `get()` instead)
+- ❌ All parameters are manual (use `call_factory()` instead)
 
 ### Configuration Pattern
 

@@ -176,6 +176,77 @@ def main(user_service: UserService):
 main()
 ```
 
+## 🏭 Working with Factories
+
+InjectQ provides flexible factory methods for advanced scenarios:
+
+### Basic Factory
+
+```python
+from injectq import InjectQ
+
+container = InjectQ.get_instance()
+container.bind("db_url", "postgresql://localhost/db")
+
+# Factory with DI
+def create_database(db_url: str):
+    return Database(db_url)
+
+container.bind_factory(Database, create_database)
+
+# Factory called automatically with injected dependencies
+db = container[Database]
+```
+
+### Parameterized Factory
+
+```python
+# Factory that accepts arguments
+def create_cache(namespace: str, ttl: int = 3600):
+    return RedisCache(namespace, ttl)
+
+container.bind_factory("cache", create_cache)
+
+# Call with custom arguments
+user_cache = container.call_factory("cache", "users", ttl=7200)
+session_cache = container.call_factory("cache", "sessions")
+```
+
+### 🆕 Hybrid Factory (Best of Both Worlds!)
+
+The new `invoke()` method combines DI with manual arguments:
+
+```python
+container.bind(Database, Database)
+container.bind(Cache, Cache)
+
+# Factory needs both injected deps and manual args
+def create_user_service(db: Database, cache: Cache, user_id: str):
+    return UserService(db, cache, user_id)
+
+container.bind_factory("user_service", create_user_service)
+
+# ❌ Old way - verbose
+db = container[Database]
+cache = container[Cache]
+factory = container.get_factory("user_service")
+service = factory(db, cache, "user123")
+
+# ✅ New way - clean and automatic!
+service = container.invoke("user_service", user_id="user123")
+# db and cache are auto-injected, only provide user_id
+
+# Async version
+service = await container.ainvoke("async_service", batch_size=100)
+```
+
+**When to use invoke():**
+- ✅ Factory needs some DI dependencies + some runtime arguments
+- ✅ You want cleaner code without manual resolution
+- ✅ Mix config from container with user input
+
+Learn more in [Factory Methods](../injection-patterns/factory-methods.md).
+
 ## 🧪 Testing with InjectQ
 
 Use the built-in testing utilities:
@@ -215,6 +286,7 @@ def test_user_service():
 - Use `@transient` for fresh instances each time
 - Use `test_container()` for unit testing
 - Use `Module` for organizing complex apps
+- 🆕 Use `invoke()` when you need both DI and manual arguments in factories
 
 Happy coding! 🎉
 ````

@@ -17,6 +17,7 @@ Full documentation is hosted at [Documentation](https://10xhub.github.io/injectq
 - Type-friendly: designed to work with static type checkers
 - Built-in integrations for frameworks (FastAPI, Taskiq) as optional extras
 - Factory and async factory support
+- 🆕 Hybrid factory methods combining DI with manual arguments (`invoke()`, `ainvoke()`)
 - Scope management and testing utilities
 
 ## Quick Start (recommended pattern)
@@ -116,6 +117,43 @@ container.bind(PaymentProcessor, CreditCardProcessor)  # OK
 
 See `examples/enhanced_features_demo.py` for a complete demonstration.
 
+### 🆕 Hybrid Factory Methods
+
+The new `invoke()` and `ainvoke()` methods combine dependency injection with manual arguments:
+
+```python
+from injectq import InjectQ
+
+container = InjectQ()
+container.bind(Database, Database)
+container.bind(Cache, Cache)
+
+# Factory that needs both DI dependencies and runtime arguments
+def create_user_service(db: Database, cache: Cache, user_id: str):
+    return UserService(db, cache, user_id)
+
+container.bind_factory("user_service", create_user_service)
+
+# ❌ Old way - verbose
+db = container[Database]
+cache = container[Cache]
+service = container.call_factory("user_service", db, cache, "user123")
+
+# ✅ New way - automatic DI + manual args
+service = container.invoke("user_service", user_id="user123")
+# Database and Cache auto-injected, only provide user_id!
+
+# Also works with async
+service = await container.ainvoke("async_service", batch_size=100)
+```
+
+**When to use `invoke()`:**
+- Factory needs some DI dependencies + some runtime arguments
+- You want cleaner code without manual resolution  
+- Mix configuration from container with user input
+
+See `examples/factory_api_showcase.py` and `docs/injection-patterns/factory-methods.md` for details.
+
 ## Installation
 
 Install from PyPI:
@@ -136,6 +174,7 @@ pip install injectq[taskiq]    # Taskiq integration (optional)
 - `docs/getting-started/installation.md` — installation and verification
 - `docs/injection-patterns/dict-interface.md` — dict-like API
 - `docs/injection-patterns/inject-decorator.md` — `@inject` usage
+- `docs/injection-patterns/factory-methods.md` — factory patterns (DI, parameterized, hybrid)
 - `docs/integrations/` — integration guides for FastAPI and Taskiq
 
 ## License

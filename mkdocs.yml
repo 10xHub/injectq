@@ -108,6 +108,7 @@ nav:
   - Injection Patterns:
       - Dict-like Interface: injection-patterns/dict-interface.md
       - "@inject Decorator": injection-patterns/inject-decorator.md
+      - Factory Methods: injection-patterns/factory-methods.md
   - Scopes:
       - Understanding Scopes: scopes/understanding-scopes.md
       - Singleton Scope: scopes/singleton-scope.md

@@ -35,8 +35,10 @@ if __name__ == "__main__":
 
 - Dict-like bindings and simple APIs for small projects
 - Decorator and type-based injection (`@inject`, `Inject[T]`) for typed code
+- 🆕 **Hybrid factory methods** - Mix DI with manual arguments (`invoke()`, `ainvoke()`)
 - Optional integrations for FastAPI and Taskiq (install extras as needed)
 - Async factory support and request-scoped lifetimes
+- Comprehensive testing utilities
 
 ## API patterns
 
@@ -56,6 +58,24 @@ container[Database] = Database()
 @inject
 def process(service: UserService):
     ...
+```
+
+### 🆕 Hybrid factory methods
+
+Combine dependency injection with manual arguments:
+
+```python
+# Factory needs both DI and custom args
+def create_service(db: Database, cache: Cache, user_id: str):
+    return UserService(db, cache, user_id)
+
+container.bind_factory("user_service", create_service)
+
+# Auto-inject db and cache, provide user_id manually
+service = container.invoke("user_service", user_id="user123")
+
+# Async version
+service = await container.ainvoke("async_service", batch_size=100)
 ```
 
 ### FastAPI integration (example)
