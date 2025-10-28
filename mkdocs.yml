@@ -129,6 +129,7 @@ nav:
       - Overview: api-reference/index.md
       - Quick Reference: api-reference/quick-reference.md
   - Contributing: contributing.md
+  - Logger Usage: logging.md
   - Changelog: changelog.md
 
 extra:
