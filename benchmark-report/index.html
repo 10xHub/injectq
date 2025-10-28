@@ -1808,6 +1808,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../logging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Logger Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../changelog/" class="md-nav__link">
         
   
@@ -2099,11 +2121,13 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Analysis:</strong> 
-- ✅ Can handle <strong>1,000 get operations</strong> in under 1 millisecond
-- ✅ Web request simulation (realistic scenario) completes in <strong>142 microseconds</strong>
-- ✅ Creating 100 services takes only <strong>779 microseconds</strong>
-- ⚠️ Creating 1,000 transient instances takes <strong>24.8ms</strong> (expected, each requires object instantiation)</p>
+<p><strong>Analysis:</strong> </p>
+<ul>
+<li>✅ Can handle <strong>1,000 get operations</strong> in under 1 millisecond</li>
+<li>✅ Web request simulation (realistic scenario) completes in <strong>142 microseconds</strong></li>
+<li>✅ Creating 100 services takes only <strong>779 microseconds</strong></li>
+<li>⚠️ Creating 1,000 transient instances takes <strong>24.8ms</strong> (expected, each requires object instantiation)</li>
+</ul>
 <hr />
 <h2 id="detailed-performance-analysis">Detailed Performance Analysis<a class="headerlink" href="#detailed-performance-analysis" title="Anchor link to this section for reference">&para;</a></h2>
 <h3 id="container-lifecycle">Container Lifecycle<a class="headerlink" href="#container-lifecycle" title="Anchor link to this section for reference">&para;</a></h3>
