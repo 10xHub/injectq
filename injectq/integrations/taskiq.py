@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 _logger = logging.getLogger("injectq.taskiq")
 
 
-def get_injector_instance_taskiq(state: TaskiqState) -> InjectQ:
+def get_injector_instance_taskiq(state: "TaskiqState") -> "InjectQ":
     """Get the InjectQ container from Taskiq state.
 
     Args:
@@ -54,7 +54,7 @@ def get_injector_instance_taskiq(state: TaskiqState) -> InjectQ:
     return container  # type: ignore[return-value]
 
 
-def _attach_injectq_taskiq(state: TaskiqState, container: InjectQ) -> None:
+def _attach_injectq_taskiq(state: "TaskiqState", container: "InjectQ") -> None:
     """Attach an InjectQ container to Taskiq state.
 
     Args:
@@ -118,7 +118,7 @@ def InjectTaskiq(  # noqa: N802
 InjectTask = InjectTaskiq
 
 
-def setup_taskiq(container: InjectQ, broker: Any) -> None:
+def setup_taskiq(container: "InjectQ", broker: Any) -> None:
     """Register InjectQ with Taskiq broker for high-performance DI.
 
     Sets up context-based container propagation for tasks.

@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from injectq.core.container import InjectQ
 
 
-def get_container_fastapi() -> InjectQ:
+def get_container_fastapi() -> "InjectQ":
     """Get the InjectQ container from the current request context.
 
     Returns:
@@ -125,7 +125,7 @@ if _HAS_FASTAPI:
         Uses ContextVar (O(1) set/reset) for high-performance context propagation.
         """
 
-        def __init__(self, app: Any, *, container: InjectQ) -> None:
+        def __init__(self, app: Any, *, container: "InjectQ") -> None:
             super().__init__(app)
             self._container = container
 
@@ -137,7 +137,7 @@ if _HAS_FASTAPI:
                 _request_container.reset(token)
 
 
-def setup_fastapi(container: InjectQ, app: Any) -> None:
+def setup_fastapi(container: "InjectQ", app: Any) -> None:
     """Register InjectQ with FastAPI app for high-performance DI.
 
     Adds a minimal middleware to set the active container with ContextVars.
