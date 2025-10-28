@@ -591,10 +591,12 @@ class ComponentRegistry:
         instance = binding.component_type()
         instance.set_container(container)
 
-        # Apply configuration
-        if binding.configuration:
-            _logger.debug("Applying configuration to component: %s", name)
-            instance.configure(**binding.configuration)
+        # Apply configuration (always call configure to transition state)
+        configuration = binding.configuration or {}
+        _logger.debug(
+            "Configuring component %s with %d parameters", name, len(configuration)
+        )
+        instance.configure(**configuration)
 
         self._instances[name] = instance
         _logger.info("Component instance created: %s", name)
