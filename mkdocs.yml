@@ -118,7 +118,6 @@ nav:
       - Module Overview: modules/overview.md
       - Configuration Modules: modules/configuration-modules.md
   - Framework Integrations:
-      - Overview: integrations/overview.md
       - FastAPI Integration: integrations/fastapi.md
       - Taskiq Integration: integrations/taskiq.md
   - Testing:
