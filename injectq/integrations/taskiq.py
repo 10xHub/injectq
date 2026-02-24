@@ -51,7 +51,7 @@ def get_injector_instance_taskiq(state: "TaskiqState") -> "InjectQ":
         _logger.exception(msg)
         raise InjectionError(msg)
     _logger.debug("Taskiq container retrieved from task context")
-    return container  # type: ignore[return-value]
+    return container  # type: ignore[no-any-return]
 
 
 def _attach_injectq_taskiq(state: "TaskiqState", container: "InjectQ") -> None:
@@ -103,7 +103,7 @@ def InjectTaskiq(  # noqa: N802
     def inject_into_task(
         context: Annotated[Context, TaskiqDepends()],
     ) -> T:
-        return get_injector_instance_taskiq(context.state).get(interface)
+        return get_injector_instance_taskiq(context.state).get(interface)  # type: ignore[no-any-return]
 
     # Ensure annotations are accessible for inspection
     inject_into_task.__annotations__ = {
@@ -111,7 +111,7 @@ def InjectTaskiq(  # noqa: N802
         "return": interface,
     }
 
-    return TaskiqDepends(inject_into_task)  # type: ignore[return-value]
+    return TaskiqDepends(inject_into_task)  # type: ignore[no-any-return]
 
 
 # Alias for backwards compatibility

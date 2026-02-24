@@ -341,13 +341,14 @@ class Inject(Generic[T], metaclass=_InjectMeta):
                 getattr(self.service_type, "__name__", str(self.service_type)),
                 result,
             )
-            return result
         except DependencyNotFoundError:
             _logger.warning(
                 "Dependency not found for __bool__ check: %s",
                 getattr(self.service_type, "__name__", str(self.service_type)),
             )
             return False
+        else:
+            return result
 
     def __eq__(self, other: object) -> bool:
         """Compares the resolved object to another object."""

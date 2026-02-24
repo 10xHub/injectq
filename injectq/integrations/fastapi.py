@@ -109,10 +109,10 @@ except ImportError:  # pragma: no cover - optional dependency path
     _HAS_FASTAPI = False
 
 if _HAS_FASTAPI:
-    BaseHTTPMiddlewareBase = BaseHTTPMiddleware  # type: ignore[assignment]
+    BaseHTTPMiddlewareBase: Any = BaseHTTPMiddleware
 else:
 
-    class BaseHTTPMiddlewareBase:  # pragma: no cover - fallback base
+    class BaseHTTPMiddlewareBase:  # type: ignore[no-redef]  # pragma: no cover - fallback base
         def __init__(self, app: Any) -> None:
             self.app = app
 
@@ -165,7 +165,7 @@ def setup_fastapi(container: "InjectQ", app: Any) -> None:
             "setup_fastapi requires the 'fastapi' package. Install with "
             "'pip install injectq[fastapi]' or 'pip install fastapi'."
         )
-        _logger.error(msg)
+        _logger.exception(msg)
         raise RuntimeError(msg) from exc
 
     app.add_middleware(InjectQRequestMiddleware, container=container)

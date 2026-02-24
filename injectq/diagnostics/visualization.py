@@ -1,10 +1,7 @@
 """Dependency graph visualization and analysis."""
 
-import logging
-
-_logger = logging.getLogger("injectq.diagnostics")
-_logger.debug("visualization module initialized")
 import inspect
+import logging
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -12,6 +9,10 @@ from typing import Any
 from injectq.core.container import InjectQ
 from injectq.utils.exceptions import InjectQError
 from injectq.utils.types import ServiceKey
+
+
+_logger = logging.getLogger("injectq.diagnostics")
+_logger.debug("visualization module initialized")
 
 
 class VisualizationError(InjectQError):
