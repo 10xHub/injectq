@@ -1,9 +1,12 @@
 """Tests for the FastMCP integration module (injectq.integrations.fastmcp)."""
 
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from uncalled_for import get_dependency_parameters
+from uncalled_for.resolution import _Depends
 
 from injectq.integrations import fastmcp as mmod
 
@@ -44,27 +47,50 @@ class OrderService:
 
 
 def test_get_container_mcp_raises_when_no_context() -> None:
-    """Should raise InjectionError if no container is set in ContextVar."""
+    """Should raise InjectionError if no active FastMCP request exists."""
     from injectq.utils import InjectionError
 
-    # Ensure clean state
-    token = mmod._mcp_container.set(None)
+    def failing_get_context() -> Any:
+        raise RuntimeError("no active context")
+
+    original_get_context = mmod.get_context
+    mmod.get_context = failing_get_context
     try:
-        with pytest.raises(InjectionError, match="No InjectQ container"):
+        with pytest.raises(InjectionError, match="No active FastMCP request context"):
             mmod.get_container_mcp()
     finally:
-        mmod._mcp_container.reset(token)
+        mmod.get_context = original_get_context
 
 
 def test_get_container_mcp_returns_container() -> None:
-    """Should return the container set in the ContextVar."""
+    """Should return the container attached to the active FastMCP server."""
     container = DummyContainer()
-    token = mmod._mcp_container.set(container)
+    server = SimpleNamespace()
+    setattr(server, mmod._CONTAINER_ATTR, container)
+    context = SimpleNamespace(fastmcp=server)
+
+    original_get_context = mmod.get_context
+    mmod.get_context = lambda: context
     try:
         result = mmod.get_container_mcp()
         assert result is container
     finally:
-        mmod._mcp_container.reset(token)
+        mmod.get_context = original_get_context
+
+
+def test_get_container_mcp_raises_when_server_has_no_container() -> None:
+    """Should raise InjectionError if server has no InjectQ container attached."""
+    from injectq.utils import InjectionError
+
+    context = SimpleNamespace(fastmcp=SimpleNamespace())
+
+    original_get_context = mmod.get_context
+    mmod.get_context = lambda: context
+    try:
+        with pytest.raises(InjectionError, match="No InjectQ container attached"):
+            mmod.get_container_mcp()
+    finally:
+        mmod.get_context = original_get_context
 
 
 # ---------------------------------------------------------------------------
@@ -72,50 +98,80 @@ def test_get_container_mcp_returns_container() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_inject_mcp_resolves_type() -> None:
-    """InjectMCP should call container.get(interface) and return the result."""
+def test_inject_mcp_returns_depends_object() -> None:
+    """InjectMCP should return a FastMCP Depends marker."""
+    dep = mmod.InjectMCP(UserService)
+    assert isinstance(dep, _Depends)
+
+
+def _resolve_depends(dep: Any) -> Any:
+    def wrapped(service: Any = dep) -> Any:
+        return service
+
+    dependencies = get_dependency_parameters(wrapped)
+    resolved_dep = dependencies["service"]
+    return resolved_dep.factory()
+
+
+def test_inject_mcp_dependency_resolves_type() -> None:
+    """InjectMCP dependency should call container.get(interface) and return the result."""
     container = DummyContainer()
     svc = UserService()
     container.register(UserService, svc)
+    server = SimpleNamespace()
+    setattr(server, mmod._CONTAINER_ATTR, container)
+    context = SimpleNamespace(fastmcp=server)
 
-    token = mmod._mcp_container.set(container)
+    original_get_context = mmod.get_context
+    mmod.get_context = lambda: context
     try:
-        result = mmod.InjectMCP(UserService)
+        dep = mmod.InjectMCP(UserService)
+        result = _resolve_depends(dep)
         assert result is svc
         assert container.calls == [UserService]
     finally:
-        mmod._mcp_container.reset(token)
+        mmod.get_context = original_get_context
 
 
 def test_inject_mcp_multiple_types() -> None:
-    """InjectMCP should resolve different types independently."""
+    """InjectMCP dependencies should resolve different types independently."""
     container = DummyContainer()
     user_svc = UserService()
     order_svc = OrderService()
     container.register(UserService, user_svc)
     container.register(OrderService, order_svc)
+    server = SimpleNamespace()
+    setattr(server, mmod._CONTAINER_ATTR, container)
+    context = SimpleNamespace(fastmcp=server)
 
-    token = mmod._mcp_container.set(container)
+    original_get_context = mmod.get_context
+    mmod.get_context = lambda: context
     try:
-        r1 = mmod.InjectMCP(UserService)
-        r2 = mmod.InjectMCP(OrderService)
+        r1 = _resolve_depends(mmod.InjectMCP(UserService))
+        r2 = _resolve_depends(mmod.InjectMCP(OrderService))
         assert r1 is user_svc
         assert r2 is order_svc
         assert container.calls == [UserService, OrderService]
     finally:
-        mmod._mcp_container.reset(token)
+        mmod.get_context = original_get_context
 
 
 def test_inject_mcp_raises_without_context() -> None:
-    """InjectMCP should raise when no container context is active."""
+    """InjectMCP dependency should raise when no FastMCP request is active."""
     from injectq.utils import InjectionError
 
-    token = mmod._mcp_container.set(None)
+    dep = mmod.InjectMCP(UserService)
+
+    def failing_get_context() -> Any:
+        raise RuntimeError("no active context")
+
+    original_get_context = mmod.get_context
+    mmod.get_context = failing_get_context
     try:
         with pytest.raises(InjectionError):
-            mmod.InjectMCP(UserService)
+            _resolve_depends(dep)
     finally:
-        mmod._mcp_container.reset(token)
+        mmod.get_context = original_get_context
 
 
 # ---------------------------------------------------------------------------
@@ -124,77 +180,58 @@ def test_inject_mcp_raises_without_context() -> None:
 
 
 @pytest.mark.asyncio
-async def test_middleware_sets_and_resets_context() -> None:
-    """Middleware should set container in ContextVar and reset after call_next."""
+async def test_middleware_attaches_container_to_server() -> None:
+    """Middleware should attach the container to the active FastMCP server."""
     container = DummyContainer()
     middleware = mmod.InjectQMCPMiddleware(container=container)
 
+    server = SimpleNamespace()
+    fastmcp_context = SimpleNamespace(fastmcp=server)
+    context = SimpleNamespace(fastmcp_context=fastmcp_context)
     captured_container = None
 
     async def fake_call_next(context: Any) -> str:
         nonlocal captured_container
-        captured_container = mmod._mcp_container.get()
+        captured_container = getattr(server, mmod._CONTAINER_ATTR, None)
         return "ok"
 
-    # Before middleware: no container
-    assert mmod._mcp_container.get() is None
-
-    context = MagicMock()
     result = await middleware.on_message(context, fake_call_next)
 
-    # During call_next, the container was set
     assert captured_container is container
-    # After middleware, context is reset
-    assert mmod._mcp_container.get() is None
+    assert getattr(server, mmod._CONTAINER_ATTR) is container
     assert result == "ok"
 
 
 @pytest.mark.asyncio
-async def test_middleware_resets_on_exception() -> None:
-    """Middleware must reset ContextVar even if call_next raises."""
+async def test_middleware_still_attaches_on_exception() -> None:
+    """Middleware should attach the container before downstream errors happen."""
     container = DummyContainer()
     middleware = mmod.InjectQMCPMiddleware(container=container)
+    server = SimpleNamespace()
+    context = SimpleNamespace(fastmcp_context=SimpleNamespace(fastmcp=server))
 
     async def failing_call_next(context: Any) -> None:
         raise ValueError("boom")
 
-    context = MagicMock()
     with pytest.raises(ValueError, match="boom"):
         await middleware.on_message(context, failing_call_next)
 
-    # ContextVar must be reset
-    assert mmod._mcp_container.get() is None
+    assert getattr(server, mmod._CONTAINER_ATTR) is container
 
 
 @pytest.mark.asyncio
-async def test_middleware_nested_calls_isolate_context() -> None:
-    """Nested middleware invocations should properly isolate context."""
+async def test_middleware_skips_missing_fastmcp_context() -> None:
+    """Middleware should no-op when FastMCP context is not yet available."""
     container_a = DummyContainer()
-    container_b = DummyContainer()
-
     middleware_a = mmod.InjectQMCPMiddleware(container=container_a)
-    middleware_b = mmod.InjectQMCPMiddleware(container=container_b)
 
-    captured = []
-
-    async def inner_call_next(context: Any) -> str:
-        captured.append(mmod._mcp_container.get())
-        return "inner"
-
-    async def outer_call_next(context: Any) -> str:
-        captured.append(mmod._mcp_container.get())
-        # Simulate middleware_b running inside middleware_a
-        result = await middleware_b.on_message(context, inner_call_next)
-        # After inner middleware, outer container should be restored
-        captured.append(mmod._mcp_container.get())
-        return result
+    async def call_next(context: Any) -> str:
+        return "ok"
 
     context = MagicMock()
-    await middleware_a.on_message(context, outer_call_next)
+    result = await middleware_a.on_message(context, call_next)
 
-    assert captured[0] is container_a  # outer saw container_a
-    assert captured[1] is container_b  # inner saw container_b
-    assert captured[2] is container_a  # outer restored after inner
+    assert result == "ok"
 
 
 # ---------------------------------------------------------------------------
@@ -203,35 +240,23 @@ async def test_middleware_nested_calls_isolate_context() -> None:
 
 
 def test_setup_mcp_adds_middleware() -> None:
-    """setup_mcp should call mcp.add_middleware with InjectQMCPMiddleware."""
+    """setup_mcp should attach the InjectQ container to the FastMCP server."""
     container = DummyContainer()
-    mock_mcp = MagicMock()
+    mock_mcp = SimpleNamespace()
 
     mmod.setup_mcp(container, mock_mcp)
 
-    mock_mcp.add_middleware.assert_called_once()
-    middleware = mock_mcp.add_middleware.call_args[0][0]
-    assert isinstance(middleware, mmod.InjectQMCPMiddleware)
-    assert middleware._container is container
+    assert getattr(mock_mcp, mmod._CONTAINER_ATTR) is container
 
 
 def test_setup_mcp_raises_without_fastmcp(monkeypatch: Any) -> None:
-    """setup_mcp should raise RuntimeError if fastmcp is not importable."""
-    import importlib
-
-    original_import = importlib.import_module
-
-    def mock_import(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "fastmcp":
-            raise ImportError("no fastmcp")
-        return original_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(importlib, "import_module", mock_import)
+    """setup_mcp should raise RuntimeError if compatible FastMCP support is absent."""
+    monkeypatch.setattr(mmod, "_HAS_FASTMCP", False)
 
     container = DummyContainer()
     mock_mcp = MagicMock()
 
-    with pytest.raises(RuntimeError, match="fastmcp"):
+    with pytest.raises(RuntimeError, match="fastmcp>=2.14.0"):
         mmod.setup_mcp(container, mock_mcp)
 
 
@@ -242,18 +267,22 @@ def test_setup_mcp_raises_without_fastmcp(monkeypatch: Any) -> None:
 
 @pytest.mark.asyncio
 async def test_end_to_end_tool_with_injection() -> None:
-    """Simulates a full MCP tool call where InjectMCP resolves a service."""
+    """Simulates a full MCP tool call where InjectMCP resolves via FastMCP DI."""
     container = DummyContainer()
     svc = UserService()
     container.register(UserService, svc)
 
-    middleware = mmod.InjectQMCPMiddleware(container=container)
+    server = SimpleNamespace()
+    setattr(server, mmod._CONTAINER_ATTR, container)
+    context = SimpleNamespace(fastmcp=server)
 
-    async def tool_handler(context: Any) -> list[str]:
-        # This is what an MCP tool function would do
-        user_service = mmod.InjectMCP(UserService)
-        return user_service.get_users()
+    original_get_context = mmod.get_context
+    mmod.get_context = lambda: context
+    try:
+        dep = mmod.InjectMCP(UserService)
+        user_service = _resolve_depends(dep)
+        result = user_service.get_users()
+    finally:
+        mmod.get_context = original_get_context
 
-    context = MagicMock()
-    result = await middleware.on_message(context, tool_handler)
     assert result == ["alice", "bob"]

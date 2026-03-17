@@ -38,7 +38,7 @@ if __name__ == "__main__":
 - Factories: dict-like factories, `call_factory()`, and 🆕 hybrid `invoke()` / `ainvoke()` for parameterized factories
 - Scopes and lifetimes: `@singleton`, `@transient`, `@scoped("request")`, async scope contexts
 - Modules and providers: `Module`, `SimpleModule`, `ProviderModule`, `@provider`
-- Integrations: FastAPI (`InjectFastAPI`) and Taskiq (`InjectTaskiq`) as optional extras
+- Integrations: FastAPI (`InjectFastAPI`), FastMCP (`InjectMCP`), and Taskiq (`InjectTaskiq`) as optional extras
 - Async-first APIs: `aget()`, `acall_factory()`, `ainvoke()`
 - Thread-safe by default with minimal overhead
 - Diagnostics & visualization: dependency graph and visualizer
@@ -203,7 +203,7 @@ with test_container() as test_cont:
 - Injection patterns (dict-style, decorator, Inject[T])
 - Scopes and lifecycle (singleton, transient, request)
 - Modules and providers
-- Integrations (FastAPI, Taskiq)
+- Integrations (FastAPI, FastMCP, Taskiq)
 - Testing utilities and examples
 - **Performance benchmarks** - Comprehensive benchmark reports and quick guide
 - API reference and migration guides

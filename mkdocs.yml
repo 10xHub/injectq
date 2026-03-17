@@ -118,6 +118,7 @@ nav:
       - Module Overview: modules/overview.md
   - Framework Integrations:
       - FastAPI Integration: integrations/fastapi.md
+      - FastMCP Integration: integrations/fastmcp.md
       - Taskiq Integration: integrations/taskiq.md
   - Testing:
       - Testing Overview: testing/overview.md

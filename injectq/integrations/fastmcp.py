@@ -1,19 +1,17 @@
 """FastMCP integration for InjectQ (optional dependency).
 
-Simple and clean integration using per-tool-call context propagation.
+FastMCP-native integration built on FastMCP's dependency injection system.
 
 Key characteristics:
-- No global container state
-- ContextVar-based per-call container lookup (O(1) overhead)
-- FastMCP Middleware for automatic container propagation
-- Works with all MCP operations (tools, resources, prompts)
+- Uses FastMCP's Depends-based runtime dependency injection
+- Attaches the InjectQ container directly to the FastMCP server instance
+- No ContextVar-based request-local container management
+- Works with tools, resources, and prompts
 
-Dependency: fastmcp
+Dependency: fastmcp>=2.14.0
 Not installed by default; install extra: `pip install injectq[fastmcp]`.
 """
 
-import contextvars
-import importlib
 import logging
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -24,49 +22,98 @@ _logger = logging.getLogger("injectq.fastmcp")
 
 T = TypeVar("T")
 
-# Per-call context for active container
-_mcp_container: contextvars.ContextVar[Any | None] = contextvars.ContextVar(
-    "injectq_mcp_container",
-    default=None,
-)
+_CONTAINER_ATTR = "_injectq_container"
 
 if TYPE_CHECKING:
     from injectq.core.container import InjectQ
 
 
+try:
+    from fastmcp.dependencies import Depends  # type: ignore[import-not-found]
+    from fastmcp.server.dependencies import (  # type: ignore[import-not-found]
+        get_context,
+    )
+    from fastmcp.server.middleware import (  # type: ignore[import-not-found]
+        Middleware,
+    )
+
+    _HAS_FASTMCP = True
+except ImportError:  # pragma: no cover - optional dependency path
+    Depends = None  # type: ignore[assignment]
+    get_context = None  # type: ignore[assignment]
+    Middleware = None  # type: ignore[assignment]
+    _HAS_FASTMCP = False
+
+if _HAS_FASTMCP:
+    MiddlewareBase = Middleware  # type: ignore[assignment]
+else:
+
+    class MiddlewareBase:
+        pass
+
+
+def _require_fastmcp() -> None:
+    if _HAS_FASTMCP:
+        return
+    msg = (
+        "FastMCP integration requires 'fastmcp>=2.14.0'. Install with "
+        "'pip install injectq[fastmcp]' or upgrade 'fastmcp'."
+    )
+    raise RuntimeError(msg)
+
+
+def _get_server_container(server: Any) -> "InjectQ":
+    container = getattr(server, _CONTAINER_ATTR, None)
+    if container is None:
+        msg = (
+            "No InjectQ container attached to the current FastMCP server. Did you "
+            "call setup_mcp(container, mcp)?"
+        )
+        _logger.error(msg)
+        raise InjectionError(msg)
+    return container  # type: ignore[return-value]
+
+
 def get_container_mcp() -> "InjectQ":
-    """Get the InjectQ container from the current MCP call context.
+    """Get the InjectQ container from the current FastMCP request context.
 
     Returns:
         InjectQ container instance
 
     Raises:
-        InjectionError: If no container is attached to the MCP context
+        InjectionError: If there is no active FastMCP request or no container attached
     """
-    container = _mcp_container.get()
-    if container is None:
+    _require_fastmcp()
+    assert get_context is not None
+
+    try:
+        context = get_context()
+    except RuntimeError as exc:
         msg = (
-            "No InjectQ container in current MCP context. Did you call "
+            "No active FastMCP request context. Did you use InjectMCP(...) in a "
+            "FastMCP handler after calling "
             "setup_mcp(container, mcp)?"
         )
-        _logger.error(msg)
-        raise InjectionError(msg)
-    _logger.debug("MCP container retrieved from call context")
-    return container  # type: ignore[return-value]
+        _logger.exception(msg)
+        raise InjectionError(msg) from exc
+
+    container = _get_server_container(context.fastmcp)
+    _logger.debug("FastMCP container retrieved from server context")
+    return container
 
 
 def InjectMCP(interface: type[T]) -> T:  # noqa: N802
-    """Resolve a dependency from the InjectQ container in MCP tool functions.
+    """Create a FastMCP dependency marker backed by the InjectQ container.
 
-    This is the recommended way to use dependency injection inside FastMCP
-    tool, resource, and prompt handlers. Uses ContextVars for async-safe,
-    high-performance dependency resolution.
+    This is the FastMCP-native way to use InjectQ inside FastMCP tools,
+    resources, and prompts. The returned dependency marker is hidden from the
+    MCP schema, so clients only see the business parameters for the handler.
 
     Args:
-        interface: The type/interface to resolve from the container
+        interface: The type/interface to resolve from InjectQ
 
     Returns:
-        The resolved instance of the requested type
+        A FastMCP dependency marker that resolves to the requested type
 
     Example:
         ```python
@@ -75,78 +122,60 @@ def InjectMCP(interface: type[T]) -> T:  # noqa: N802
 
         mcp = FastMCP("MyServer")
 
-        @mcp.tool()
-        async def get_users():
-            service = InjectMCP(UserService)
+        @mcp.tool
+        async def get_users(service: UserService = InjectMCP(UserService)):
             return await service.get_all_users()
         ```
     """
-    return get_container_mcp().get(interface)
+    _require_fastmcp()
+    assert Depends is not None
+
+    def inject_dependency() -> T:
+        return get_container_mcp().get(interface)
+
+    inject_dependency.__annotations__ = {"return": interface}
+    return Depends(inject_dependency)  # type: ignore[return-value]
 
 
-# ---------------------------------------------------------------------------
-# FastMCP Middleware — sets the InjectQ container in ContextVar per MCP call
-# ---------------------------------------------------------------------------
+class InjectQMCPMiddleware(MiddlewareBase):
+    """Compatibility middleware that attaches InjectQ to the active server.
 
-try:
-    from fastmcp.server.middleware import Middleware
+    This is primarily useful when middleware registration is preferred over
+    calling ``setup_mcp()`` directly. ``setup_mcp()`` already attaches the
+    container eagerly and is the recommended entry point.
 
-    _HAS_FASTMCP = True
-except ImportError:  # pragma: no cover - optional dependency path
-    _HAS_FASTMCP = False
+    Example:
+        ```python
+        from fastmcp import FastMCP
+        from injectq import InjectQ
+        from injectq.integrations.fastmcp import InjectQMCPMiddleware
 
-if _HAS_FASTMCP:
+        container = InjectQ()
+        mcp = FastMCP(
+            "MyServer",
+            middleware=[InjectQMCPMiddleware(container=container)],
+        )
+        ```
+    """
 
-    class InjectQMCPMiddleware(Middleware):
-        """Lightweight middleware to set the active InjectQ container per MCP call.
+    def __init__(self, *, container: "InjectQ") -> None:
+        _require_fastmcp()
+        self._container = container
 
-        Hooks into ``on_message`` so the container is available for **every**
-        MCP operation (tool calls, resource reads, prompt gets, list
-        operations, etc.).
-
-        Uses ContextVar (O(1) set/reset) for high-performance context
-        propagation that is fully async-safe.
-
-        Example:
-            ```python
-            from fastmcp import FastMCP
-            from injectq import InjectQ
-            from injectq.integrations.fastmcp import InjectQMCPMiddleware
-
-            container = InjectQ()
-            mcp = FastMCP("MyServer", middleware=[InjectQMCPMiddleware(container=container)])
-            ```
-        """
-
-        def __init__(self, *, container: "InjectQ") -> None:
-            self._container = container
-
-        async def on_message(self, context: Any, call_next: Any) -> Any:
-            """Set container in ContextVar before every MCP message."""
-            token = _mcp_container.set(self._container)
-            try:
-                return await call_next(context)
-            finally:
-                _mcp_container.reset(token)
-
-else:  # pragma: no cover - fallback when fastmcp is not installed
-
-    class InjectQMCPMiddleware:  # type: ignore[no-redef]
-        """Placeholder when fastmcp is not installed."""
-
-        def __init__(self, *, container: Any) -> None:
-            msg = (
-                "InjectQMCPMiddleware requires the 'fastmcp' package. Install with "
-                "'pip install injectq[fastmcp]' or 'pip install fastmcp'."
-            )
-            raise RuntimeError(msg)
+    async def on_message(self, context: Any, call_next: Any) -> Any:
+        """Attach the container to the current FastMCP server before dispatch."""
+        fastmcp_context = getattr(context, "fastmcp_context", None)
+        if fastmcp_context is not None:
+            setattr(fastmcp_context.fastmcp, _CONTAINER_ATTR, self._container)
+        return await call_next(context)
 
 
 def setup_mcp(container: "InjectQ", mcp: Any) -> None:
-    """Register InjectQ with a FastMCP server for dependency injection.
+    """Register InjectQ with a FastMCP server using native FastMCP DI.
 
-    Adds a lightweight middleware that propagates the InjectQ container to
-    every MCP tool call, resource read, and prompt handler via ContextVars.
+    This attaches the InjectQ container directly to the FastMCP server
+    instance so ``InjectMCP(...)`` can resolve dependencies through FastMCP's
+    own dependency injection system.
 
     Args:
         container: InjectQ container instance to use for dependency injection
@@ -164,15 +193,6 @@ def setup_mcp(container: "InjectQ", mcp: Any) -> None:
         setup_mcp(container, mcp)
         ```
     """
-    try:
-        importlib.import_module("fastmcp")
-    except ImportError as exc:  # pragma: no cover - optional dependency path
-        msg = (
-            "setup_mcp requires the 'fastmcp' package. Install with "
-            "'pip install injectq[fastmcp]' or 'pip install fastmcp'."
-        )
-        _logger.error(msg)
-        raise RuntimeError(msg) from exc
-
-    mcp.add_middleware(InjectQMCPMiddleware(container=container))
-    _logger.info("InjectQ MCP middleware registered")
+    _require_fastmcp()
+    setattr(mcp, _CONTAINER_ATTR, container)
+    _logger.info("InjectQ FastMCP container attached to server")

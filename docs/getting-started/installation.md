@@ -11,13 +11,14 @@ pip install injectq
 ## Optional integrations (install only what you need)
 
 - FastAPI integration: `pip install injectq[fastapi]`
+- FastMCP integration: `pip install injectq[fastmcp]`
 - Taskiq integration: `pip install injectq[taskiq]`
 - Developer extras (mypy, pytest, black, ...): `pip install injectq[dev]`
 
 Example combined install:
 
 ```bash
-pip install "injectq[fastapi,taskiq]"
+pip install "injectq[fastapi,fastmcp,taskiq]"
 ```
 
 ## Supported Python versions

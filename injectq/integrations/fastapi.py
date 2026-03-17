@@ -165,7 +165,7 @@ def setup_fastapi(container: "InjectQ", app: Any) -> None:
             "setup_fastapi requires the 'fastapi' package. Install with "
             "'pip install injectq[fastapi]' or 'pip install fastapi'."
         )
-        _logger.error(msg)
+        _logger.exception(msg)
         raise RuntimeError(msg) from exc
 
     app.add_middleware(InjectQRequestMiddleware, container=container)

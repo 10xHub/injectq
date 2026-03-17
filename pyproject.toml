@@ -39,11 +39,12 @@ dependencies = [
 
 [project.optional-dependencies]
 fastapi = ["fastapi>=0.68.0"]
-fastmcp = ["fastmcp>=2.0.0"]
+fastmcp = ["fastmcp>=2.14.0"]
 taskiq = ["taskiq>=0.9.0"]
-testing = ["pytest>=6.0.0", "pytest-asyncio>=0.21.0"]
+testing = ["pytest>=6.0.0", "pytest-asyncio>=0.21.0", "pytest-benchmark>=4.0.0"]
 dev = [
     "pytest>=6.0.0",
+    "pytest-benchmark>=4.0.0",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=3.0.0",
     "mypy>=1.0.0",
@@ -53,7 +54,7 @@ dev = [
     "httpx>=0.28.1",
     "taskiq>=0.11.18",
     "fastapi>=0.68.0",
-    "fastmcp>=2.0.0"
+    "fastmcp>=2.14.0"
 ]
 
 [project.urls]
@@ -288,6 +289,7 @@ dev = [
     "mkdocstrings>=0.30.0",
     "mypy>=1.17.1",
     "pytest-asyncio>=1.1.0",
+    "pytest-benchmark>=4.0.0",
     "pytest-cov>=6.2.1",
     "ruff>=0.12.11",
     "twine>=6.1.0",
