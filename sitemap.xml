@@ -2,110 +2,118 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://10xhub.github.io/injectq/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/benchmark-guide/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/benchmark-report/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/changelog/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/contributing/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/logging/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/api-reference/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/api-reference/quick-reference/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/core-concepts/container-pattern/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/core-concepts/service-lifetimes/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/core-concepts/type-safety/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/core-concepts/what-is-di/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/getting-started/first-app/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/getting-started/installation/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/getting-started/quick-start/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/injection-patterns/dict-interface/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/injection-patterns/factory-methods/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/injection-patterns/inject-decorator/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
+    </url>
+    <url>
+         <loc>https://10xhub.github.io/injectq/injection-patterns/parameterized-factories/</loc>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/integrations/fastapi/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
+    </url>
+    <url>
+         <loc>https://10xhub.github.io/injectq/integrations/fastmcp/</loc>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/integrations/taskiq/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/modules/overview/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/scopes/scoped-services/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/scopes/singleton-scope/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/scopes/transient-scope/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/scopes/understanding-scopes/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/testing/overview/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
     <url>
          <loc>https://10xhub.github.io/injectq/testing/testing-patterns/</loc>
-         <lastmod>2025-10-28</lastmod>
+         <lastmod>2026-03-17</lastmod>
     </url>
 </urlset>
