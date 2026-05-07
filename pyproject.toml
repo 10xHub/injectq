@@ -18,9 +18,16 @@ keywords = [
     "ioc",
     "inversion-of-control",
     "container",
+    "fastapi",
+    "websocket",
+    "async",
+    "middleware",
+    "service-locator",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
+    "Framework :: AsyncIO",
+    "Framework :: FastAPI",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -150,6 +157,7 @@ omit = [
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
+    "if TYPE_CHECKING:",
     "def __repr__",
     "if self.debug:",
     "if settings.DEBUG",

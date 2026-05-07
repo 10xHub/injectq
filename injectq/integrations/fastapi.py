@@ -5,6 +5,7 @@ Simple and clean integration using per-request context propagation.
 Key characteristics:
 - No global container state
 - ContextVar-based request container lookup (O(1) overhead)
+- Supports both HTTP and WebSocket connections
 - Clean and maintainable code
 
 Dependency: fastapi (and starlette)
@@ -61,6 +62,7 @@ def InjectFastAPI(interface: type[T]) -> T:  # noqa: N802
 
     This is the recommended way to use dependency injection with FastAPI.
     Uses ContextVars for async-safe, high-performance dependency resolution.
+    Works with both HTTP endpoints and WebSocket handlers.
 
     Args:
         interface: The type/interface to inject
@@ -78,6 +80,14 @@ def InjectFastAPI(interface: type[T]) -> T:  # noqa: N802
             service: Annotated[UserService, InjectFastAPI(UserService)],
         ):
             return service.get_all_users()
+
+        @app.websocket("/ws")
+        async def websocket_endpoint(
+            websocket: WebSocket,
+            service: Annotated[UserService, InjectFastAPI(UserService)],
+        ):
+            await websocket.accept()
+            ...
         ```
     """
     try:
@@ -99,49 +109,33 @@ def InjectFastAPI(interface: type[T]) -> T:  # noqa: N802
 InjectAPI = InjectFastAPI
 
 
-# Optimized middleware using ContextVars for per-request container propagation
-try:
-    from starlette.middleware.base import BaseHTTPMiddleware
+class InjectQRequestMiddleware:
+    """Pure ASGI middleware to set the active InjectQ container per connection.
 
-    _HAS_FASTAPI = True
-except ImportError:  # pragma: no cover - optional dependency path
-    BaseHTTPMiddleware = None  # type: ignore[assignment]
-    _HAS_FASTAPI = False
+    Handles both HTTP and WebSocket scopes. Uses ContextVar (O(1) set/reset)
+    for high-performance context propagation.
+    """
 
-if _HAS_FASTAPI:
-    BaseHTTPMiddlewareBase = BaseHTTPMiddleware  # type: ignore[assignment]
-else:
+    def __init__(self, app: Any, *, container: "InjectQ") -> None:
+        self.app = app
+        self._container = container
 
-    class BaseHTTPMiddlewareBase:  # pragma: no cover - fallback base
-        def __init__(self, app: Any) -> None:
-            self.app = app
-
-
-if _HAS_FASTAPI:
-
-    class InjectQRequestMiddleware(BaseHTTPMiddlewareBase):
-        """Lightweight middleware to set the active InjectQ container per request.
-
-        Uses ContextVar (O(1) set/reset) for high-performance context propagation.
-        """
-
-        def __init__(self, app: Any, *, container: "InjectQ") -> None:
-            super().__init__(app)
-            self._container = container
-
-        async def dispatch(self, request: Any, call_next: Any) -> Any:
+    async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
+        if scope["type"] in ("http", "websocket"):
             token = _request_container.set(self._container)
             try:
-                return await call_next(request)
+                await self.app(scope, receive, send)
             finally:
                 _request_container.reset(token)
+        else:
+            await self.app(scope, receive, send)
 
 
 def setup_fastapi(container: "InjectQ", app: Any) -> None:
     """Register InjectQ with FastAPI app for high-performance DI.
 
-    Adds a minimal middleware to set the active container with ContextVars.
-    No per-request context manager entry/exit overhead.
+    Adds a minimal ASGI middleware to set the active container with ContextVars.
+    Supports both HTTP requests and WebSocket connections.
 
     Args:
         container: InjectQ container instance to use for dependency injection
