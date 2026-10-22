@@ -2,17 +2,19 @@
 
 .PHONY: build publish testpublish clean test test-cov docs-serve docs-build docs-deploy
 
+# Build and upload with uv-managed tools, so the result doesn't depend on
+# whichever virtualenv (and twine version) happens to be active.
 build:
-	uv pip install build
-	python -m build
+	rm -rf dist
+	uv build
 
 publish: build
-	uv pip install twine
-	twine upload dist/*
+	uvx twine check dist/*
+	uvx twine upload dist/*
 
 testpublish: build
-	uv pip install twine
-	twine upload --repository testpypi dist/*
+	uvx twine check dist/*
+	uvx twine upload --repository testpypi dist/*
 
 clean:
 	rm -rf dist build *.egg-info site
