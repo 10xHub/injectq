@@ -1,6 +1,6 @@
 # InjectQ
 [![PyPI version](https://badge.fury.io/py/injectq.svg)](https://pypi.org/project/injectq/)
-[![Python versions](https://img.shields.io/pypi/pyversions/injectq.svg)](https://pypi.org/project/injectq/)
+[![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15-blue.svg)](https://pypi.org/project/injectq/)
 [![License](https://img.shields.io/github/license/Iamsdt/injectq.svg)](https://github.com/Iamsdt/injectq/blob/main/LICENSE)
 [![Coverage](https://img.shields.io/badge/coverage-80%25-yellow.svg)](#)
 
@@ -19,6 +19,7 @@ Full documentation is hosted at [Documentation](https://10xhub.github.io/injectq
 - Factory and async factory support
 - 🆕 Hybrid factory methods combining DI with manual arguments (`invoke()`, `ainvoke()`)
 - Scope management and testing utilities
+- Supports Python 3.10 through 3.15, including Python 3.15 lazy imports (PEP 810)
 
 ## Quick Start (recommended pattern)
 
@@ -169,9 +170,42 @@ pip install injectq[fastapi]   # FastAPI integration (optional)
 pip install injectq[taskiq]    # Taskiq integration (optional)
 ```
 
+### Supported Python versions
+
+InjectQ supports Python 3.10 and above, and is tested on 3.10 through 3.15.
+
+#### Python 3.15 lazy imports
+
+InjectQ 0.5.0+ works with Python 3.15 explicit lazy imports ([PEP 810](https://peps.python.org/pep-0810/)). Your imports and decorators stay the same. Lazy imports pay off for your own slow or rarely used modules (here, `reports`). You can turn them on in three ways:
+
+```python
+# 1. Per module: list modules to import lazily. Ignored on Python 3.10-3.14.
+__lazy_modules__ = ["reports"]
+import reports
+
+# 2. Per import: the `lazy` keyword. Python 3.15+ only (SyntaxError before).
+lazy import reports
+```
+
+```bash
+# 3. Whole process
+PYTHON_LAZY_IMPORTS=all python app.py   # or: python -X lazy_imports=all app.py
+```
+
+**One thing to check:** `@singleton`, `@transient`, `@scoped`, `@register_as` and top-level `container.bind(...)` register services when their module is imported. With lazy imports, a module you import *only* for that registration (`import services`) is never loaded, so resolving its services fails with `DependencyNotFoundError`. Load such modules eagerly before resolving, for example:
+
+```python
+import importlib
+
+importlib.import_module("services")  # always runs immediately
+```
+
+See [Python 3.15 Lazy Imports](https://10xhub.github.io/injectq/getting-started/lazy-imports/) for the other fixes and [`examples/python315_lazy_imports/`](examples/python315_lazy_imports/) for a runnable demo, and test your whole application before turning on global lazy mode in production.
+
 ## Where to look next
 
 - `docs/getting-started/installation.md` — installation and verification
+- `docs/getting-started/lazy-imports.md` — Python 3.15 lazy imports ([runnable example](examples/python315_lazy_imports/))
 - `docs/injection-patterns/dict-interface.md` — dict-like API
 - `docs/injection-patterns/inject-decorator.md` — `@inject` usage
 - `docs/injection-patterns/factory-methods.md` — factory patterns (DI, parameterized, hybrid)

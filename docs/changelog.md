@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [0.5.0] - Released
 
 **🎯 Focus:** Python 3.15 support.
 
 ### Added
 - Python 3.14 and 3.15 support; the package classifiers now list both
 - Regression tests for Python 3.15 lazy imports (`tests/test_lazy_imports.py`)
+- Runnable example, `examples/python315_lazy_imports/`: startup speedup, the registration pitfall and three fixes, each run with and without `PYTHON_LAZY_IMPORTS=all`
+- New guide, [Python 3.15 Lazy Imports](getting-started/lazy-imports.md): how to turn lazy imports on, and how to keep services registered when the modules that register them (`@singleton`, `@register_as`, `container.bind(...)`) are imported lazily
 
 ### Fixed
 - `inject`, `singleton` and `resource` no longer turn into modules under Python 3.15 lazy imports (PEP 810). With `PYTHON_LAZY_IMPORTS=all`, `from injectq import Inject, inject` followed by `@inject` used to fail with `TypeError: 'module' object is not callable`

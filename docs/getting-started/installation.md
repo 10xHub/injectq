@@ -27,9 +27,9 @@ InjectQ supports Python 3.10 and above, and is tested on 3.10 through 3.15. Usin
 
 ### Python 3.15 lazy imports
 
-InjectQ works with Python 3.15 explicit lazy imports ([PEP 810](https://peps.python.org/pep-0810/)), including the global mode (`PYTHON_LAZY_IMPORTS=all` or `-X lazy_imports=all`). Nothing changes in how you import or use InjectQ.
+InjectQ 0.5.0+ works with Python 3.15 explicit lazy imports ([PEP 810](https://peps.python.org/pep-0810/)), including the global mode (`PYTHON_LAZY_IMPORTS=all` or `-X lazy_imports=all`). Your imports and decorators stay the same.
 
-Global lazy mode affects every package in your application, not just InjectQ. Test your whole stack with it before turning it on in production.
+If you turn lazy imports on, check one thing: a module imported only so that `@singleton`, `@register_as` or `container.bind(...)` runs is no longer loaded, so its services aren't registered. See [Python 3.15 Lazy Imports](lazy-imports.md) for how to enable lazy imports and how to keep registration working.
 
 ## Quick verification
 
