@@ -1,6 +1,5 @@
 """Dependency resolver for InjectQ dependency injection library."""
 
-import asyncio
 import inspect
 import logging
 from collections.abc import Callable
@@ -186,7 +185,7 @@ class DependencyResolver:
     ) -> Any:
         """Resolve a service from a factory function asynchronously."""
         # Check if factory is async and handle appropriately
-        if asyncio.iscoroutinefunction(factory):
+        if inspect.iscoroutinefunction(factory):
             return await self._invoke_factory_async(factory)
         return self._invoke_factory(factory)
 
@@ -243,7 +242,7 @@ class DependencyResolver:
 
         # If it's callable, invoke it
         if callable(implementation):
-            if asyncio.iscoroutinefunction(implementation):
+            if inspect.iscoroutinefunction(implementation):
                 return await self._invoke_factory_async(implementation)
             return self._invoke_factory(implementation)
 

@@ -50,7 +50,7 @@ What actually happens
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher (tested on 3.10 through 3.15)
 - uv (recommended) or pip
 - Git
 

@@ -438,10 +438,10 @@ class InjectQ:
             >>> injector.bind_factory("data_store", async_loader)
             >>> result = await injector.acall_factory("data_store", "key1")
         """
-        import asyncio
+        import inspect
 
         factory = await self.aget_factory(service_type)
-        if asyncio.iscoroutinefunction(factory):
+        if inspect.iscoroutinefunction(factory):
             return await factory(*args, **kwargs)
         return factory(*args, **kwargs)
 
@@ -566,7 +566,6 @@ class InjectQ:
             >>> injector.bind_factory("service", create_service)
             >>> service = await injector.ainvoke("service", user_id="123")
         """
-        import asyncio
         import inspect
 
         factory = await self.aget_factory(service_type)
@@ -616,7 +615,7 @@ class InjectQ:
                 raise DependencyNotFoundError(param.annotation)  # type: ignore  # noqa: PGH003
 
         # Call the factory with positional args and complete kwargs
-        if asyncio.iscoroutinefunction(factory):
+        if inspect.iscoroutinefunction(factory):
             return await factory(*args, **complete_kwargs)
         return factory(*args, **complete_kwargs)
 

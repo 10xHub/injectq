@@ -1,6 +1,7 @@
 """Thread safety utilities for InjectQ dependency injection library."""
 
 import asyncio
+import inspect
 import logging
 import threading
 import weakref
@@ -358,7 +359,7 @@ def thread_safe(
     """
     lock = HybridLock()
 
-    if asyncio.iscoroutinefunction(func):
+    if inspect.iscoroutinefunction(func):
 
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             async with lock.async_lock():

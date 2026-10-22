@@ -337,7 +337,7 @@ class DependencyProfiler:
         import csv
         from pathlib import Path
 
-        with Path(filename).open("w", newline="") as csvfile:
+        with Path(filename).open("w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(
                 [
@@ -397,7 +397,7 @@ class DependencyProfiler:
             ],
         }
 
-        with Path(filename).open("w") as jsonfile:
+        with Path(filename).open("w", encoding="utf-8") as jsonfile:
             json.dump(data, jsonfile, indent=2)
 
 

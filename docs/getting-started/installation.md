@@ -23,7 +23,13 @@ pip install "injectq[fastapi,fastmcp,taskiq]"
 
 ## Supported Python versions
 
-InjectQ supports Python 3.10 and above. Using 3.11+ is recommended for best runtime performance.
+InjectQ supports Python 3.10 and above, and is tested on 3.10 through 3.15. Using 3.11+ is recommended for best runtime performance.
+
+### Python 3.15 lazy imports
+
+InjectQ works with Python 3.15 explicit lazy imports ([PEP 810](https://peps.python.org/pep-0810/)), including the global mode (`PYTHON_LAZY_IMPORTS=all` or `-X lazy_imports=all`). Nothing changes in how you import or use InjectQ.
+
+Global lazy mode affects every package in your application, not just InjectQ. Test your whole stack with it before turning it on in production.
 
 ## Quick verification
 

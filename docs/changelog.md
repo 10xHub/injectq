@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+**🎯 Focus:** Python 3.15 support.
+
+### Added
+- Python 3.14 and 3.15 support; the package classifiers now list both
+- Regression tests for Python 3.15 lazy imports (`tests/test_lazy_imports.py`)
+
+### Fixed
+- `inject`, `singleton` and `resource` no longer turn into modules under Python 3.15 lazy imports (PEP 810). With `PYTHON_LAZY_IMPORTS=all`, `from injectq import Inject, inject` followed by `@inject` used to fail with `TypeError: 'module' object is not callable`
+- Replaced `asyncio.iscoroutinefunction`, which is deprecated in 3.14 and removed in 3.16, with `inspect.iscoroutinefunction`. The result is the same on every supported Python version
+- Diagnostics exports (`DependencyVisualizer`, `DependencyProfiler`) always write UTF-8, instead of the system default encoding on Python 3.10-3.14
+
+### Changed
+- The decorator submodules are now private: `injectq/decorators/inject.py`, `singleton.py` and `resource.py` were renamed to `_inject.py`, `_singleton.py` and `_resource.py`. No code changes are needed:
+  - `from injectq import ...` and `from injectq.decorators import ...` work as before
+  - The old paths, such as `from injectq.decorators.inject import Inject` and `from injectq.decorators.resource import ResourceError`, still work at runtime and in type checkers
+  - The only visible difference is `__module__` on these classes, for example `Inject.__module__ == "injectq.decorators._inject"`. Objects pickled with an older version still load, but objects pickled with this version cannot be loaded by injectq 0.4.2 or older
+
+---
+
 ## [0.4.0] - Released
 
 **🎯 Focus:** Enhanced factory methods, improved type safety, and better async support.

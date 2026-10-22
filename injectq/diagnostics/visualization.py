@@ -393,7 +393,7 @@ class DependencyVisualizer:
             msg = f"Unknown format: {format}"
             raise VisualizationError(msg)
 
-        with Path(filename).open("w") as f:
+        with Path(filename).open("w", encoding="utf-8") as f:
             f.write(content)
 
     def get_statistics(self) -> dict:
