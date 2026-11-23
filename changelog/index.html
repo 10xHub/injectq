@@ -1636,17 +1636,41 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#060-unreleased" class="md-nav__link">
+  <a href="#061-unreleased" class="md-nav__link">
     <span class="md-ellipsis">
-      [0.6.0] - Unreleased
+      [0.6.1] - Unreleased
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="[0.6.0] - Unreleased">
+    <nav class="md-nav" aria-label="[0.6.1] - Unreleased">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#060-released" class="md-nav__link">
+    <span class="md-ellipsis">
+      [0.6.0] - Released
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.6.0] - Released">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
     <span class="md-ellipsis">
       Fixed
     </span>
@@ -1733,7 +1757,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_1" class="md-nav__link">
+  <a href="#fixed_2" class="md-nav__link">
     <span class="md-ellipsis">
       Fixed
     </span>
@@ -1817,7 +1841,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_2" class="md-nav__link">
+  <a href="#fixed_3" class="md-nav__link">
     <span class="md-ellipsis">
       Fixed
     </span>
@@ -1859,7 +1883,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_3" class="md-nav__link">
+  <a href="#fixed_4" class="md-nav__link">
     <span class="md-ellipsis">
       Fixed
     </span>
@@ -2153,10 +2177,16 @@
 <p>The format is based on <a href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>,
 and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
 <hr />
-<h2 id="060-unreleased">[0.6.0] - Unreleased<a class="headerlink" href="#060-unreleased" title="Anchor link to this section for reference">&para;</a></h2>
+<h2 id="061-unreleased">[0.6.1] - Unreleased<a class="headerlink" href="#061-unreleased" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Anchor link to this section for reference">&para;</a></h3>
+<ul>
+<li><code>validate()</code> and <code>compile()</code> failed for factories that take call-time arguments (used with <code>call_factory</code>/<code>get_factory</code>). A factory whose parameters the container cannot fill is now skipped; resolving it with <code>get()</code>/<code>aget()</code>/<code>@inject</code> still raises. Cycles and classes depending on such a factory are still reported.</li>
+</ul>
+<hr />
+<h2 id="060-released">[0.6.0] - Released<a class="headerlink" href="#060-released" title="Anchor link to this section for reference">&para;</a></h2>
 <p><strong>Focus:</strong> a new resolution engine, correct context and scope handling, and cleanup of the public API.</p>
 <p>Upgrading from 0.5? Read the <a href="../migration-0.6/">0.6 migration guide</a>. Benchmark numbers: see <a href="../benchmarks/">Benchmarks</a>.</p>
-<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Anchor link to this section for reference">&para;</a></h3>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Anchor link to this section for reference">&para;</a></h3>
 <p>Two bugs with the current container:</p>
 <ul>
 <li><strong>The current container leaked across asyncio tasks.</strong> It was stored in a place shared by every task on a thread, so one task could change the container another task saw. It is now a <code>ContextVar</code>: each task and thread has its own value.</li>
@@ -2246,7 +2276,7 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
 <li>Runnable example, <code>examples/python315_lazy_imports/</code>: startup speedup, the registration pitfall and three fixes, each run with and without <code>PYTHON_LAZY_IMPORTS=all</code></li>
 <li>New guide, <a href="../getting-started/lazy-imports/">Python 3.15 Lazy Imports</a>: how to turn lazy imports on, and how to keep services registered when the modules that register them (<code>@singleton</code>, <code>@register_as</code>, <code>container.bind(...)</code>) are imported lazily</li>
 </ul>
-<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Anchor link to this section for reference">&para;</a></h3>
+<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Anchor link to this section for reference">&para;</a></h3>
 <ul>
 <li><code>inject</code>, <code>singleton</code> and <code>resource</code> no longer turn into modules under Python 3.15 lazy imports (PEP 810). With <code>PYTHON_LAZY_IMPORTS=all</code>, <code>from injectq import Inject, inject</code> followed by <code>@inject</code> used to fail with <code>TypeError: 'module' object is not callable</code></li>
 <li>Replaced <code>asyncio.iscoroutinefunction</code>, which is deprecated in 3.14 and removed in 3.16, with <code>inspect.iscoroutinefunction</code>. The result is the same on every supported Python version</li>
@@ -2300,7 +2330,7 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
 <li>Better error messages with detailed debugging info</li>
 <li>Optimized dependency graph resolution</li>
 </ul>
-<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Anchor link to this section for reference">&para;</a></h3>
+<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Anchor link to this section for reference">&para;</a></h3>
 <ul>
 <li>Subclass injection issues with concrete type resolution</li>
 <li>Various stability improvements</li>
@@ -2321,7 +2351,7 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
 <li>Enhanced testing utilities</li>
 <li>Performance benchmarks</li>
 </ul>
-<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Anchor link to this section for reference">&para;</a></h3>
+<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Anchor link to this section for reference">&para;</a></h3>
 <ul>
 <li>Memory leaks in scoped services</li>
 <li>Thread safety issues in async contexts</li>

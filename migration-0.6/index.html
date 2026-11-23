@@ -2220,7 +2220,7 @@
 </ul>
 <h3 id="validate-and-compile"><code>validate()</code> and <code>compile()</code><a class="headerlink" href="#validate-and-compile" title="Anchor link to this section for reference">&para;</a></h3>
 <ul>
-<li><code>container.validate()</code> reports circular dependencies and accepts parameters that have defaults or <code>allow_none</code>. It raises <code>InjectionError</code> listing every problem.</li>
+<li><code>container.validate()</code> reports circular dependencies and accepts parameters that have defaults or <code>allow_none</code>. It raises <code>InjectionError</code> listing every problem. A factory whose parameters the container cannot fill (call-time arguments) is skipped by <code>validate()</code> and <code>compile()</code>; resolving it with <code>get()</code>/<code>aget()</code>/<code>@inject</code> raises.</li>
 <li><code>container.compile()</code> builds every resolver now and raises on the first set of errors. Call it at startup to fail fast.</li>
 <li><code>get_dependency_graph()</code> includes factory-bound keys and applies the lookup-by-name rule.</li>
 </ul>
