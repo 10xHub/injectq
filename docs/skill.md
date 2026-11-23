@@ -63,7 +63,7 @@ assert main() == "sqlite://"
 
 ## 2. Core API
 
-Imports: `from injectq import ...`. Names below exist in 0.6.0.
+Imports: `from injectq import ...`. Names below exist in 0.6.1.
 
 ### Container and constructor
 
@@ -766,6 +766,7 @@ Do not write deprecated or removed names (`test_container`, `TestModule`, `pytes
 Limitations to tell the user about:
 
 - Wiring errors surface at first resolve unless you call `validate()` or `compile()` at startup.
+- `validate()` and `compile()` skip a factory whose parameters the container cannot fill (call-time arguments for `call_factory`). Its errors, including a missing service it needs, appear only when it is resolved with `get()`/`aget()`/`@inject`.
 - Bindings are type-keyed: two bindings of one type need distinct keys (a subclass, a wrapper class or a string key).
 - `override()`, an attached profiler and `debug=True` use slower resolution paths. Generated resolvers are harder to step through (use `debug=True`).
 - Free-threaded CPython is not tested; the `fastmcp` extra cannot be installed on Python 3.15 yet.
@@ -847,8 +848,8 @@ Tuning:
 
 ## 9. Debugging
 
-- `container.validate()` lists every unresolvable service and cycle (`InjectionError`) without building instances. Also: `c.validate()` accepts defaults and `allow_none`.
-- `container.compile()` builds all resolvers; raises on the first problem set.
+- `container.validate()` lists every unresolvable service and cycle (`InjectionError`) without building instances. Also: `c.validate()` accepts defaults and `allow_none`. Factories whose parameters the container cannot fill are skipped.
+- `container.compile()` builds all resolvers; raises on the first problem set. Skipped factories compile on first use.
 - `container.get_dependency_graph()` returns `{key: [dependency keys]}`; `container.visualize_dependencies()` returns a `DependencyVisualizer` with `to_ascii()`, `to_dot()`, `to_json()`, `save_graph()`, `find_cycles()`. Graph helpers also live in `injectq.utils.graph` (`find_cycles`, `find_path`, `reachable`).
 - Generated code: after `container.compile()`, `print(container._resolver.source(Key))` shows the generated function. Returns `None` for singletons/instances, uncompiled keys, `debug=True`, an attached profiler or an active override.
 - Tracebacks through generated code show frames named `<injectq-generated:Name>`. Read from the top: your exception and the generated line that called your constructor, then one `InjectionError` for the class that failed (`__cause__` is your exception).

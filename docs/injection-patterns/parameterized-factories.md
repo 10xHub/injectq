@@ -139,6 +139,19 @@ print(dev_config)   # {"environment": "dev", "debug": True, ...}
 print(prod_config)  # {"environment": "prod", "debug": False, ...}
 ```
 
+## Validation
+
+A parameterized factory takes arguments only the caller can supply, so `validate()` and `compile()` skip it instead of failing:
+
+```python
+container.bind_factory("data_store", lambda key: data[key])
+container.compile()                              # passes
+container.call_factory("data_store", "user:1")  # works
+container.get("data_store")                      # raises: nobody passed `key`
+```
+
+Circular dependencies are still reported, and so is a class that depends on such a factory.
+
 ## API Methods
 
 ### `get_factory(service_type)`

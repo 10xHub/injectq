@@ -74,6 +74,8 @@ pool = factory("users_db", max_conn=20)
 
 `call_factory` calls the function directly. Nothing is cached, whatever scope the binding has. `get_factory` and `call_factory` raise `DependencyNotFoundError` if no factory is bound under the key.
 
+A factory that takes arguments the container cannot fill (as here) is skipped by `validate()` and `compile()`. Resolving it with `get()`, `aget()` or `@inject` raises `InjectionError` or `DependencyNotFoundError`, because there is nobody to pass the arguments.
+
 Async versions:
 
 ```python
