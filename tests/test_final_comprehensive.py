@@ -36,8 +36,11 @@ def test_container_get_nonexistent() -> None:
     """Test getting nonexistent service."""
     container = InjectQ()
 
-    class NonExistent:
-        pass
+    from abc import ABC, abstractmethod
+
+    class NonExistent(ABC):  # abstract: cannot be auto-resolved
+        @abstractmethod
+        def run(self) -> None: ...
 
     with pytest.raises(DependencyNotFoundError):
         container.get(NonExistent)

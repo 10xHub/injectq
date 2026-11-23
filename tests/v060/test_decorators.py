@@ -110,7 +110,6 @@ def test_inject_marker_in_decorated_function_is_transient():
     assert get_ident() != get_ident()
 
 
-@xf(7, "Inject[T] picks up a rebinding (no stale value across tests)")
 def test_inject_marker_sees_rebinding():
     c = InjectQ()
     c.bind_instance(NamedDb, NamedDb("first"))

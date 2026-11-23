@@ -47,7 +47,6 @@ async def test_aget_singleton_is_same_instance_across_calls_and_with_get():
     assert c.get(A) is first
 
 
-@xf(4, "aget of an unbound class builds it instead of returning a coroutine")
 async def test_aget_unbound_class_returns_instance_not_coroutine():
     c = InjectQ()
     result = await c.aget(C)
@@ -56,7 +55,6 @@ async def test_aget_unbound_class_returns_instance_not_coroutine():
     assert isinstance(result.b.a, A)
 
 
-@xf(4, "no shared resolution stack: concurrent aget gives no false cycle")
 async def test_concurrent_aget_does_not_raise_false_circular_dependency():
     c = InjectQ()
 
@@ -74,7 +72,6 @@ async def test_concurrent_aget_does_not_raise_false_circular_dependency():
     assert all(isinstance(r, C) for r in results)
 
 
-@xf(4, "concurrent aget of a singleton runs the async factory once")
 async def test_concurrent_async_singleton_runs_factory_once():
     c = InjectQ()
     calls = []
@@ -91,7 +88,6 @@ async def test_concurrent_async_singleton_runs_factory_once():
     assert len({id(r) for r in results}) == 1
 
 
-@xf(4, "get() on an async-factory key raises instead of returning a coroutine")
 def test_get_on_async_factory_key_raises_injection_error():
     c = InjectQ()
 
@@ -103,7 +99,6 @@ def test_get_on_async_factory_key_raises_injection_error():
         c.get(A)
 
 
-@xf(4, "sync-resolved class with async dependency raises, not a raw coroutine")
 def test_get_class_with_async_dependency_raises_injection_error():
     c = InjectQ()
 

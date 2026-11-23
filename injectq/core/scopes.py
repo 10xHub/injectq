@@ -28,7 +28,7 @@ import inspect
 import logging
 import threading
 from abc import ABC, abstractmethod
-from contextlib import AsyncExitStack, ExitStack, asynccontextmanager, contextmanager
+from contextlib import AsyncExitStack, ExitStack, asynccontextmanager
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -36,7 +36,7 @@ from injectq.utils import ScopeError
 
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Callable, Iterator, Mapping
+    from collections.abc import AsyncIterator, Callable, Mapping
 
 
 _logger = logging.getLogger("injectq.core")
@@ -113,6 +113,27 @@ def _resolve_name(scope: Any) -> str:
         return scope.name
     msg = f"Invalid scope type: {type(scope)}"
     raise ScopeError(msg)
+
+
+class _SyncScope:
+    """Context manager returned by ``ScopeManager.scope_context``."""
+
+    __slots__ = ("_frame", "_manager", "_name", "_token")
+
+    def __init__(self, manager: ScopeManager, name: str | ScopeType) -> None:
+        self._manager = manager
+        self._name = name
+        self._frame: _Frame | None = None
+        self._token: contextvars.Token[Mapping[str, _Frame]] | None = None
+
+    def __enter__(self) -> None:
+        self._frame, self._token = self._manager._enter(self._name, is_async=False)  # noqa: SLF001
+
+    def __exit__(self, *exc_info: object) -> None:
+        frame, token = self._frame, self._token
+        if frame is not None and token is not None:
+            self._frame = self._token = None
+            self._manager._exit(frame, token)  # noqa: SLF001
 
 
 class ScopeManager:
@@ -197,29 +218,28 @@ class ScopeManager:
             # ValueError: token from another Context; RuntimeError: already used.
             _logger.debug("Scope context token not reset: %s", exc)
 
-    @contextmanager
-    def scope_context(self, scope_name: str | ScopeType) -> Iterator[None]:
+    def scope_context(self, scope_name: str | ScopeType) -> _SyncScope:
         """Enter a named scope for the duration of a ``with`` block.
 
         On exit the scope's exit stack is closed (LIFO), the scope's instances
         are dropped and the previously active scope of that name, if any, is
         restored.
         """
-        frame, token = self._enter(scope_name, is_async=False)
-        if frame is None or token is None:
-            yield
-            return
+        return _SyncScope(self, scope_name)
+
+    def _exit(
+        self,
+        frame: _Frame,
+        token: contextvars.Token[Mapping[str, _Frame]],
+    ) -> None:
+        frame.closed = True
         try:
-            yield
+            stack = frame.exit_stack
+            if isinstance(stack, ExitStack):
+                stack.close()
         finally:
-            frame.closed = True
-            try:
-                stack = frame.exit_stack
-                if isinstance(stack, ExitStack):
-                    stack.close()
-            finally:
-                frame.instances.clear()
-                self._reset(token)
+            frame.instances.clear()
+            self._reset(token)
 
     @asynccontextmanager
     async def async_scope_context(

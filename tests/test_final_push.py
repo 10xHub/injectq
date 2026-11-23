@@ -7,26 +7,7 @@ import pytest
 
 from injectq import InjectQ
 from injectq.core.scopes import ScopeManager
-from injectq.core.thread_safety import HybridLock
 from injectq.utils.helpers import ThreadLocalStorage
-
-
-def test_hybrid_lock_sync() -> None:
-    """Test HybridLock sync_lock method."""
-    lock = HybridLock()
-
-    with lock.sync_lock():
-        # Inside lock context
-        assert True
-
-
-def test_hybrid_lock_context_manager() -> None:
-    """Test HybridLock as context manager."""
-    lock = HybridLock()
-
-    with lock:
-        # Inside lock context
-        assert True
 
 
 def test_thread_local_storage_set_get() -> None:

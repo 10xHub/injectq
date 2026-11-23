@@ -19,12 +19,27 @@ from unittest import mock
 import pytest
 
 from injectq import InjectQ, ScopeType
-from injectq.core.thread_safety import AsyncSafeCounter, HybridLock, ThreadSafeDict
 from injectq.utils import (
     CircularDependencyError,
     DependencyNotFoundError,
     InjectionError,
 )
+
+
+class AsyncSafeCounter:
+    """Lock-protected counter used by the tests below."""
+
+    def __init__(self, value: int = 0) -> None:
+        self._value = value
+        self._lock = threading.Lock()
+
+    async def aincrement(self) -> int:
+        with self._lock:
+            self._value += 1
+            return self._value
+
+    async def aget(self) -> int:
+        return self._value
 
 
 # Test Services
@@ -385,103 +400,6 @@ def test_sync_circular_dependency_thread_safety():
     # All threads should get same error type
     assert len(errors) == 10
     assert all(error_type is CircularDependencyError for error_type in errors)
-
-
-def test_sync_thread_safe_counter_increment():
-    """Test thread-safe counter under heavy concurrent access."""
-    counter = AsyncSafeCounter(0)
-
-    def increment_worker():
-        for _ in range(100):
-            counter.increment()
-
-    # Run multiple threads
-    threads = []
-    for _ in range(20):
-        thread = threading.Thread(target=increment_worker)
-        threads.append(thread)
-        thread.start()
-
-    for thread in threads:
-        thread.join()
-
-    # Should be exactly 20 * 100 = 2000
-    assert counter.get() == 2000
-
-
-def test_sync_thread_safe_dict_operations():
-    """Test ThreadSafeDict under concurrent access."""
-    safe_dict = ThreadSafeDict[str]()
-
-    def worker(worker_id: int):
-        # Set operations
-        for i in range(50):
-            key = f"worker_{worker_id}_item_{i}"
-            value = f"value_{worker_id}_{i}"
-            safe_dict.set(key, value)
-
-        # Get operations
-        for i in range(50):
-            key = f"worker_{worker_id}_item_{i}"
-            safe_dict.get(key)
-
-        # Get-or-create operations
-        for i in range(25):
-            key = f"shared_item_{i}"
-            safe_dict.get_or_create(key, lambda: f"created_by_{worker_id}")
-
-    # Run multiple threads
-    threads = []
-    for worker_id in range(10):
-        thread = threading.Thread(target=worker, args=(worker_id,))
-        threads.append(thread)
-        thread.start()
-
-    for thread in threads:
-        thread.join()
-
-    # Verify data integrity
-    data = safe_dict.copy()
-
-    # Should have at least 500 worker items (50 per worker * 10 workers)
-    worker_items = [k for k in data if k.startswith("worker_")]
-    assert len(worker_items) == 500
-
-    # Shared items should exist and have consistent values
-    shared_items = [k for k in data if k.startswith("shared_item_")]
-    assert len(shared_items) == 25
-
-
-def test_sync_hybrid_lock_performance():
-    """Test HybridLock performance under contention."""
-    lock = HybridLock()
-    shared_resource = [0]
-
-    def worker():
-        for _ in range(500):
-            with lock:
-                current = shared_resource[0]
-                shared_resource[0] = current + 1
-
-    start_time = time.time()
-
-    # Run multiple threads
-    threads = []
-    for _ in range(10):
-        thread = threading.Thread(target=worker)
-        threads.append(thread)
-        thread.start()
-
-    for thread in threads:
-        thread.join()
-
-    duration = time.time() - start_time
-
-    # Verify correctness
-    assert shared_resource[0] == 5000
-
-    # Should complete in reasonable time (less than 10 seconds)
-    assert duration < 10.0
 
 
 def test_sync_container_thread_local_state():
@@ -1024,70 +942,6 @@ async def test_async_circular_dependency_detection():
     # All should detect circular dependency
     assert len(errors) == 10
     assert all(error_type is CircularDependencyError for error_type in errors)
-
-
-@pytest.mark.asyncio
-async def test_async_hybrid_lock_performance():
-    """Test HybridLock performance in async environment."""
-    lock = HybridLock()
-    shared_resource = AsyncSafeCounter(0)
-
-    async def worker():
-        for _ in range(100):
-            async with lock:
-                await shared_resource.aincrement()
-                await asyncio.sleep(0.001)
-
-    start_time = time.time()
-
-    # Run multiple concurrent workers
-    await asyncio.gather(*[worker() for _ in range(10)])
-
-    duration = time.time() - start_time
-
-    # Verify correctness
-    final_value = await shared_resource.aget()
-    assert final_value == 1000
-
-    # Should complete in reasonable time
-    assert duration < 20.0
-
-
-@pytest.mark.asyncio
-async def test_async_thread_safe_dict_operations():
-    """Test async ThreadSafeDict operations."""
-    safe_dict = ThreadSafeDict[str]()
-
-    async def worker(worker_id: int):
-        # Async set operations
-        for i in range(25):
-            key = f"async_worker_{worker_id}_item_{i}"
-            value = f"async_value_{worker_id}_{i}"
-            await safe_dict.aset(key, value)
-
-        # Async get operations
-        for i in range(25):
-            key = f"async_worker_{worker_id}_item_{i}"
-            await safe_dict.aget(key)
-
-        # Async get-or-create operations
-        for i in range(15):
-            key = f"async_shared_item_{i}"
-            await safe_dict.aget_or_create(key, lambda: f"async_created_by_{worker_id}")
-
-    # Run multiple concurrent workers
-    await asyncio.gather(*[worker(i) for i in range(8)])
-
-    # Verify data integrity
-    data = await safe_dict.acopy()
-
-    # Should have worker items (25 per worker * 8 workers)
-    worker_items = [k for k in data if k.startswith("async_worker_")]
-    assert len(worker_items) == 200
-
-    # Should have shared items
-    shared_items = [k for k in data if k.startswith("async_shared_item_")]
-    assert len(shared_items) == 15
 
 
 @pytest.mark.asyncio

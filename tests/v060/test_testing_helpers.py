@@ -105,7 +105,6 @@ def test_test_container_visible_while_context_active():
             assert InjectQ.get_instance() is t
 
 
-@xf(6, "override_dependency works for factory-bound keys")
 def test_override_dependency_on_factory_key():
     from injectq.testing import override_dependency
 

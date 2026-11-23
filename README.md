@@ -241,11 +241,15 @@ pytest tests/test_benchmarks.py --benchmark-only --benchmark-verbose
 pytest tests/test_benchmarks.py --benchmark-only --benchmark-autosave
 ```
 
-### Performance Highlights
-- **Ultra-fast operations:** Basic operations (bind, get, has) execute in 270-780 nanoseconds
-- **Efficient resolution:** Dependency resolution completes in ~1 microsecond
-- **Excellent scalability:** Handles 1,000+ operations with sub-millisecond performance
-- **Thread-safe:** Concurrent access with minimal overhead (~24 μs)
-- **Production-ready:** Web request simulation (10 services) completes in 142 microseconds
+### Cross-library benchmarks
 
-📊 See `BENCHMARK_REPORT.md` for detailed analysis and `BENCHMARK_QUICK_GUIDE.md` for usage guide.
+`benchmarks/` holds the reproducible micro-benchmark suite (scenarios S1–S7:
+cached singleton, transient chain, wide graph, request scope, `@inject` call,
+async resolution, container build). Run it with:
+
+```bash
+make bench          # injectq only, compared against benchmarks/baseline.json
+make bench-compare  # injectq vs other DI libraries, in an isolated venv
+```
+
+Published numbers will be added here with the 0.6.0 release.

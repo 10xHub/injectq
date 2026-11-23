@@ -70,11 +70,11 @@ class DependencyVisualizer:
         registry = self.container._registry  # noqa: SLF001
 
         # Analyze bindings
-        for service_key, binding in registry._bindings.items():  # noqa: SLF001
+        for service_key, binding in registry.get_all_bindings().items():
             self._analyze_binding(service_key, binding)
 
         # Analyze factories
-        for service_key, factory in registry._factories.items():  # noqa: SLF001
+        for service_key, factory in registry.get_all_factories().items():
             self._analyze_factory(service_key, factory)
         _logger.debug("Dependency graph analyzed for visualization")
 

@@ -62,7 +62,6 @@ def test_validator_accepts_auto_injectable_dependencies():
     assert result.is_valid, str(result)
 
 
-@xf(10, "validator: defaulted parameters are not errors")
 def test_validator_accepts_defaulted_params():
     c = InjectQ()
     c.bind(Defaulted, Defaulted)

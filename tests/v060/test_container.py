@@ -82,7 +82,6 @@ def make_service_factory(dep: Dep, user_id: str) -> tuple[Dep, str]:
 # --- auto-resolve ------------------------------------------------------------
 
 
-@xf(4, "auto-resolve a plain class with no __init__")
 def test_auto_resolve_class_without_init():
     c = InjectQ()
     assert isinstance(c.get(Plain), Plain)
@@ -91,7 +90,6 @@ def test_auto_resolve_class_without_init():
 # --- override ----------------------------------------------------------------
 
 
-@xf(6, "override() works on factory-bound keys")
 def test_override_applies_to_factory_bound_key():
     c = InjectQ()
     c.bind_factory("k", lambda: "real")
@@ -163,7 +161,6 @@ def test_test_mode_wins_over_active_context_container():
 # --- registry ----------------------------------------------------------------
 
 
-@xf(4, "a later bind() replaces an earlier factory for the same key")
 def test_later_bind_wins_over_earlier_factory():
     c = InjectQ()
     c.bind_factory(Service, lambda: "from-factory")
@@ -210,7 +207,6 @@ def _race_rounds(n_threads: int, rounds: int) -> None:
         assert len({id(i) for i in got}) == 1
 
 
-@xf(4, "bind_instance must not call bool() on the instance")
 def test_bind_instance_with_ambiguous_truthiness():
     c = InjectQ()
     inst = Ambiguous()
@@ -218,7 +214,6 @@ def test_bind_instance_with_ambiguous_truthiness():
     assert c.get("arr") is inst
 
 
-@xf(4, "dict-style assignment must not call bool() on the instance")
 def test_setitem_with_ambiguous_truthiness():
     c = InjectQ()
     inst = Ambiguous()
@@ -226,7 +221,6 @@ def test_setitem_with_ambiguous_truthiness():
     assert c["arr"] is inst
 
 
-@xf(7, "invoke() resolves string annotations (from __future__ import annotations)")
 def test_invoke_with_postponed_annotations():
     c = InjectQ()
     c.bind(Dep, Dep)
@@ -236,7 +230,6 @@ def test_invoke_with_postponed_annotations():
     assert uid == "u1"
 
 
-@xf(7, "ainvoke() resolves string annotations (from __future__ import annotations)")
 async def test_ainvoke_with_postponed_annotations():
     c = InjectQ()
     c.bind(Dep, Dep)
@@ -246,7 +239,6 @@ async def test_ainvoke_with_postponed_annotations():
     assert uid == "u1"
 
 
-@xf(4, "ModuleBinder.bind(Service) without an implementation binds to itself")
 def test_module_binder_bind_without_implementation():
     class M:
         def configure(self, binder) -> None:
@@ -260,14 +252,12 @@ def test_module_binder_bind_without_implementation():
 # --- defaults / missing nested dependencies -----------------------------------
 
 
-@xf(4, "outer default must not hide a missing nested dependency")
 def test_outer_default_does_not_hide_missing_nested_dependency():
     c = InjectQ()
     with pytest.raises(DependencyNotFoundError):
         c.get(OuterWithDefault)
 
 
-@xf(4, "try_get must not hide a missing nested dependency")
 def test_try_get_does_not_hide_missing_nested_dependency():
     c = InjectQ()
     with pytest.raises(DependencyNotFoundError):
@@ -283,21 +273,18 @@ def test_try_get_returns_default_for_unknown_key():
 # --- validate() / compile() ---------------------------------------------------
 
 
-@xf(4, "validate() accepts parameters that have defaults")
 def test_validate_accepts_defaulted_params():
     c = InjectQ()
     c.bind(Defaulted, Defaulted)
     c.validate()
 
 
-@xf(4, "validate() accepts allow_none bindings")
 def test_validate_accepts_allow_none_binding():
     c = InjectQ()
     c.bind("maybe", None, allow_none=True)
     c.validate()
 
 
-@xf(4, "validate() detects cycles")
 def test_validate_detects_cycles():
     c = InjectQ()
     c.bind(Cyc1, Cyc1)
@@ -306,7 +293,6 @@ def test_validate_detects_cycles():
         c.validate()
 
 
-@xf(4, "validate() checks factory-only services")
 def test_validate_checks_factory_only_services():
     c = InjectQ()
 
@@ -318,7 +304,6 @@ def test_validate_checks_factory_only_services():
         c.validate()
 
 
-@xf(4, "compile() raises on errors instead of swallowing them")
 def test_compile_raises_on_unresolvable_dependency():
     c = InjectQ()
     c.bind(NeedsIface, NeedsIface)
