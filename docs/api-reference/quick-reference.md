@@ -168,15 +168,18 @@ class RequestContext:
 ```python
 from injectq import resource
 
-@resource
-class DatabaseConnection:
-    async def initialize(self):
-        # Called when service is created
-        self.connection = await connect()
-    
-    async def cleanup(self):
-        # Called when service is destroyed
-        await self.connection.close()
+@resource  # singleton: created once, closed by get_resource_manager().shutdown_all()
+def database_connection() -> Iterator[DatabaseConnection]:
+    conn = connect()
+    try:
+        yield conn          # the container binds DatabaseConnection to this
+    finally:
+        conn.close()        # teardown runs on shutdown
+
+@resource("request")        # per request: closed when the request scope exits
+async def session() -> AsyncIterator[Session]:
+    async with make_session() as s:
+        yield s
 ```
 
 ## Modules
@@ -566,19 +569,19 @@ else:
 
 ```python
 @resource
-class ConnectionPool:
-    async def initialize(self):
-        self.pool = await create_pool()
-    
-    async def cleanup(self):
-        await self.pool.close()
+async def connection_pool() -> AsyncIterator[ConnectionPool]:
+    pool = await create_pool()
+    try:
+        yield pool
+    finally:
+        await pool.close()
 
-# With async context
-async with container:
-    pool = container[ConnectionPool]
-    # Resources auto-initialized
-    # Auto-cleanup on exit
+pool = await container.aget(ConnectionPool)   # created once
+await get_resource_manager().shutdown_all_async()  # teardown, last created first
 ```
+
+Teardown errors are raised together as an `ExceptionGroup` (Python 3.11+; on
+3.10 the first error is raised with the others in `__notes__`).
 
 ### Circular Dependency Detection
 

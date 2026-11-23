@@ -10,8 +10,6 @@ import pytest
 from injectq import InjectQ, resource
 from injectq.utils import ScopeError
 
-from ._helpers import xf
-
 
 class Req:
     pass
@@ -100,7 +98,6 @@ async def test_to_thread_instance_does_not_leak_into_next_request():
         assert await c.aget(Req) is not leaked
 
 
-@xf(9, "scope exit closes resource instances (LIFO, via the resource exit stack)")
 def test_scope_exit_runs_resource_teardown():
     c = InjectQ.get_instance()
     c.bind(Conn, Conn, scope="request")

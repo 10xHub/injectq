@@ -1,13 +1,14 @@
 """Base module classes for InjectQ dependency injection library."""
 
+import inspect
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from contextlib import suppress
-from typing import Any, get_type_hints
+from typing import Any, TypeVar, get_type_hints, overload
 
 from injectq.core import ModuleBinder, ScopeType
-from injectq.utils import BindingError, ServiceKey, get_function_dependencies
+from injectq.core.registry import ServiceBinding
+from injectq.utils import BindingError, ServiceKey
 
 
 _logger = logging.getLogger("injectq.modules")
@@ -32,7 +33,7 @@ class SimpleModule(Module):
     """A simple module implementation that allows fluent binding configuration."""
 
     def __init__(self) -> None:
-        self._bindings: list[tuple] = []
+        self._bindings: list[tuple[Any, ...]] = []
 
     def bind(
         self,
@@ -80,7 +81,7 @@ class SimpleModule(Module):
         return self
 
     def bind_factory(
-        self, service_type: ServiceKey, factory: Callable
+        self, service_type: ServiceKey, factory: Callable[..., Any]
     ) -> "SimpleModule":
         """Add a factory binding to this module.
 
@@ -115,123 +116,119 @@ class SimpleModule(Module):
                 binder.bind_factory(*args)
 
 
-def provider(func: Callable) -> Callable:
-    """Decorator to mark a method as a provider within a module.
+_PROVIDER_ATTR = "_is_provider"
+_PROVIDER_SCOPE_ATTR = "_provider_scope"
 
-    Provider methods are used to create instances of services
-    with their dependencies automatically injected.
+P = TypeVar("P", bound=Callable[..., Any])
+
+
+@overload
+def provider(func: P, /) -> P: ...
+
+
+@overload
+def provider(*, scope: str | ScopeType = ...) -> Callable[[P], P]: ...
+
+
+def provider(
+    func: P | None = None, /, *, scope: str | ScopeType = ScopeType.TRANSIENT
+) -> P | Callable[[P], P]:
+    """Mark a method of a ``ProviderModule`` as the provider of its return type.
+
+    The provider's parameters are injected like any factory's (``Inject[...]``
+    marker, then parameter name if bound, then type annotation). ``async def``
+    providers are awaited by ``aget()``.
+
+    Usage: bare ``@provider`` (transient: called on every resolve) or
+    ``@provider(scope="singleton")`` / any scope name.
 
     Args:
-        func: The provider function/method
+        func: The provider method (bare form).
+        scope: Scope of the provided service. Default: transient.
 
     Returns:
-        The decorated function with provider metadata
+        The method itself, marked as a provider.
     """
-    # Mark the function as a provider
-    func._is_provider = True  # type: ignore  # noqa: PGH003, SLF001
-    return func
+    scope_name = scope.value if isinstance(scope, ScopeType) else str(scope)
+
+    def mark(f: P) -> P:
+        target = f.__func__ if isinstance(f, staticmethod | classmethod) else f
+        setattr(target, _PROVIDER_ATTR, True)
+        setattr(target, _PROVIDER_SCOPE_ATTR, scope_name)
+        return f
+
+    if func is None:
+        return mark
+    return mark(func)
+
+
+def _provider_function(attr: Any) -> Any:
+    """The marked function behind a class-dict entry, or None."""
+    if isinstance(attr, staticmethod | classmethod):
+        attr = attr.__func__
+    if inspect.isfunction(attr) and getattr(attr, _PROVIDER_ATTR, False):
+        return attr
+    return None
 
 
 class ProviderModule(Module):
-    """A module that supports provider methods for advanced binding scenarios.
+    """A module whose ``@provider`` methods provide services.
 
-    Provider methods are methods decorated with @provider that return
-    instances of services. Their parameters are automatically injected.
+    Each provider method is bound as a factory for its return annotation, with
+    the scope given to ``@provider`` (transient by default). Its parameters
+    are resolved by the container exactly like a constructor's, so a missing
+    dependency raises ``DependencyNotFoundError`` naming it.
     """
 
     def configure(self, binder: ModuleBinder) -> None:
-        """Configure bindings from provider methods."""
-        _logger.info("Configuring ProviderModule: %s", self.__class__.__name__)
-        # Find all provider methods
-        provider_count = 0
-        for attr_name in dir(self):
-            attr = getattr(self, attr_name)
-            if callable(attr) and hasattr(attr, "_is_provider"):
-                provider_count += 1
-                _logger.debug("Found provider method: %s", attr_name)
-                self._configure_provider(binder, attr)
-        _logger.info(
-            "Configured %d provider method(s) in %s",
-            provider_count,
-            self.__class__.__name__,
-        )
+        """Bind every provider method (found in the class dicts, MRO order)."""
+        seen: set[str] = set()
+        for klass in type(self).__mro__:
+            # The class dicts, not dir()/getattr(): properties and other
+            # descriptors are never evaluated while scanning.
+            for name, attr in vars(klass).items():
+                if name in seen:
+                    continue
+                seen.add(name)
+                function = _provider_function(attr)
+                if function is not None:
+                    self._configure_provider(binder, name, function)
 
     def _configure_provider(
-        self, binder: ModuleBinder, provider_method: Callable
+        self, binder: ModuleBinder, name: str, function: Callable[..., Any]
     ) -> None:
-        """Configure a binding from a provider method."""
+        """Bind the provider method ``name`` for its return type."""
+        qualname = getattr(function, "__qualname__", name)
         try:
-            # Get return type annotation as the service type
-
-            hints = get_type_hints(provider_method)
-            return_type = hints.get("return", None)
-
-            if return_type is None:
-                msg = f"Provider method {provider_method.__name__} must"
-                msg += " have a return type annotation"
-                _logger.error(msg)
-                raise BindingError(msg)  # noqa: TRY301
-
-            _logger.debug(
-                "Configuring provider: %s -> %s",
-                provider_method.__name__,
-                return_type,
-            )
-
-            # Create a factory function that manually resolves dependencies
-            def factory() -> Any:
-                # Get dependencies for the provider method
-                dependencies = get_function_dependencies(provider_method)
-                _logger.debug(
-                    "Resolving %d dependencies for provider %s",
-                    len(dependencies),
-                    provider_method.__name__,
-                )
-
-                # Resolve dependencies from the container
-                resolved_args = {}
-                for param_name, param_type in dependencies.items():
-                    with suppress(Exception):
-                        # First try to resolve by parameter name (string key)
-                        if binder._container.has(param_name):  # noqa: SLF001
-                            resolved_args[param_name] = binder._container.get(  # noqa: SLF001
-                                param_name
-                            )
-                            _logger.debug(
-                                "Resolved dependency '%s' by name", param_name
-                            )
-                        else:
-                            # Fall back to type-based resolution
-                            resolved_args[param_name] = binder._container.get(  # noqa: SLF001
-                                param_type
-                            )
-                            _logger.debug(
-                                "Resolved dependency '%s' by type: %s",
-                                param_name,
-                                param_type,
-                            )
-
-                # Call the provider method (it's already bound to self)
-                return provider_method(**resolved_args)
-
-            # Bind the factory
-            binder.bind_factory(return_type, factory)
-            _logger.debug(
-                "Successfully configured provider %s for type %s",
-                provider_method.__name__,
-                return_type,
-            )
-
-        except Exception as e:
-            msg = f"Failed to configure provider {provider_method.__name__}: {e}"
-            _logger.exception(msg)
-            raise BindingError(msg) from e
+            return_type = get_type_hints(function).get("return")
+        except Exception as exc:
+            msg = f"Cannot read the return type of provider {qualname}: {exc}"
+            raise BindingError(msg) from exc
+        if return_type is None:
+            msg = f"Provider method {qualname} must have a return type annotation"
+            raise BindingError(msg)
+        # Bound method (or the static/class method as accessed): the engine
+        # analyses its parameters like any factory's and awaits it if async.
+        factory = getattr(self, name)
+        scope = getattr(function, _PROVIDER_SCOPE_ATTR, ScopeType.TRANSIENT.value)
+        container = binder._container  # noqa: SLF001
+        if scope == ScopeType.TRANSIENT.value:
+            container.bind_factory(return_type, factory)
+            return
+        # Scoped factory: ModuleBinder / InjectQ.bind_factory have no scope
+        # parameter, so install the binding through the registry directly.
+        registry = container._registry  # noqa: SLF001
+        registry._check_override(return_type, container._allow_override)  # noqa: SLF001
+        registry.set_provider(
+            return_type,
+            ServiceBinding(return_type, factory, scope, is_factory=True),
+        )
 
 
 class ConfigurationModule(Module):
     """A module for binding configuration values and settings."""
 
-    def __init__(self, config_dict: dict) -> None:
+    def __init__(self, config_dict: dict[Any, Any]) -> None:
         """Initialize with a configuration dictionary.
 
         Args:

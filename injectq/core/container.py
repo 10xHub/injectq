@@ -94,6 +94,8 @@ class InjectQ:
         use_async_scopes: bool = True,
         thread_safe: bool = True,
         allow_override: bool = True,
+        *,
+        debug: bool = False,
     ) -> None:
         """Initialize the InjectQ container.
 
@@ -107,6 +109,8 @@ class InjectQ:
                 key, and the container lock is never held while factories run.
             allow_override: Whether to allow overriding existing registrations
                           (default: True)
+            debug: Resolve with plain linked closures instead of generated
+                code (simpler tracebacks and stepping; a little slower).
         """
         del use_async_scopes  # deprecated, ignored
         self._thread_safe = thread_safe  # deprecated, ignored (kept for repr)
@@ -116,7 +120,9 @@ class InjectQ:
         # Same dict object as the scope manager's (never replaced): the
         # singleton fast path of get()/aget() reads it directly.
         self._singletons = self._scope_manager._singletons  # noqa: SLF001
-        self._resolver = DependencyResolver(self._registry, self._scope_manager)
+        self._resolver = DependencyResolver(
+            self._registry, self._scope_manager, codegen=not debug
+        )
         self._registry.add_listener(self._on_registry_change)
         self._factories = FactoryProxy(self)
 

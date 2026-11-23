@@ -1,119 +1,113 @@
 """FastAPI integration for InjectQ (optional dependency).
 
-Simple and clean integration using per-request context propagation.
+``setup_fastapi(container, app)`` adds a pure ASGI middleware that, for every
+HTTP request and WebSocket connection:
 
-Key characteristics:
-- No global container state
-- ContextVar-based request container lookup (O(1) overhead)
-- Supports both HTTP and WebSocket connections
-- Clean and maintainable code
+- makes ``container`` the current container (``ContainerContext``), so
+  ``InjectQ.get_instance()`` and ``@inject`` inside routes resolve from it;
+- enters ``container.async_scope("request")``, so request-scoped services
+  live for exactly one request (or one WebSocket connection).
 
-Dependency: fastapi (and starlette)
-Not installed by default; install extra: `pip install injectq[fastapi]`.
+Sync routes and dependencies run in anyio worker threads, which copy the
+caller's context: they see the same container and request scope.
+
+``InjectFastAPI(Service)`` is an ``async def`` FastAPI dependency that
+awaits ``container.aget(Service)`` (async factories are awaited; no thread
+pool is involved).
+
+Dependency: fastapi (and starlette). Not installed by default; install the
+extra: ``pip install injectq[fastapi]``. FastAPI is imported only when one of
+the functions here is called.
 """
 
-import contextvars
-import importlib
-import logging
+import functools
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from injectq.utils import InjectionError
+from injectq.core.context import ContainerContext
+
+from ._common import deprecated_alias, make_dependency, missing_container, require
 
 
-_logger = logging.getLogger("injectq.fastapi")
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from injectq.core.container import InjectQ
 
 
 T = TypeVar("T")
 
-# Per-request context for active container
-_request_container: contextvars.ContextVar[Any | None] = contextvars.ContextVar(
-    "injectq_request_container",
-    default=None,
-)
+_STATE_ATTR = "injectq_container"
 
 
-if TYPE_CHECKING:
-    from injectq.core.container import InjectQ
+def get_container_fastapi(connection: Any = None) -> "InjectQ":
+    """Return the InjectQ container for the current FastAPI request.
 
+    This is the current context container, which the middleware installed by
+    ``setup_fastapi`` sets for each request. If no container is current (for
+    example code running in a plain thread), the container stored on the app
+    by ``setup_fastapi`` is used, found through ``connection``.
 
-def get_container_fastapi() -> "InjectQ":
-    """Get the InjectQ container from the current request context.
-
-    Returns:
-        InjectQ container instance
+    Args:
+        connection: Optional ``Request`` / ``WebSocket`` (any starlette
+            ``HTTPConnection``) or raw ASGI scope, used for the fallback.
 
     Raises:
-        InjectionError: If no container is attached to the request context
+        InjectionError: If no container can be found.
     """
-    container = _request_container.get()
-    if container is None:
-        msg = (
-            "No InjectQ container in current request context. Did you call "
-            "setup_fastapi(app, container)?"
-        )
-        _logger.error(msg)
-        raise InjectionError(msg)
-    _logger.debug("FastAPI container retrieved from request context")
-    return container  # type: ignore[return-value]
+    container = ContainerContext.get_current()
+    if container is not None:
+        return container
+    if connection is not None:
+        scope = connection if isinstance(connection, dict) else connection.scope
+        state = getattr(scope.get("app"), "state", None)
+        stored: InjectQ | None = getattr(state, _STATE_ATTR, None)
+        if stored is not None:
+            return stored
+    error = missing_container("FastAPI request", "setup_fastapi(container, app)")
+    raise error
+
+
+@functools.cache
+def _locator() -> "Callable[..., InjectQ]":
+    from starlette.requests import HTTPConnection  # noqa: PLC0415
+
+    def locate(connection: Any) -> "InjectQ":
+        return get_container_fastapi(connection)
+
+    # FastAPI injects the Request / WebSocket into an HTTPConnection parameter.
+    locate.__annotations__ = {"connection": HTTPConnection}
+    return locate
 
 
 def InjectFastAPI(interface: type[T]) -> T:  # noqa: N802
-    """Inject dependency from InjectQ container in FastAPI routes.
+    """Resolve ``interface`` from the request's InjectQ container in a route.
 
-    This is the recommended way to use dependency injection with FastAPI.
-    Uses ContextVars for async-safe, high-performance dependency resolution.
-    Works with both HTTP endpoints and WebSocket handlers.
-
-    Args:
-        interface: The type/interface to inject
-
-    Returns:
-        FastAPI Depends object that will resolve to the requested type
+    Returns a FastAPI ``Depends`` whose dependency is an ``async def`` that
+    awaits ``container.aget(interface)``. Works for HTTP routes and WebSocket
+    handlers, in sync and async endpoints.
 
     Example:
         ```python
-        from fastapi import FastAPI
-        from typing import Annotated
-
         @app.get("/users")
         async def get_users(
             service: Annotated[UserService, InjectFastAPI(UserService)],
         ):
             return service.get_all_users()
-
-        @app.websocket("/ws")
-        async def websocket_endpoint(
-            websocket: WebSocket,
-            service: Annotated[UserService, InjectFastAPI(UserService)],
-        ):
-            await websocket.accept()
-            ...
         ```
+
+    Raises:
+        RuntimeError: If fastapi is not installed.
     """
-    try:
-        from fastapi import Depends
-    except ImportError as exc:
-        msg = (
-            "InjectFastAPI requires the 'fastapi' package. Install with "
-            "'pip install injectq[fastapi]' or 'pip install fastapi'."
-        )
-        raise RuntimeError(msg) from exc
-
-    def inject_dependency() -> T:
-        return get_container_fastapi().get(interface)
-
-    return Depends(inject_dependency)  # type: ignore[return-value]
-
-
-# Alias for backwards compatibility
-InjectAPI = InjectFastAPI
+    fastapi = require("fastapi", "fastapi", "InjectFastAPI")
+    return fastapi.Depends(make_dependency(interface, _locator()))  # type: ignore[no-any-return]
 
 
 class InjectQRequestMiddleware:
-    """Pure ASGI middleware to set the active InjectQ container per connection.
+    """Pure ASGI middleware: current container + request scope per connection.
 
-    Handles both HTTP and WebSocket scopes. Uses ContextVar (O(1) set/reset)
-    for high-performance context propagation.
+    Handles ``http`` and ``websocket`` scopes; everything else (``lifespan``)
+    passes through untouched. Kept pure ASGI (not ``BaseHTTPMiddleware``) so
+    the context it sets propagates to the endpoint.
     """
 
     def __init__(self, app: Any, *, container: "InjectQ") -> None:
@@ -121,46 +115,46 @@ class InjectQRequestMiddleware:
         self._container = container
 
     async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
-        if scope["type"] in ("http", "websocket"):
-            token = _request_container.set(self._container)
-            try:
-                await self.app(scope, receive, send)
-            finally:
-                _request_container.reset(token)
-        else:
+        if scope["type"] not in ("http", "websocket"):
             await self.app(scope, receive, send)
+            return
+        container = self._container
+        token = ContainerContext.set_current(container)
+        try:
+            async with container.async_scope("request"):
+                await self.app(scope, receive, send)
+        finally:
+            ContainerContext.reset_current(token)
 
 
 def setup_fastapi(container: "InjectQ", app: Any) -> None:
-    """Register InjectQ with FastAPI app for high-performance DI.
+    """Use ``container`` for every request handled by ``app``.
 
-    Adds a minimal ASGI middleware to set the active container with ContextVars.
-    Supports both HTTP requests and WebSocket connections.
-
-    Args:
-        container: InjectQ container instance to use for dependency injection
-        app: FastAPI application instance
+    Adds ``InjectQRequestMiddleware`` and stores the container on
+    ``app.state`` (used as a fallback by ``get_container_fastapi``).
 
     Example:
         ```python
-        from fastapi import FastAPI
-        from injectq import InjectQ
-
         app = FastAPI()
         container = InjectQ()
-
         setup_fastapi(container, app)
         ```
-    """
-    try:
-        importlib.import_module("fastapi")
-    except ImportError as exc:  # pragma: no cover - optional dependency path
-        msg = (
-            "setup_fastapi requires the 'fastapi' package. Install with "
-            "'pip install injectq[fastapi]' or 'pip install fastapi'."
-        )
-        _logger.exception(msg)
-        raise RuntimeError(msg) from exc
 
+    Raises:
+        RuntimeError: If fastapi is not installed.
+    """
+    require("fastapi", "fastapi", "setup_fastapi")
+    setattr(app.state, _STATE_ATTR, container)
     app.add_middleware(InjectQRequestMiddleware, container=container)
-    _logger.info("InjectQ FastAPI middleware registered")
+
+
+InjectAPI = deprecated_alias(InjectFastAPI, "InjectAPI", "InjectFastAPI")
+
+
+__all__ = [
+    "InjectAPI",
+    "InjectFastAPI",
+    "InjectQRequestMiddleware",
+    "get_container_fastapi",
+    "setup_fastapi",
+]

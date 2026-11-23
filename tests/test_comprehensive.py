@@ -288,7 +288,9 @@ class TestTypeChecking:
 
         with container.context():
             database = get_database()
-            assert isinstance(database, PostgreSQLDatabase)
+            # Outside @inject the marker stays a marker (0.6.0: no __class__
+            # spoofing); attribute access resolves from the current container.
+            assert isinstance(database, Inject)
             assert "postgresql" in database.get_connection()
 
     def test_protocol_injection(self) -> None:

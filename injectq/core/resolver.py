@@ -21,6 +21,21 @@ How a key is resolved:
    (use ``aget``) instead of returning a coroutine, unless the async part is
    an already-created singleton / scoped instance.
 
+4. Code generation (default; ``InjectQ(debug=True)`` turns it off): a
+   transient or context-scoped key resolved directly starts on the closures
+   of step 2 behind a small warm-up stub; on its second call the stub
+   replaces itself with one generated Python function for the key (see
+   ``_CodeGen``): transient dependencies inlined as constructor / factory
+   calls, singleton and scoped dependencies as inline cache lookups,
+   ``await`` only on async factories. A key resolved once (container
+   startup) never pays the ``compile()`` cost; ``compile_all()`` generates
+   eagerly. Generated source is kept in ``sources`` and registered in
+   ``linecache`` as ``<injectq-generated:Name>``, so tracebacks show it.
+   Singleton keys (created once) and resolvers compiled while a profiler is
+   set stay on closures. Singletons are looked up, not baked in as
+   constants: ``clear_scope("singleton")`` empties the cache without a
+   registry change, so a baked instance could outlive it.
+
 All compiled state is dropped (the dicts are replaced, never mutated in
 place) whenever the registry changes. Reads take no lock; compilation runs
 under one ``RLock`` and never runs user factories, so the lock is never held
@@ -32,6 +47,9 @@ from __future__ import annotations
 import enum
 import functools
 import inspect
+import keyword
+import linecache
+import re
 import sys
 import threading
 import types
@@ -513,9 +531,20 @@ def _ainstrument(profiler: Any, key: Any, fn: Callable[[], Any]) -> Callable[[],
 class DependencyResolver:
     """Compiles and caches per-key resolvers for one container."""
 
-    def __init__(self, registry: ServiceRegistry, scope_manager: ScopeManager) -> None:
+    def __init__(
+        self,
+        registry: ServiceRegistry,
+        scope_manager: ScopeManager,
+        *,
+        codegen: bool = True,
+    ) -> None:
         self.registry = registry
         self.scope_manager = scope_manager
+        # True: each key gets one generated function (see ``_CodeGen``);
+        # False (``InjectQ(debug=True)``): linked closures, plain tracebacks.
+        self.codegen = codegen
+        # Generated source per (key, is_async), for inspection / debugging.
+        self.sources: dict[tuple[Any, bool], str] = {}
         # Override layer consulted when compiling a key (filled by step 6).
         self.overrides: Mapping[ServiceKey, ServiceBinding] = {}
         # Profiler hook: when set at compile time, every compiled resolver is
@@ -530,6 +559,12 @@ class DependencyResolver:
         self.async_: dict[Any, tuple[Callable[[], Any], bool]] = {}
         self._building: list[Any] = []
         self._dirty = False
+        self._eager = False  # compile_all(): generate code without warm-up
+        # Codegen warm-up: closure resolvers (``_closure``) and each promoted
+        # stub's generated replacement.
+        self._closures: dict[Any, Callable[[], Any]] = {}
+        self._aclosures: dict[Any, tuple[Callable[[], Any], bool]] = {}
+        self._promoted: dict[Callable[[], Any], Callable[[], Any]] = {}
 
     # ------------------------------------------------------------ invalidation
 
@@ -543,6 +578,10 @@ class DependencyResolver:
             self._nodes = {}
             self.sync = {}
             self.async_ = {}
+            self.sources = {}
+            self._closures = {}
+            self._aclosures = {}
+            self._promoted = {}
             self._dirty = False
 
     # ----------------------------------------------------------------- lookup
@@ -708,6 +747,11 @@ class DependencyResolver:
         node = self._node(key)
         if node.kind == INSTANCE:
             fn = _constant(node.target)
+        elif self._generated(node, is_async=False):
+            if self._eager:
+                fn = self._generate(node, is_async=False)
+            else:
+                fn = self._tiered(node, self._closure(key))
         else:
             fn = self._scoped(node, self._create(node))
         if self.profiler is not None:
@@ -731,7 +775,7 @@ class DependencyResolver:
             if dep.key is _MISSING:
                 r: Callable[[], Any] = _constant(dep.value)
             else:
-                r = self._compile_sync(dep.key)
+                r = self._link_sync(dep.key)
             if dep.positional:
                 pos.append(r)
             else:
@@ -787,12 +831,61 @@ class DependencyResolver:
         node = self._node(key)
         if not node.needs_async:
             entry = (self._compile_sync(key), False)
+        elif self._generated(node, is_async=True):
+            if self._eager:
+                entry = (self._generate(node, is_async=True), True)
+            else:
+                entry = (self._atiered(node, self._aclosure(key)[0]), True)
         else:
             fn = self._ascoped(node, self._acreate(node))
             if self.profiler is not None:
                 fn = _ainstrument(self.profiler, key, fn)
             entry = (fn, True)
         self.async_[key] = entry
+        return entry
+
+    # ------------------------------------------------------ warm-up closures
+    #
+    # With codegen on, a key resolved directly gets a warm-up stub (see
+    # ``_tiered``) around a closure resolver. Closures link to each other's
+    # closures, not to stubs, so a key only used as a dependency costs no
+    # stub and is never promoted on its own (its parent's generated code
+    # inlines it, or calls its stub once it is resolved directly).
+
+    def _link_sync(self, key: Any) -> Callable[[], Any]:
+        """The sync resolver a closure calls for dependency ``key``."""
+        if self.codegen and self.profiler is None:
+            return self._closure(key)
+        return self._compile_sync(key)
+
+    def _link_async(self, key: Any) -> tuple[Callable[[], Any], bool]:
+        """The ``aget`` resolver a closure calls for dependency ``key``."""
+        if self.codegen and self.profiler is None:
+            return self._aclosure(key)
+        return self._compile_async(key)
+
+    def _closure(self, key: Any) -> Callable[[], Any]:
+        fn = self._closures.get(key)
+        if fn is None:
+            node = self._node(key)
+            if self._generated(node, is_async=False):
+                fn = self._scoped(node, self._create(node))
+            else:  # never promoted: share the compiled entry
+                fn = self._compile_sync(key)
+            self._closures[key] = fn
+        return fn
+
+    def _aclosure(self, key: Any) -> tuple[Callable[[], Any], bool]:
+        entry = self._aclosures.get(key)
+        if entry is None:
+            node = self._node(key)
+            if not node.needs_async:
+                entry = (self._closure(key), False)
+            elif self._generated(node, is_async=True):
+                entry = (self._ascoped(node, self._acreate(node)), True)
+            else:
+                entry = self._compile_async(key)
+            self._aclosures[key] = entry
         return entry
 
     def _acreate(self, node: Node) -> Callable[[], Any]:
@@ -803,7 +896,7 @@ class DependencyResolver:
             if dep.key is _MISSING:
                 entry: tuple[Callable[[], Any], bool] = (_constant(dep.value), False)
             else:
-                entry = self._compile_async(dep.key)
+                entry = self._link_async(dep.key)
             if dep.positional:
                 pos.append(entry)
             else:
@@ -847,6 +940,109 @@ class DependencyResolver:
 
         return scoped
 
+    # --------------------------------------------------------------- codegen
+    #
+    # A key starts with the closure resolver; after ``_PROMOTE_AFTER`` calls
+    # its entry is replaced by generated code. Generating costs far more than
+    # linking closures (``compile()`` is ~5 us per inlined node), so a key
+    # resolved once (startup, a container built per test) never pays for it.
+    # Singleton keys stay on closures: their resolver runs once per instance.
+
+    def _generated(self, node: Node, *, is_async: bool) -> bool:
+        """True if ``node``'s resolver should become generated code."""
+        return (
+            self.codegen
+            and self.profiler is None
+            and node.scope != SINGLETON
+            and (is_async or not node.is_async)
+        )
+
+    def _tiered(self, node: Node, first: Callable[[], Any]) -> Callable[[], Any]:
+        """Run ``first`` (closures) until the key is hot, then generated code."""
+        promote = self._promote
+        impl = first
+        calls = 0
+
+        def warm() -> Any:
+            nonlocal impl, calls
+            if calls >= 0:
+                calls += 1
+                if calls >= _PROMOTE_AFTER:
+                    calls = -1
+                    impl = promote(node, warm, first, is_async=False)
+            return impl()
+
+        return warm
+
+    def _atiered(self, node: Node, first: Callable[[], Any]) -> Callable[[], Any]:
+        """Async form of ``_tiered``."""
+        promote = self._promote
+        impl = first
+        calls = 0
+
+        async def warm() -> Any:
+            nonlocal impl, calls
+            if calls >= 0:
+                calls += 1
+                if calls >= _PROMOTE_AFTER:
+                    calls = -1
+                    impl = promote(node, warm, first, is_async=True)
+            return await impl()
+
+        return warm
+
+    def _promote(
+        self,
+        node: Node,
+        stub: Callable[[], Any],
+        first: Callable[[], Any],
+        *,
+        is_async: bool,
+    ) -> Callable[[], Any]:
+        """Replace ``stub`` by generated code; return what the stub calls now.
+
+        Runs no user code under the lock. A stub that is no longer the
+        compiled entry of its key (the registry changed since) keeps its
+        closures: whoever still holds it holds a stale resolver anyway. A
+        stub promoted concurrently by another thread gets that thread's code.
+        """
+        key = node.key
+        with self._lock:
+            done = self._promoted.get(stub)
+            if done is not None:
+                return done
+            if is_async:
+                entry = self.async_.get(key)
+                if entry is None or entry[0] is not stub:
+                    return first
+                fn = self._generate(node, is_async=True)
+                self.async_[key] = (fn, True)
+            else:
+                if self.sync.get(key) is not stub:
+                    return first
+                fn = self._generate(node, is_async=False)
+                self.sync[key] = fn
+            self._promoted[stub] = fn
+            return fn
+
+    def _generate(self, node: Node, *, is_async: bool) -> Callable[[], Any]:
+        """Generated resolver for a class/factory node (see ``_CodeGen``)."""
+        fn, source = _CodeGen(self, node, is_async=is_async).build()
+        self.sources[(node.key, is_async)] = source
+        if node.scope == TRANSIENT or (node.scope != SINGLETON and not is_async):
+            return fn  # the generated function is the whole resolver
+        # Singleton (lock) / async scoped (shared future) creation.
+        return self._ascoped(node, fn) if is_async else self._scoped(node, fn)
+
+    def source(self, key: Any, *, is_async: bool = False) -> str | None:
+        """Generated source of ``key``'s resolver, once compiled (else None).
+
+        ``is_async=True`` gives the ``aget`` resolver of a key whose graph has
+        an async factory. None in ``debug`` mode, under a profiler, and for
+        instance bindings, which use closures.
+        """
+        return self.sources.get((key, is_async))
+
     # ------------------------------------------------------------ whole graph
 
     def registered_keys(self) -> list[Any]:
@@ -877,10 +1073,14 @@ class DependencyResolver:
             )
         with self._lock:
             self._dirty = True
-            for key in self.registered_keys():
-                self._compile_sync(key)
-                if self._node(key).needs_async:
-                    self._compile_async(key)
+            self._eager = True  # generate code now, no closure warm-up
+            try:
+                for key in self.registered_keys():
+                    self._compile_sync(key)
+                    if self._node(key).needs_async:
+                        self._compile_async(key)
+            finally:
+                self._eager = False
 
     def dependency_graph(self) -> dict[ServiceKey, list[ServiceKey]]:
         """Direct dependency keys of every registered key, per the plans.
@@ -915,3 +1115,277 @@ class DependencyResolver:
                 continue
             out.append(dep_key)
         return out
+
+
+# ---------------------------------------------------------------------- codegen
+
+# Most transient nodes inlined into one generated function; deeper / wider
+# transient subtrees call their own (generated) resolver instead.
+_MAX_INLINE = 64
+
+# Calls served by a key's closure resolver before it gets generated code.
+_PROMOTE_AFTER = 2
+
+_NON_IDENT = re.compile(r"\W", re.ASCII)
+_RESERVED = frozenset({"_M", "_Exc", "_KeyError", "_fail_at", "_lines", "_root", "_e"})
+
+# Generated source -> linecache filename, and the next suffix per label.
+_files: dict[str, str] = {}
+_file_counts: dict[str, int] = {}
+_files_lock = threading.Lock()
+
+
+def _ident(text: str) -> str:
+    """A readable Python identifier made from ``text``."""
+    name = _NON_IDENT.sub("_", text)[:48] or "_"
+    if name[0].isdigit():
+        name = "_" + name
+    if keyword.iskeyword(name):
+        name += "_"
+    return name
+
+
+def _short_name(obj: Any) -> str:
+    """Class / function name of a key or target, for generated identifiers."""
+    if isinstance(obj, str):
+        return obj
+    try:
+        name = getattr(obj, "__name__", None)
+    except Exception:  # noqa: BLE001 - odd descriptors on user objects
+        name = None
+    return name if isinstance(name, str) else type(obj).__name__
+
+
+def _register_source(label: str, source: str) -> str:
+    """Register ``source`` in ``linecache``; return its stable filename.
+
+    The filename is ``<injectq-generated:Label>``; a different source for
+    the same label (another graph, another class of that name) gets
+    ``#2``, ``#3``..., so every traceback line points at the right code.
+    """
+    with _files_lock:
+        filename = _files.get(source)
+        if filename is None:
+            n = _file_counts.get(label, 0) + 1
+            _file_counts[label] = n
+            suffix = "" if n == 1 else f"#{n}"
+            filename = f"<injectq-generated:{label}{suffix}>"
+            _files[source] = filename
+        # (Re-)register: linecache.clearcache() may have dropped it.
+        linecache.cache[filename] = (
+            len(source),
+            None,
+            source.splitlines(keepends=True),
+            filename,
+        )
+    return filename
+
+
+def _fail_at(exc: Exception, lines: dict[int, Node], root: Node) -> NoReturn:
+    """``_fail`` for generated code: the failing node is found by line.
+
+    Every inlined constructor / factory call sits on its own line, so the
+    line of the generated frame the exception passed through names the
+    node whose target raised; it is wrapped exactly once, as by the
+    closure engine.
+    """
+    if isinstance(exc, InjectQError):
+        raise exc
+    tb = exc.__traceback__
+    node = lines.get(tb.tb_lineno, root) if tb is not None else root
+    raise _wrap_error(node, exc) from exc
+
+
+def _raise_needs_aget(key: Any) -> NoReturn:
+    raise _needs_aget(key)
+
+
+class _CodeGen:
+    """Generates one Python function resolving one key.
+
+    The function computes the key's graph in the order the closure engine
+    does (depth first, arguments left to right), one statement per
+    created object:
+
+    - transient class/factory dependencies are inlined as constructor /
+      factory calls (``await``-ed only for async factories, in the async
+      variant);
+    - singleton dependencies are a dict lookup in the singleton cache,
+      falling back to that key's own resolver (which takes the per-key
+      creation lock);
+    - context-scoped dependencies are a lookup in the active scope frame,
+      falling back to that key's resolver (which creates the instance or
+      raises ``ScopeError``);
+    - instance bindings and default values are constants.
+
+    One ``try`` covers the body; ``_fail_at`` maps the failing line back to
+    its node. Identifiers are the class / factory / parameter names, the
+    source is registered in ``linecache`` so tracebacks show it.
+    """
+
+    def __init__(
+        self, resolver: DependencyResolver, root: Node, *, is_async: bool
+    ) -> None:
+        self.resolver = resolver
+        self.root = root
+        self.is_async = is_async
+        self.ns: dict[str, Any] = {
+            "_M": _MISSING,
+            "_Exc": Exception,
+            "_KeyError": KeyError,
+            "_fail_at": _fail_at,
+            "_root": root,
+        }
+        self.used: set[str] = set(_RESERVED)
+        self.next_suffix: dict[str, int] = {}
+        self.by_id: dict[int, str] = {}
+        self.body: list[tuple[str, Node | None]] = []
+        self.inlined = 0
+        sm = resolver.scope_manager
+        # Bound methods are created per attribute access: fetch them once.
+        self.singletons = sm._singletons  # noqa: SLF001
+        self.frame_of = sm._frame  # noqa: SLF001
+
+    # ---------------------------------------------------------------- names
+
+    def fresh(self, hint: str) -> str:
+        """A new identifier based on ``hint``, unique in the function."""
+        base = _ident(hint)
+        name, n = base, self.next_suffix.get(base, 2)
+        while name in self.used:
+            name = f"{base}_{n}"
+            n += 1
+        self.next_suffix[base] = n
+        self.used.add(name)
+        return name
+
+    def const(self, obj: Any, hint: str) -> str:
+        """Name of a global of the generated function holding ``obj``."""
+        name = self.by_id.get(id(obj))
+        if name is None:
+            name = self.fresh(hint)
+            self.ns[name] = obj
+            self.by_id[id(obj)] = name
+        return name
+
+    def emit(self, line: str, node: Node | None = None) -> None:
+        self.body.append((line, node))
+
+    # --------------------------------------------------------------- values
+
+    def call(self, node: Node) -> str:
+        """``target(args)`` of a class/factory node; emits its dependencies."""
+        args: list[str] = []
+        for dep in node.deps:
+            if dep.key is _MISSING:
+                value = self.const(dep.value, f"default_{dep.name}")
+            else:
+                value = self.value(self.resolver._node(dep.key), dep.name)  # noqa: SLF001
+            args.append(value if dep.positional else f"{dep.name}={value}")
+        target = self.const(node.target, _short_name(node.target))
+        call = f"{target}({', '.join(args)})"
+        return f"await {call}" if node.is_async else call
+
+    def resolve_call(self, node: Node) -> str:
+        """A call of ``node``'s own resolver (sync, or awaited if needed)."""
+        label = _short_name(node.key)
+        if self.is_async and node.needs_async:
+            afn = self.resolver._compile_async(node.key)[0]  # noqa: SLF001
+            return f"await {self.const(afn, f'aresolve_{label}')}()"
+        fn = self.resolver._compile_sync(node.key)  # noqa: SLF001
+        return f"{self.const(fn, f'resolve_{label}')}()"
+
+    def value(self, node: Node, hint: str) -> str:
+        """Emit the statements producing ``node``'s value; return its name."""
+        if node.kind == INSTANCE:
+            return self.const(node.target, hint)
+        scope = node.scope
+        if scope == TRANSIENT:
+            var = self.fresh(hint)
+            if self.inlined >= _MAX_INLINE:
+                self.emit(f"{var} = {self.resolve_call(node)}")
+            elif node.is_async and not self.is_async:
+                # Sync resolve of an async factory: the closure engine's
+                # ``create_async_only`` (raises "use aget").
+                fail = self.const(_raise_needs_aget, "_needs_aget")
+                key = self.const(node.key, f"key_{_short_name(node.key)}")
+                self.emit(f"{var} = {fail}({key})")
+            else:
+                self.inlined += 1
+                self.emit(f"{var} = {self.call(node)}", node)
+            return var
+        sm = self.resolver.scope_manager
+        key = self.const(node.key, f"key_{_short_name(node.key)}")
+        resolve = self.resolve_call(node)
+        var = self.fresh(hint)
+        if scope == SINGLETON:
+            # ``d[k]`` in a try is cheaper than ``d.get(k, _M)`` on a hit.
+            singletons = self.const(self.singletons, "_singletons")
+            self.emit("try:")
+            self.emit(f"    {var} = {singletons}[{key}]")
+            self.emit("except _KeyError:")
+            self.emit(f"    {var} = _M")
+        else:
+            active = self.const(sm._active, "_scopes")  # noqa: SLF001
+            name = self.const(scope, f"scope_{scope}")
+            frame = self.fresh(f"{hint}_frame")
+            self.emit(f"{frame} = {active}.get().get({name})")
+            self.emit(
+                f"{var} = {frame}.instances.get({key}, _M) "
+                f"if {frame} is not None and not {frame}.closed else _M"
+            )
+        self.emit(f"if {var} is _M: {var} = {resolve}")
+        return var
+
+    # ---------------------------------------------------------------- build
+
+    def build(self) -> tuple[Callable[[], Any], str]:
+        """Generate, compile and return ``(function, source)``."""
+        root = self.root
+        label = _ident(_short_name(root.key))
+        self.inlined = 1
+        call = self.call(root)
+        scoped_root = root.scope not in (TRANSIENT, SINGLETON) and not self.is_async
+        prefix = "resolve" if root.scope == TRANSIENT or scoped_root else "create"
+        fname = self.fresh(f"{prefix}_{label}")
+        head = f"{'async ' if self.is_async else ''}def {fname}():"
+        out: list[str] = [head]
+        lines: dict[int, Node] = {}
+        if scoped_root:
+            sm = self.resolver.scope_manager
+            active = self.const(sm._active, "_scopes")  # noqa: SLF001
+            frame_of = self.const(self.frame_of, "_frame_of")
+            name = self.const(root.scope, f"scope_{root.scope}")
+            key = self.const(root.key, f"key_{label}")
+            frame, instances, value = (
+                self.fresh("frame"),
+                self.fresh("instances"),
+                self.fresh("value"),
+            )
+            out += [
+                f"    {frame} = {active}.get().get({name})",
+                f"    if {frame} is None or {frame}.closed:",
+                f"        {frame} = {frame_of}({name})  # raises ScopeError",
+                f"    {instances} = {frame}.instances",
+                f"    {value} = {instances}.get({key}, _M)",
+                f"    if {value} is not _M:",
+                f"        return {value}",
+            ]
+            self.emit(f"{value} = {call}", root)
+            tail = [f"    return {instances}.setdefault({key}, {value})"]
+        else:
+            self.emit(f"return {call}", root)
+            tail = []
+        out.append("    try:")
+        for text, node in self.body:
+            out.append(f"        {text}")
+            if node is not None:
+                lines[len(out)] = node
+        out += ["    except _Exc as _e:", "        _fail_at(_e, _lines, _root)"]
+        out += tail
+        source = "\n".join(out) + "\n"
+        self.ns["_lines"] = lines
+        filename = _register_source(label, source)
+        exec(compile(source, filename, "exec"), self.ns)  # noqa: S102
+        fn: Callable[[], Any] = self.ns[fname]
+        return fn, source

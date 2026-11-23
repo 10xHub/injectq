@@ -3,6 +3,10 @@
 from typing import Annotated
 
 import pytest
+
+
+pytest.importorskip("taskiq")
+
 from taskiq import InMemoryBroker
 
 from injectq import InjectQ

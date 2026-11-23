@@ -13,8 +13,6 @@ import pytest
 from injectq import ContainerContext, InjectQ, inject
 from injectq.utils import ScopeError
 
-from ._helpers import xf
-
 
 class Svc:
     pass
@@ -46,7 +44,6 @@ def _import_leaks(module: str, forbidden: str) -> bool:
     return proc.stdout.strip() == "True"
 
 
-@xf(8, "importing one integration must not import another framework (fastmcp)")
 def test_importing_fastapi_integration_does_not_import_fastmcp():
     pytest.importorskip("fastmcp")
     assert not _import_leaks("injectq.integrations.fastapi", "fastmcp")
@@ -116,7 +113,6 @@ def _fastapi_app(container: InjectQ, *, delay: float = 0.0) -> Any:
     return app
 
 
-@xf(8, "FastAPI: InjectQ.get_instance() inside a route is the app container")
 async def test_fastapi_get_instance_in_route_is_app_container_and_global_after():
     glob = InjectQ.get_instance()
     c = InjectQ()
@@ -126,7 +122,6 @@ async def test_fastapi_get_instance_in_route_is_app_container_and_global_after()
     assert ContainerContext.get_current() is None
 
 
-@xf(8, "FastAPI: two concurrent requests on two apps do not see each other's container")
 async def test_fastapi_concurrent_requests_on_two_apps_are_isolated():
     glob = InjectQ.get_instance()
     c1, c2 = InjectQ(), InjectQ()
@@ -137,7 +132,6 @@ async def test_fastapi_concurrent_requests_on_two_apps_are_isolated():
     assert InjectQ.get_instance() is glob
 
 
-@xf(8, "FastAPI: @inject inside a route resolves from the app container")
 async def test_fastapi_inject_decorator_uses_app_container():
     c = InjectQ()
     c.bind(Svc, Svc, scope="singleton")
@@ -145,7 +139,6 @@ async def test_fastapi_inject_decorator_uses_app_container():
     assert await _asgi_get(app, "/inject") == {"same": True}
 
 
-@xf(8, "FastAPI: middleware enters a request scope per request")
 async def test_fastapi_middleware_enters_request_scope():
     pytest.importorskip("fastapi")
     from fastapi import FastAPI
@@ -170,7 +163,6 @@ async def test_fastapi_middleware_enters_request_scope():
     assert len(seen) == 2
 
 
-@xf(8, "FastAPI: InjectFastAPI dependency is an async def")
 def test_fastapi_inject_dependency_is_coroutine_function():
     pytest.importorskip("fastapi")
     from injectq.integrations.fastapi import InjectFastAPI
@@ -179,7 +171,6 @@ def test_fastapi_inject_dependency_is_coroutine_function():
     assert inspect.iscoroutinefunction(dep.dependency)  # type: ignore[attr-defined]
 
 
-@xf(8, "FastAPI: InjectFastAPI awaits async factories")
 async def test_fastapi_inject_awaits_async_factory():
     pytest.importorskip("fastapi")
     from fastapi import FastAPI
@@ -236,7 +227,6 @@ async def _call_tool(mcp: Any, tool: str = "whoami") -> Any:
     return result.data
 
 
-@xf(8, "FastMCP: InjectQ.get_instance() inside a tool is the server container")
 async def test_fastmcp_get_instance_in_tool_is_server_container_and_global_after():
     glob = InjectQ.get_instance()
     c = InjectQ()
@@ -246,7 +236,6 @@ async def test_fastmcp_get_instance_in_tool_is_server_container_and_global_after
     assert ContainerContext.get_current() is None
 
 
-@xf(8, "FastMCP: two concurrent calls on two servers are isolated")
 async def test_fastmcp_concurrent_servers_are_isolated():
     glob = InjectQ.get_instance()
     m1 = _fastmcp_server(InjectQ(), "one", delay=0.02)
@@ -257,7 +246,6 @@ async def test_fastmcp_concurrent_servers_are_isolated():
     assert InjectQ.get_instance() is glob
 
 
-@xf(8, "FastMCP: new names InjectFastMCP / setup_fastmcp / get_container_fastmcp")
 def test_fastmcp_new_names_exist():
     pytest.importorskip("fastmcp")
     from injectq.integrations import fastmcp as mod
@@ -266,7 +254,6 @@ def test_fastmcp_new_names_exist():
         assert hasattr(mod, name), name
 
 
-@xf(8, "FastMCP: old names setup_mcp / InjectMCP are deprecated aliases")
 def test_fastmcp_old_names_warn():
     pytest.importorskip("fastmcp")
     from fastmcp import FastMCP
@@ -309,7 +296,6 @@ async def _kick(task: Any) -> Any:
     return result.return_value
 
 
-@xf(8, "Taskiq: InjectQ.get_instance() inside a task is the broker container")
 async def test_taskiq_get_instance_in_task_is_broker_container_and_global_after():
     glob = InjectQ.get_instance()
     c = InjectQ()
@@ -323,7 +309,6 @@ async def test_taskiq_get_instance_in_task_is_broker_container_and_global_after(
     assert ContainerContext.get_current() is None
 
 
-@xf(8, "Taskiq: two concurrent tasks on two brokers are isolated")
 async def test_taskiq_concurrent_brokers_are_isolated():
     glob = InjectQ.get_instance()
     b1, t1 = _taskiq_broker(InjectQ(), delay=0.02)
@@ -363,9 +348,323 @@ async def test_taskiq_sync_task_still_resolves_injected_dependency():
         await broker.shutdown()
 
 
-@xf(8, "Taskiq: get_container_taskiq is the uniform name")
 def test_taskiq_new_name_exists():
     pytest.importorskip("taskiq")
     from injectq.integrations import taskiq as mod
 
     assert hasattr(mod, "get_container_taskiq")
+
+
+# =============================================================================
+# Step 8 additions: import hygiene, sync routes, request scopes, async factories
+# =============================================================================
+
+
+@pytest.mark.parametrize(
+    ("module", "forbidden"),
+    [
+        ("injectq.integrations", "fastapi"),
+        ("injectq.integrations", "fastmcp"),
+        ("injectq.integrations", "taskiq"),
+        ("injectq.integrations.fastmcp", "fastmcp"),
+        ("injectq.integrations.taskiq", "taskiq"),
+        ("injectq.integrations.taskiq", "fastapi"),
+        ("injectq.integrations.taskiq", "fastmcp"),
+        ("injectq.integrations.fastapi", "fastapi"),
+    ],
+)
+def test_integration_modules_import_no_framework(module: str, forbidden: str):
+    assert not _import_leaks(module, forbidden)
+
+
+def test_integrations_package_exports_lazily():
+    pytest.importorskip("fastapi")
+    import injectq.integrations as pkg
+    from injectq.integrations.fastapi import InjectFastAPI
+
+    assert pkg.InjectFastAPI is InjectFastAPI
+    with pytest.raises(AttributeError):
+        _ = pkg.does_not_exist
+
+
+def test_fastapi_old_name_warns():
+    pytest.importorskip("fastapi")
+    from injectq.integrations import fastapi as mod
+
+    with pytest.warns(DeprecationWarning, match="InjectFastAPI"):
+        dep = mod.InjectAPI(Svc)
+    assert inspect.iscoroutinefunction(dep.dependency)  # type: ignore[attr-defined]
+
+
+async def test_fastapi_sync_route_sees_container_and_request_scope():
+    """Sync routes run in an anyio worker thread that copies the context."""
+    pytest.importorskip("fastapi")
+    from fastapi import FastAPI
+
+    from injectq.integrations.fastapi import InjectFastAPI, setup_fastapi
+
+    c = InjectQ()
+    c.bind(ReqSvc, ReqSvc, scope="request")
+    app = FastAPI()
+    setup_fastapi(c, app)
+    kept: list[ReqSvc] = []
+
+    @app.get("/")
+    def sync_route(
+        svc: Annotated[ReqSvc, InjectFastAPI(ReqSvc)],
+    ) -> dict[str, bool]:
+        kept.append(svc)
+        return {
+            "is_app_container": InjectQ.get_instance() is c,
+            "same_request_instance": c.get(ReqSvc) is svc,
+        }
+
+    expected = {"is_app_container": True, "same_request_instance": True}
+    assert await _asgi_get(app) == expected
+    assert await _asgi_get(app) == expected
+    assert kept[0] is not kept[1]
+    assert ContainerContext.get_current() is None
+
+
+async def test_fastapi_request_scope_is_per_request_and_ends():
+    pytest.importorskip("fastapi")
+    from fastapi import FastAPI
+
+    from injectq.integrations.fastapi import InjectFastAPI, setup_fastapi
+
+    c = InjectQ()
+    c.bind(ReqSvc, ReqSvc, scope="request")
+    app = FastAPI()
+    setup_fastapi(c, app)
+    kept: list[ReqSvc] = []
+
+    @app.get("/")
+    async def root(
+        a: Annotated[ReqSvc, InjectFastAPI(ReqSvc)],
+        b: Annotated[ReqSvc, InjectFastAPI(ReqSvc)],
+    ) -> dict[str, bool]:
+        kept.append(a)
+        return {"same": a is b}
+
+    assert await _asgi_get(app) == {"same": True}
+    assert await _asgi_get(app) == {"same": True}
+    assert kept[0] is not kept[1]
+    with pytest.raises(ScopeError):
+        await c.aget(ReqSvc)
+
+
+def test_fastapi_websocket_sees_container_and_request_scope():
+    pytest.importorskip("fastapi")
+    from fastapi import FastAPI, WebSocket
+    from fastapi.testclient import TestClient
+
+    from injectq.integrations.fastapi import InjectFastAPI, setup_fastapi
+
+    c = InjectQ()
+    c.bind(ReqSvc, ReqSvc, scope="request")
+    app = FastAPI()
+    setup_fastapi(c, app)
+
+    @app.websocket("/ws")
+    async def ws(
+        websocket: WebSocket, svc: Annotated[ReqSvc, InjectFastAPI(ReqSvc)]
+    ) -> None:
+        await websocket.accept()
+        await websocket.send_json(
+            {
+                "is_app_container": InjectQ.get_instance() is c,
+                "same": await c.aget(ReqSvc) is svc,
+            }
+        )
+        await websocket.close()
+
+    with TestClient(app).websocket_connect("/ws") as conn:
+        assert conn.receive_json() == {"is_app_container": True, "same": True}
+
+
+async def test_fastapi_middleware_tolerates_foreign_context_reset():
+    """A token reset from another context must not break the middleware."""
+    pytest.importorskip("fastapi")
+    from injectq.integrations.fastapi import InjectQRequestMiddleware
+
+    c = InjectQ()
+
+    async def inner(_scope: Any, _receive: Any, _send: Any) -> None:
+        assert InjectQ.get_instance() is c
+        ContainerContext.set_current(InjectQ())  # handler leaves a value behind
+
+    mw = InjectQRequestMiddleware(inner, container=c)
+
+    async def call() -> None:
+        await mw({"type": "http"}, None, None)
+
+    await asyncio.create_task(call())
+    assert ContainerContext.get_current() is None
+
+
+async def test_fastmcp_request_scope_per_call_and_async_factory():
+    pytest.importorskip("fastmcp")
+    from fastmcp import FastMCP
+
+    from injectq.integrations.fastmcp import InjectFastMCP, setup_fastmcp
+
+    c = InjectQ()
+    c.bind(ReqSvc, ReqSvc, scope="request")
+
+    async def make_svc() -> Svc:
+        await asyncio.sleep(0)
+        return Svc()
+
+    c.bind_factory(Svc, make_svc)
+    mcp = FastMCP("scoped")
+    setup_fastmcp(c, mcp)
+    kept: list[ReqSvc] = []
+
+    @mcp.tool
+    async def scoped(
+        a: ReqSvc = InjectFastMCP(ReqSvc),  # noqa: B008
+        svc: Svc = InjectFastMCP(Svc),  # noqa: B008
+    ) -> bool:
+        kept.append(a)
+        return (
+            isinstance(svc, Svc)
+            and await c.aget(ReqSvc) is a
+            and InjectQ.get_instance() is c
+        )
+
+    assert await _call_tool(mcp, "scoped") is True
+    assert await _call_tool(mcp, "scoped") is True
+    assert kept[0] is not kept[1]
+    assert ContainerContext.get_current() is None
+
+
+def test_fastmcp_dependency_is_coroutine_function():
+    pytest.importorskip("fastmcp")
+    from injectq.integrations.fastmcp import InjectFastMCP
+
+    dep = InjectFastMCP(Svc)
+    assert inspect.iscoroutinefunction(dep.factory)  # type: ignore[attr-defined]
+
+
+def test_taskiq_dependency_is_coroutine_function():
+    pytest.importorskip("taskiq")
+    from injectq.integrations.taskiq import InjectTaskiq
+
+    dep = InjectTaskiq(Svc)
+    assert inspect.iscoroutinefunction(dep.dependency)  # type: ignore[attr-defined]
+
+
+async def test_taskiq_request_scope_per_task_and_async_factory():
+    pytest.importorskip("taskiq")
+    from taskiq import InMemoryBroker
+
+    from injectq.integrations.taskiq import InjectTaskiq, setup_taskiq
+
+    c = InjectQ()
+    c.bind(ReqSvc, ReqSvc, scope="request")
+
+    async def make_svc() -> Svc:
+        await asyncio.sleep(0)
+        return Svc()
+
+    c.bind_factory(Svc, make_svc)
+    broker = InMemoryBroker()
+    setup_taskiq(c, broker)
+    kept: list[ReqSvc] = []
+
+    @broker.task
+    async def scoped(
+        a: Annotated[ReqSvc, InjectTaskiq(ReqSvc)],
+        svc: Annotated[Svc, InjectTaskiq(Svc)],
+    ) -> bool:
+        @inject
+        def via_inject(r: ReqSvc) -> ReqSvc:
+            return r
+
+        kept.append(a)
+        return (
+            isinstance(svc, Svc)
+            and await c.aget(ReqSvc) is a
+            and via_inject() is a
+            and InjectQ.get_instance() is c
+        )
+
+    await broker.startup()
+    try:
+        assert await _kick(scoped) is True
+        assert await _kick(scoped) is True
+    finally:
+        await broker.shutdown()
+    assert kept[0] is not kept[1]
+    assert ContainerContext.get_current() is None
+
+
+async def test_taskiq_failing_task_resets_context_and_scope():
+    pytest.importorskip("taskiq")
+    from taskiq import InMemoryBroker
+
+    from injectq.integrations.taskiq import setup_taskiq
+
+    c = InjectQ()
+    c.bind(ReqSvc, ReqSvc, scope="request")
+    broker = InMemoryBroker(await_inplace=True)  # runs in this task's context
+    setup_taskiq(c, broker)
+    closed: list[bool] = []
+
+    @broker.task
+    async def boom() -> None:
+        c._scope_manager.current_exit_stack("request").callback(  # noqa: SLF001
+            lambda: closed.append(True)
+        )
+        msg = "boom"
+        raise ValueError(msg)
+
+    await broker.startup()
+    try:
+        handle = await boom.kiq()
+        result = await handle.wait_result()
+    finally:
+        await broker.shutdown()
+    assert result.is_err
+    assert closed == [True]
+    assert ContainerContext.get_current() is None
+    with pytest.raises(ScopeError):
+        await c.aget(ReqSvc)
+
+
+async def test_taskiq_sync_task_gets_request_scoped_dependency():
+    """Sync tasks get deps resolved on the loop (inside the task's scope)."""
+    pytest.importorskip("taskiq")
+    from taskiq import InMemoryBroker
+
+    from injectq.integrations.taskiq import InjectTaskiq, setup_taskiq
+
+    c = InjectQ()
+    c.bind(ReqSvc, ReqSvc, scope="request")
+    broker = InMemoryBroker()
+    setup_taskiq(c, broker)
+
+    @broker.task
+    def sync_task(svc: Annotated[ReqSvc, InjectTaskiq(ReqSvc)]) -> bool:
+        return isinstance(svc, ReqSvc)
+
+    await broker.startup()
+    try:
+        assert await _kick(sync_task) is True
+    finally:
+        await broker.shutdown()
+
+
+def test_taskiq_old_names_warn():
+    pytest.importorskip("taskiq")
+    from taskiq import TaskiqState
+
+    from injectq.integrations import taskiq as mod
+
+    with pytest.warns(DeprecationWarning, match="InjectTaskiq"):
+        mod.InjectTask(Svc)
+    state = TaskiqState()
+    c = InjectQ()
+    state.injectq_container = c  # type: ignore[attr-defined]
+    with pytest.warns(DeprecationWarning, match="get_container_taskiq"):
+        assert mod.get_injector_instance_taskiq(state) is c

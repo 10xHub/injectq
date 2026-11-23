@@ -3,23 +3,35 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import functools
 import inspect
 import types
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator, Iterator
 
 import pytest
 
-from injectq import Inject, InjectQ, inject, resource, scoped, singleton, transient
+from injectq import (
+    Inject,
+    InjectQ,
+    ScopeType,
+    inject,
+    register_as,
+    resource,
+    scoped,
+    singleton,
+    transient,
+)
 from injectq.decorators._resource import (
     AsyncResourceLifecycle,
     ResourceManager,
     SyncResourceLifecycle,
+    get_resource_manager,
 )
 from injectq.modules import ProviderModule, provider
 from injectq.utils import DependencyNotFoundError, InjectionError
 
-from ._helpers import xf
 
 
 class Db:
@@ -55,7 +67,6 @@ class Needy:
 # --- @inject: user exceptions ------------------------------------------------
 
 
-@xf(7, "@inject lets the function's own ValueError through unwrapped")
 def test_inject_does_not_wrap_user_value_error():
     c = InjectQ()
     c.bind(Dep, Dep)
@@ -69,7 +80,6 @@ def test_inject_does_not_wrap_user_value_error():
         boom()
 
 
-@xf(7, "@inject (async) lets the function's own exception through unwrapped")
 async def test_inject_async_does_not_wrap_user_exception():
     c = InjectQ()
     c.bind(Dep, Dep)
@@ -123,7 +133,6 @@ def test_inject_marker_sees_rebinding():
     assert get_name() == "second"
 
 
-@xf(7, "Inject proxy outside @inject resolves per access, not once")
 def test_inject_proxy_resolves_per_access():
     c = InjectQ.get_instance()
     c.bind(Db, Db, scope="transient")
@@ -144,7 +153,6 @@ def test_inject_marker_honours_explicit_container():
     assert f() == "explicit"
 
 
-@xf(7, "repr() of an Inject proxy must not trigger resolution")
 def test_inject_proxy_repr_does_not_resolve():
     c = InjectQ.get_instance()
     calls = []
@@ -159,7 +167,6 @@ def test_inject_proxy_repr_does_not_resolve():
     assert calls == []
 
 
-@xf(7, "an Inject proxy equals itself")
 def test_inject_proxy_equals_itself():
     InjectQ.get_instance().bind(Db, Db)
     proxy = Inject[Db]
@@ -173,7 +180,6 @@ def _takes_dep(d: Dep, extra: int) -> tuple[Dep, int]:
     return d, extra
 
 
-@xf(7, "@inject works on functools.partial (no __name__)")
 def test_inject_on_partial():
     c = InjectQ()
     c.bind(Dep, Dep)
@@ -183,7 +189,6 @@ def test_inject_on_partial():
     assert extra == 1
 
 
-@xf(7, "@inject works on callable instances (no __name__)")
 def test_inject_on_callable_instance():
     c = InjectQ()
     c.bind(Dep, Dep)
@@ -196,7 +201,6 @@ def test_inject_on_callable_instance():
     assert isinstance(wrapped(), Dep)
 
 
-@xf(7, "@inject placed above @classmethod")
 def test_inject_above_classmethod():
     c = InjectQ()
     c.bind(Dep, Dep)
@@ -224,7 +228,6 @@ def test_inject_below_classmethod():
     assert isinstance(S.m(), Dep)
 
 
-@xf(7, "@inject on an async generator function returns an async generator")
 async def test_inject_on_async_generator_function():
     c = InjectQ()
     c.bind(Dep, Dep)
@@ -239,7 +242,6 @@ async def test_inject_on_async_generator_function():
     assert isinstance(items[0], Dep)
 
 
-@xf(7, "@inject analyses dependencies lazily so forward references work")
 def test_inject_forward_reference_to_later_class():
     mod = types.ModuleType("fwd_mod")
     mod.__dict__["InjectQ"] = InjectQ
@@ -260,7 +262,6 @@ def test_inject_forward_reference_to_later_class():
 # --- registration decorators -------------------------------------------------
 
 
-@xf(9, "@singleton(container=c) works with arguments")
 def test_singleton_with_container_argument():
     c = InjectQ()
 
@@ -271,7 +272,6 @@ def test_singleton_with_container_argument():
     assert c.get(X) is c.get(X)
 
 
-@xf(9, "@transient(container=c) works with arguments")
 def test_transient_with_container_argument():
     c = InjectQ()
 
@@ -295,7 +295,6 @@ def test_scoped_with_arguments_still_works():
         assert c.get(X) is c.get(X)
 
 
-@xf(9, "bare @scoped returns the class (docs show bare usage)")
 def test_bare_scoped_returns_class():
     InjectQ.get_instance()
 
@@ -306,7 +305,6 @@ def test_bare_scoped_returns_class():
     assert isinstance(X, type)
 
 
-@xf(9, "bare @resource returns the original function")
 def test_bare_resource_keeps_function():
     @resource
     def conn():
@@ -329,7 +327,6 @@ def test_resource_with_arguments_keeps_function():
 # --- resources ---------------------------------------------------------------
 
 
-@xf(9, "resources shut down in LIFO order")
 def test_resource_shutdown_is_lifo():
     order: list[str] = []
     mgr = ResourceManager()
@@ -348,7 +345,6 @@ def test_resource_shutdown_is_lifo():
     assert order == ["third", "second", "first"]
 
 
-@xf(9, "resource shutdown errors are not swallowed (and the others still run)")
 def test_resource_shutdown_does_not_swallow_errors():
     closed: list[str] = []
     mgr = ResourceManager()
@@ -371,7 +367,6 @@ def test_resource_shutdown_does_not_swallow_errors():
     assert closed == ["good"]
 
 
-@xf(9, "concurrent async resource init runs the factory once")
 async def test_concurrent_async_resource_init_runs_once():
     calls: list[int] = []
     mgr = ResourceManager()
@@ -390,6 +385,115 @@ async def test_concurrent_async_resource_init_runs_once():
     await mgr.shutdown_all_async()
 
 
+class Pool:
+    pass
+
+
+class Conn2:
+    pass
+
+
+class Plain:
+    pass
+
+
+def test_resource_singleton_binds_and_shuts_down_in_manager():
+    c = InjectQ()
+    log: list[str] = []
+
+    @resource(container=c)
+    def pool() -> Iterator[Pool]:
+        log.append("open")
+        yield Pool()
+        log.append("close")
+
+    assert c.get(Pool) is c.get(Pool)
+    assert log == ["open"]
+    get_resource_manager().shutdown_all()
+    assert log == ["open", "close"]
+
+
+def test_same_qualname_resources_do_not_clobber():
+    c = InjectQ()
+
+    def make():
+        @resource(container=c)
+        def conn():
+            yield object()
+
+        return conn
+
+    fa, fb = make(), make()
+    assert fa._resource_name != fb._resource_name
+    assert c.get(fa) is not c.get(fb)
+
+
+def test_resource_teardown_receives_exception():
+    seen: list[BaseException | None] = []
+
+    @contextlib.contextmanager
+    def cm():
+        try:
+            yield 1
+        except ValueError as e:
+            seen.append(e)
+            raise
+
+    lifecycle = SyncResourceLifecycle(cm)
+    lifecycle.initialize()
+    err = ValueError("boom")
+    lifecycle.shutdown(err)  # the caller already holds ``err``; not re-raised
+    assert seen == [err]
+
+
+async def test_async_scoped_resource_and_sync_cm_from_async_factory():
+    c = InjectQ()
+    closed: list[str] = []
+
+    @resource("request", container=c)
+    async def conn() -> AsyncIterator[Conn2]:
+        yield Conn2()
+        closed.append("conn")
+
+    @contextlib.contextmanager
+    def sync_cm():
+        yield Plain()
+        closed.append("plain")
+
+    @resource("request", container=c)
+    async def plain() -> Plain:
+        return sync_cm()
+
+    async with c.async_scope("request"):
+        assert isinstance(await c.aget(Conn2), Conn2)
+        assert isinstance(await c.aget(Plain), Plain)
+        assert not closed
+    assert closed == ["plain", "conn"]
+
+
+def test_register_decorator_forms():
+    c = InjectQ()
+
+    @singleton()
+    class Bare:
+        pass
+
+    @scoped(scope=ScopeType.REQUEST, container=c)
+    class S:
+        pass
+
+    class Iface:
+        pass
+
+    @register_as(Iface, scope=ScopeType.TRANSIENT, container=c)
+    class Impl(Iface):
+        pass
+
+    assert c.get(Impl) is not c.get(Iface)
+    assert isinstance(S, type)
+    assert Bare is not None
+
+
 # --- ProviderModule ----------------------------------------------------------
 
 
@@ -401,7 +505,6 @@ class NeedsDb:
     pass
 
 
-@xf(7, "ProviderModule must not swallow missing-dependency errors")
 def test_provider_module_missing_dependency_raises_dependency_error():
     class M(ProviderModule):
         @provider
@@ -416,7 +519,6 @@ def test_provider_module_missing_dependency_raises_dependency_error():
         c.get(Out)
 
 
-@xf(7, "ProviderModule must not evaluate properties via dir()")
 def test_provider_module_does_not_evaluate_properties():
     hits: list[int] = []
 
@@ -435,7 +537,6 @@ def test_provider_module_does_not_evaluate_properties():
     assert hits == []
 
 
-@xf(7, "async providers are awaited by aget")
 async def test_provider_module_async_provider_is_awaited():
     class M(ProviderModule):
         @provider
