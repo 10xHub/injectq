@@ -1,4 +1,4 @@
-from injectq import Inject, InjectQ
+from injectq import Inject, InjectQ, inject
 
 
 class A:
@@ -6,6 +6,7 @@ class A:
         self.value = "Service A"
 
 
+@inject
 def hello_function(name: str, service: A = Inject[A]) -> None:
     print(f"Hello, {name}!")
     print(service.value)
@@ -14,4 +15,4 @@ def hello_function(name: str, service: A = Inject[A]) -> None:
 if __name__ == "__main__":
     container = InjectQ.get_instance()
     container.bind(A, A())  # Bind the type A to an instance of A
-    hello_function()  # type: ignore  # noqa: PGH003
+    hello_function("World")

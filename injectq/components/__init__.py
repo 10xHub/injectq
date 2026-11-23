@@ -14,6 +14,7 @@ Key Features:
 import asyncio
 import contextlib
 import logging
+import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
@@ -29,6 +30,15 @@ from injectq.core.container import InjectQ
 from injectq.core.scopes import Scope
 from injectq.utils.exceptions import InjectQError
 
+
+_DEPRECATION_MESSAGE = (
+    "injectq.components is deprecated since 0.6 and will be removed in 0.7. "
+    "Use plain modules/providers (injectq.Module, container.bind) and the "
+    "container lifecycle (scopes, @resource, container.shutdown()) instead."
+)
+
+# stacklevel=2 points at the importer (importlib frames are skipped by warnings).
+warnings.warn(_DEPRECATION_MESSAGE, DeprecationWarning, stacklevel=2)
 
 # Get component logger
 _logger = logging.getLogger("injectq.components")
@@ -656,6 +666,12 @@ class ComponentContainer(InjectQ):
     """
 
     def __init__(self, thread_safe: bool = True) -> None:
+        warnings.warn(
+            "ComponentContainer is deprecated since 0.6 and will be removed "
+            "in 0.7; use InjectQ with modules/providers instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(thread_safe=thread_safe)
         self.component_registry = ComponentRegistry()
         self._component_scopes: dict[str, ComponentScope] = {}

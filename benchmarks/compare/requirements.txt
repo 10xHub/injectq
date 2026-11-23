@@ -1,0 +1,15 @@
+# Exact versions used for the published numbers (installed by run_all.sh).
+# injectq itself is installed from this checkout (pip install -e .), not pinned here.
+aioinject==1.11.0
+dependency-injector==4.49.1
+dishka==1.10.1
+diwire==1.5.0
+inject==5.5.0
+injector==0.24.0
+kink==0.9.0
+lagom==2.7.7
+punq==0.9.0
+rodi==2.1.0
+svcs==26.2.0
+that-depends==4.3.0
+wireup==2.13.1

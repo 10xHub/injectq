@@ -1,420 +1,111 @@
 # Contributing to InjectQ
 
-Thank you for your interest in contributing to InjectQ! This document provides guidelines and information for contributors.
+Bug reports, feature requests, documentation fixes, tests and code are all welcome.
 
-## 🤝 How to Contribute
+## Reporting issues
 
-There are many ways to contribute to InjectQ:
+Open an issue at [github.com/10xhub/injectq/issues](https://github.com/10xhub/injectq/issues) with:
 
-- **Bug Reports**: Report bugs and issues
-- **Feature Requests**: Suggest new features and improvements
-- **Documentation**: Improve documentation and examples
-- **Code**: Submit bug fixes and new features
-- **Testing**: Add tests and improve test coverage
-- **Reviews**: Review pull requests and provide feedback
+1. A description of the problem.
+2. The smallest code that reproduces it.
+3. What you expected and what happened (include the traceback).
+4. Python version, InjectQ version, OS, and the framework versions if an integration is involved.
 
-## 🐛 Reporting Issues
+## Development setup
 
-When reporting issues, please include:
-
-1. **Clear Description**: Describe the issue clearly
-2. **Reproduction Steps**: Provide minimal code to reproduce the issue
-3. **Expected Behavior**: What you expected to happen
-4. **Actual Behavior**: What actually happened
-5. **Environment**: Python version, InjectQ version, OS, etc.
-
-### Issue Template
-
-```markdown
-## Description
-Brief description of the issue
-
-## Reproduction
-```python
-# Minimal code to reproduce the issue
-```
-
-## Expected Behavior
-What should happen
-
-## Actual Behavior
-What actually happens
-
-## Environment
-- Python version: 
-- InjectQ version: 
-- Operating System: 
-```
-
-## 🚀 Setting Up Development Environment
-
-### Prerequisites
-
-- Python 3.10 or higher (tested on 3.10 through 3.15)
-- uv (recommended) or pip
-- Git
-
-### Setup Steps
-
-1. **Fork and Clone**
-   ```bash
-   git clone https://github.com/yourusername/injectq.git
-   cd injectq
-   ```
-
-2. **Install Dependencies**
-   ```bash
-   # Using uv (recommended)
-   uv sync --dev
-   
-   # Or using pip
-   pip install -e .[dev]
-   ```
-
-3. **Install Pre-commit Hooks**
-   ```bash
-   pre-commit install
-   ```
-
-4. **Run Tests**
-   ```bash
-   # Run all tests
-   pytest
-   
-   # Run with coverage
-   pytest --cov=injectq
-   
-   # Run specific test file
-   pytest tests/test_container.py
-   ```
-
-5. **Run Linting**
-   ```bash
-   # Run all checks
-   ruff check .
-   
-   # Auto-fix issues
-   ruff check . --fix
-   
-   # Format code
-   ruff format .
-   ```
-
-## 🏗️ Development Workflow
-
-### Branch Strategy
-
-- `main`: Stable release branch
-- `develop`: Development branch
-- `feature/*`: Feature branches
-- `bugfix/*`: Bug fix branches
-- `hotfix/*`: Critical hotfix branches
-
-### Workflow Steps
-
-1. **Create Feature Branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-2. **Make Changes**
-   - Write code following our style guidelines
-   - Add tests for new functionality
-   - Update documentation if needed
-
-3. **Run Tests**
-   ```bash
-   pytest
-   ruff check .
-   mypy injectq
-   ```
-
-4. **Commit Changes**
-   ```bash
-   git add .
-   git commit -m "feat: add your feature description"
-   ```
-
-5. **Push and Create PR**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-## 📝 Code Style Guidelines
-
-### Python Code Style
-
-We use [Ruff](https://docs.astral.sh/ruff/) for linting and formatting:
-
-- **Line Length**: 88 characters
-- **Import Sorting**: isort-compatible
-- **Formatting**: Black-compatible
-- **Type Hints**: Required for all public APIs
-
-### Docstring Style
-
-We use Google-style docstrings:
-
-```python
-def example_function(param1: str, param2: int) -> bool:
-    """Example function with proper docstring.
-    
-    Args:
-        param1: Description of param1
-        param2: Description of param2
-        
-    Returns:
-        Description of return value
-        
-    Raises:
-        ValueError: When param1 is empty
-        
-    Example:
-        >>> example_function("test", 42)
-        True
-    """
-    if not param1:
-        raise ValueError("param1 cannot be empty")
-    return len(param1) == param2
-```
-
-### Commit Message Format
-
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-Types:
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes
-- `refactor`: Code refactoring
-- `test`: Adding or fixing tests
-- `chore`: Maintenance tasks
-
-Examples:
-```
-feat: add async dependency resolution
-fix(container): resolve circular dependency issue
-docs: update getting started guide
-test: add tests for scoped services
-```
-
-## 🧪 Testing Guidelines
-
-### Test Structure
-
-```
-tests/
-├── test_container.py          # Container functionality
-├── test_scopes.py            # Scoping tests
-├── test_modules.py           # Module system tests
-├── test_integrations/        # Framework integrations
-│   ├── test_fastapi.py
-│   └── test_taskiq.py
-└── fixtures/                 # Test fixtures
-    └── conftest.py
-```
-
-### Writing Tests
-
-1. **Test Files**: Match source file names with `test_` prefix
-2. **Test Classes**: Group related tests in classes
-3. **Test Methods**: Use descriptive names starting with `test_`
-4. **Fixtures**: Use pytest fixtures for setup/teardown
-5. **Mocking**: Use unittest.mock or pytest-mock
-
-Example test:
-
-```python
-import pytest
-from injectq import InjectQ, inject
-
-class TestContainer:
-    def test_simple_registration(self):
-        """Test simple service registration."""
-        container = InjectQ()
-        container[str] = "test"
-        
-        assert container[str] == "test"
-    
-    def test_dependency_injection(self):
-        """Test automatic dependency injection."""
-        container = InjectQ()
-        container[str] = "hello"
-        
-        @inject
-        def func(message: str) -> str:
-            return f"Got: {message}"
-        
-        result = func()
-        assert result == "Got: hello"
-    
-    @pytest.mark.asyncio
-    async def test_async_injection(self):
-        """Test async dependency injection."""
-        container = InjectQ()
-        container[str] = "async"
-        
-        @inject
-        async def async_func(message: str) -> str:
-            return f"Async: {message}"
-        
-        result = await async_func()
-        assert result == "Async: async"
-```
-
-### Test Coverage
-
-- **Minimum Coverage**: 95%
-- **Missing Coverage**: Should be documented
-- **Test Types**: Unit, integration, and end-to-end tests
-
-## 📚 Documentation Guidelines
-
-### Documentation Structure
-
-Documentation is written in Markdown and built with MkDocs:
-
-```
-docs/
-├── index.md                  # Home page
-├── getting-started/          # Installation and quick start
-├── core-concepts/           # Fundamental concepts
-├── injection-patterns/      # Different injection styles
-├── scopes/                  # Service lifetimes
-├── modules/                 # Module system
-├── integrations/            # Framework integrations
-├── testing/                 # Testing utilities
-├── advanced/                # Advanced features
-├── examples/                # Examples and patterns
-├── best-practices/          # Best practices
-├── api-reference/           # API documentation
-└── migration/               # Migration guides
-```
-
-### Writing Documentation
-
-1. **Tutorial Style**: Documentation should be tutorial-oriented
-2. **Code Examples**: Include working code examples
-3. **Clear Headings**: Use descriptive headings and subheadings
-4. **Cross-references**: Link to related sections
-5. **Up-to-date**: Keep examples current with latest API
-
-### Building Documentation
+You need Python 3.10 or newer, [uv](https://docs.astral.sh/uv/) and Git.
 
 ```bash
-# Install documentation dependencies
-pip install -e .[docs]
-
-# Serve documentation locally
-mkdocs serve
-
-# Build documentation
-mkdocs build
+git clone https://github.com/<your-account>/injectq.git
+cd injectq
+uv sync                  # installs the project and the dev dependency group
+pre-commit install       # optional: ruff, ruff-format, bandit and other hooks
 ```
 
-## 🔄 Pull Request Process
+Without uv: `pip install -e ".[dev]"`. The `dev` extra covers tests, mypy and the integration frameworks (FastAPI, Taskiq, FastMCP). The documentation tools (MkDocs and plugins) are in the uv `dev` dependency group only.
 
-### Before Submitting
+### Everyday commands
 
-1. **Tests Pass**: All tests must pass
-2. **Linting Clean**: No linting errors
-3. **Coverage**: Maintain or improve test coverage
-4. **Documentation**: Update docs if needed
-5. **Changelog**: Add entry to changelog
-
-### PR Requirements
-
-- **Clear Title**: Descriptive title following commit convention
-- **Description**: Explain what the PR does and why
-- **Issue Reference**: Link to related issues
-- **Testing**: Describe how the change was tested
-- **Breaking Changes**: Clearly mark breaking changes
-
-### PR Template
-
-```markdown
-## Description
-Brief description of the changes
-
-## Changes
-- List of changes
-- Another change
-
-## Testing
-How the changes were tested
-
-## Checklist
-- [ ] Tests pass
-- [ ] Linting clean
-- [ ] Documentation updated
-- [ ] Changelog updated
-- [ ] Breaking changes noted
+```bash
+uv run pytest                          # all tests
+uv run pytest tests/v060/test_scopes.py   # one file
+uv run pytest -k override              # by name
+uv run ruff check .                    # lint (add --fix to fix)
+uv run ruff format .                   # format
+uv run mypy injectq                    # type check
 ```
 
-### Review Process
+`pytest` is configured in `pyproject.toml`: it always measures coverage of `injectq` and fails below 73%, and `asyncio_mode = "auto"` means `async def` tests need no marker.
 
-1. **Automated Checks**: CI must pass
-2. **Code Review**: At least one maintainer review
-3. **Discussion**: Address feedback and questions
-4. **Approval**: Maintainer approval required
-5. **Merge**: Squash and merge to main
+`make test` runs `uv run pytest -v`. Other Makefile targets: `make bench`, `make bench-compare` and `make bench-publish` (see [Benchmarks](benchmarks.md)), `make docs-serve` and `make docs-build`.
 
-## 🏷️ Release Process
+## Workflow
 
-### Version Numbering
+1. Branch from `main`: `git checkout -b feature/short-name` (or `fix/short-name`).
+2. Make the change. Add or update tests, and update the docs if behaviour changed.
+3. Run `uv run pytest`, `uv run ruff check .` and `uv run mypy injectq`.
+4. Add an entry to [the changelog](changelog.md) for user-visible changes. A breaking change also needs a note in the [migration guide](migration-0.6.md) (or the guide for the release it ships in).
+5. Push and open a pull request against `main`. Describe what changed and why, link related issues, and say how you tested it.
 
-We follow [Semantic Versioning](https://semver.org/):
+CI must pass and a maintainer must approve before a pull request is merged.
 
-- **MAJOR**: Breaking changes
-- **MINOR**: New features (backward compatible)
-- **PATCH**: Bug fixes (backward compatible)
+## Code style
 
-### Release Steps
+- Ruff does linting and formatting (line length 88, isort-style imports). Type hints are required on public APIs and checked with mypy in strict mode.
+- Docstrings use the Google style.
+- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`, with an optional scope, for example `fix(container): drop cached singleton on rebind`.
 
-1. **Update Version**: Update version in `pyproject.toml`
-2. **Update Changelog**: Add release notes
-3. **Create Release**: Tag and create GitHub release
-4. **Publish**: Publish to PyPI
-5. **Documentation**: Update documentation
+## Tests
 
-## 📋 Code Review Guidelines
+Tests live in `tests/`. The 0.6 suite is in `tests/v060/` (scopes, overrides, context, decorators, integrations, codegen, testing helpers). Older files sit directly in `tests/`. Put new tests next to the code they cover.
 
-### For Contributors
+- Use plain functions or classes named `Test*` with `test_*` methods.
+- Create a fresh `InjectQ()` in each test, or use `isolated_container()` / `container_fixture()` from `injectq.testing`, so tests share no bindings.
+- Do not import names that start with `test_` or `Test` into a test module: pytest would try to collect them.
+- Run the suite with `-W error::DeprecationWarning` to catch use of deprecated names.
 
-- **Self Review**: Review your own code before submitting
-- **Small PRs**: Keep changes focused and small
-- **Context**: Provide context and explanation
-- **Responsive**: Respond to feedback promptly
+```python
+from injectq import InjectQ, inject
 
-### For Reviewers
 
-- **Be Kind**: Provide constructive feedback
-- **Be Thorough**: Check code, tests, and documentation
-- **Be Timely**: Review PRs in reasonable time
-- **Be Clear**: Explain suggestions and concerns
+def test_inject_resolves_by_type():
+    container = InjectQ()
+    container.bind_instance("greeting", "hello")
 
-## 🆘 Getting Help
+    @inject(container=container)
+    def handler(greeting: str) -> str:
+        return f"{greeting}!"
 
-- **GitHub Issues**: Ask questions in issues
-- **Discussions**: Use GitHub Discussions for general questions
-- **Documentation**: Check documentation first
-- **Examples**: Look at example code
+    assert handler() == "hello!"
 
-## 🎉 Recognition
 
-Contributors are recognized in:
+async def test_aget_creates_singleton_once():
+    container = InjectQ()
 
-- **Changelog**: Major contributions noted
-- **Documentation**: Contributors acknowledged
-- **Releases**: Contributions highlighted
+    class Client: ...
 
-Thank you for contributing to InjectQ! 🚀
+    async def make() -> Client:
+        return Client()
+
+    container.bind_factory(Client, make, scope="singleton")
+    assert await container.aget(Client) is await container.aget(Client)
+```
+
+## Documentation
+
+Docs are Markdown in `docs/`, built with MkDocs Material (navigation in `mkdocs.yml`).
+
+```bash
+uv run mkdocs serve      # or: make docs-serve, at http://127.0.0.1:8000
+uv run mkdocs build      # or: make docs-build
+```
+
+- Examples must run against the current API. Run them before you commit.
+- Use relative links between pages.
+- Do not edit the tables between `<!-- BENCH:... -->` markers by hand; they are generated (see [Benchmarks](benchmarks.md)).
+
+## Releases
+
+Maintainers release. The version is `__version__` in `injectq/__init__.py` (read by hatch). A release updates the version and the changelog, builds with `make build` (`uv build`), publishes with `make publish` (checks with `twine`, then uploads), and tags the release on GitHub.
+
+InjectQ follows [Semantic Versioning](https://semver.org/). Deprecated names keep working for one minor release with a `DeprecationWarning` before removal.

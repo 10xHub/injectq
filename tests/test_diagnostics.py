@@ -1,5 +1,6 @@
 """Tests for diagnostics and profiling features."""
 
+import abc
 import pytest
 import time
 
@@ -282,14 +283,29 @@ class TestDependencyValidator:
         assert result.is_valid
         assert len(result.errors) == 0
 
-    def test_missing_dependencies(self):
-        """Test validation with missing dependencies."""
-        # Register UserService without its dependencies
+    def test_auto_injectable_dependencies_are_not_missing(self):
+        """UserService's dependencies are plain classes: the container builds them."""
         self.container.bind(UserService)
 
         result = self.validator.validate()
+        assert result.is_valid
+
+    def test_missing_dependencies(self):
+        """A dependency that is neither bound nor auto-injectable is an error."""
+
+        class Unbound(abc.ABC):
+            @abc.abstractmethod
+            def run(self): ...
+
+        class NeedsUnbound:
+            def __init__(self, dep: Unbound):
+                self.dep = dep
+
+        self.container.bind(NeedsUnbound)
+
+        result = self.validator.validate()
         assert not result.is_valid
-        assert len(result.errors) > 0
+        assert any("Unbound" in str(e) for e in result.errors)
 
     def test_circular_dependencies(self):
         """Test circular dependency detection."""

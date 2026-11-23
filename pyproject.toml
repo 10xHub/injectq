@@ -67,16 +67,19 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Iamsdt/injectq"
-Documentation = "https://github.com/Iamsdt/injectq"
-Repository = "https://github.com/Iamsdt/injectq"
-Issues = "https://github.com/Iamsdt/injectq/issues"
+Homepage = "https://github.com/10xhub/injectq"
+Documentation = "https://github.com/10xhub/injectq"
+Repository = "https://github.com/10xhub/injectq"
+Issues = "https://github.com/10xhub/injectq/issues"
 
 [tool.hatch.version]
 path = "injectq/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["injectq"]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["benchmarks", "plans", "reports", "htmlcov", "site"]
 
 [tool.black]
 line-length = 88

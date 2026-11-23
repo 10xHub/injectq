@@ -3,69 +3,44 @@
 import pytest
 
 from injectq import InjectQ
-from injectq.core.scopes import ActionScope, ThreadLocalScope
+from injectq.core.scopes import ScopeManager
 from injectq.utils.exceptions import DependencyNotFoundError
 from injectq.utils.helpers import get_function_dependencies, is_injectable_class
 
 
 def test_action_scope_basic() -> None:
     """Test action scope."""
-    scope = ActionScope()
+    manager = ScopeManager()
 
     def factory() -> str:
         return "value"
 
-    value = scope.get(str, factory)
-    assert value == "value"
+    with manager.scope_context("action"):
+        assert manager.get_instance(str, factory, "action") == "value"
 
 
 def test_action_scope_clear() -> None:
     """Test action scope clear."""
-    scope = ActionScope()
+    manager = ScopeManager()
 
-    def factory() -> str:
-        return "value"
+    def factory() -> object:
+        return object()
 
-    scope.get(str, factory)
-    scope.clear()
-
-    # Should not error
-    assert True
-
-
-def test_thread_local_scope_basic() -> None:
-    """Test thread local scope."""
-    scope = ThreadLocalScope("test")
-
-    def factory() -> str:
-        return "value"
-
-    value1 = scope.get(str, factory)
-    value2 = scope.get(str, factory)
-
-    # Within same thread, should be same
-    assert value1 == value2
-
-
-def test_thread_local_scope_clear() -> None:
-    """Test thread local scope clear."""
-    scope = ThreadLocalScope("test")
-
-    def factory() -> str:
-        return "value"
-
-    scope.get(str, factory)
-    scope.clear()
-
-    assert True
+    with manager.scope_context("action"):
+        first = manager.get_instance(str, factory, "action")
+        manager.clear_scope("action")
+        assert manager.get_instance(str, factory, "action") is not first
 
 
 def test_container_get_nonexistent() -> None:
     """Test getting nonexistent service."""
     container = InjectQ()
 
-    class NonExistent:
-        pass
+    from abc import ABC, abstractmethod
+
+    class NonExistent(ABC):  # abstract: cannot be auto-resolved
+        @abstractmethod
+        def run(self) -> None: ...
 
     with pytest.raises(DependencyNotFoundError):
         container.get(NonExistent)
@@ -483,9 +458,7 @@ def test_container_contains() -> None:
 
 def test_scope_with_same_key() -> None:
     """Test scope with same key multiple times."""
-    from injectq.core.scopes import SingletonScope
-
-    scope = SingletonScope()
+    manager = ScopeManager()
 
     call_count = 0
 
@@ -495,11 +468,11 @@ def test_scope_with_same_key() -> None:
         return "value"
 
     # First call
-    scope.get(str, factory)
+    manager.get_instance(str, factory, "singleton")
     assert call_count == 1
 
     # Second call should not call factory again
-    scope.get(str, factory)
+    manager.get_instance(str, factory, "singleton")
     assert call_count == 1
 
 

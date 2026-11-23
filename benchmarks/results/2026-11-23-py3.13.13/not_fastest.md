@@ -1,0 +1,4 @@
+- **S1 cached singleton**: injectq is not fastest. dependency-injector takes 0.057 µs, injectq 0.083 µs (1.5x slower); injectq ranks 3 of 14.
+- **S4 request scope: enter, resolve, exit**: injectq is not fastest. rodi takes 0.836 µs, injectq 0.968 µs (1.2x slower); injectq ranks 2 of 9.
+- **S7 build container (50 services)**: injectq is not fastest. inject takes 13.9 µs, injectq 27.4 µs (2.0x slower); injectq ranks 2 of 14.
+- **S7r build container + resolve 50-deep chain**: injectq is not fastest. inject takes 98.3 µs, injectq 251 µs (2.6x slower); injectq ranks 3 of 14.

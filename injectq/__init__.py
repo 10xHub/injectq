@@ -4,31 +4,18 @@ Combines the simplicity of kink, the power of python-injector,
 and the advanced features of modern DI frameworks.
 """
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
-# Core exports
-# Testing exports
-from . import testing
-
-# Component exports
-from .components import (
-    Component,
-    ComponentBinding,
-    ComponentContainer,
-    ComponentError,
-    ComponentInterface,
-    ComponentRegistry,
-    ComponentScope,
-    ComponentState,
-)
+# Core
 from .core import (
     ContainerContext,
     InjectQ,
+    ModuleBinder,
     Scope,
     ScopeType,
 )
 
-# Decorator exports
+# Decorators
 from .decorators import (
     Inject,
     async_managed_resource,
@@ -41,13 +28,9 @@ from .decorators import (
     singleton,
     transient,
 )
+from .decorators._resource import ResourceError
 
-# Diagnostics exports
-from .diagnostics import (
-    DependencyProfiler,
-    DependencyValidator,
-    DependencyVisualizer,
-)
+# Modules
 from .modules import (
     ConfigurationModule,
     Module,
@@ -56,8 +39,9 @@ from .modules import (
     provider,
 )
 
-# Utility exports
+# Exceptions, protocols and type utilities
 from .utils import (
+    AlreadyRegisteredError,
     AsyncFactory,
     AsyncProvider,
     AsyncResourceProvider,
@@ -70,66 +54,50 @@ from .utils import (
     InjectionError,
     InjectQError,
     Provider,
-    Resolvable,
     ResourceProvider,
     ScopeAware,
     ScopeError,
     ServiceFactory,
-    # Type utilities and protocols
     ServiceKey,
     logger,
 )
 
 
 __all__ = [
+    "AlreadyRegisteredError",
     "AsyncFactory",
     "AsyncProvider",
     "AsyncResourceProvider",
     "BindingError",
     "CircularDependencyError",
-    # Components
-    "Component",
-    "ComponentBinding",
-    "ComponentContainer",
-    "ComponentError",
-    "ComponentInterface",
-    "ComponentRegistry",
-    "ComponentScope",
-    "ComponentState",
     "Configurable",
     "ConfigurationModule",
     "ContainerContext",
     "DependencyNotFoundError",
-    # Diagnostics
     "DependencyProfiler",
     "DependencyValidator",
     "DependencyVisualizer",
     "Factory",
     "Inject",
-    # Core classes
     "InjectQ",
-    # Integrations
-    # Exceptions
     "InjectQError",
     "Injectable",
     "InjectionError",
-    # Modules
     "Module",
+    "ModuleBinder",
     "Provider",
     "ProviderModule",
-    "Resolvable",
+    "ResourceError",
     "ResourceProvider",
     "Scope",
     "ScopeAware",
     "ScopeError",
     "ScopeType",
     "ServiceFactory",
-    # Type utilities and protocols
     "ServiceKey",
     "SimpleModule",
     "async_managed_resource",
     "get_resource_manager",
-    # Decorators
     "inject",
     "logger",
     "managed_resource",
@@ -138,7 +106,50 @@ __all__ = [
     "resource",
     "scoped",
     "singleton",
-    # Testing
     "testing",
     "transient",
 ]
+
+
+# Imported on first use (PEP 562): neither is needed at runtime.
+_LAZY_DIAGNOSTICS = frozenset(
+    {"DependencyProfiler", "DependencyValidator", "DependencyVisualizer"}
+)
+
+# Deprecated since 0.6, removed in 0.7. Not in __all__, so `import *` stays silent.
+_DEPRECATED_COMPONENT_NAMES = frozenset(
+    {
+        "Component",
+        "ComponentBinding",
+        "ComponentContainer",
+        "ComponentError",
+        "ComponentInterface",
+        "ComponentRegistry",
+        "ComponentScope",
+        "ComponentState",
+    }
+)
+
+
+def __getattr__(name: str) -> object:
+    if name == "testing":
+        import importlib  # noqa: PLC0415
+
+        return importlib.import_module("injectq.testing")
+    if name in _LAZY_DIAGNOSTICS:
+        import importlib  # noqa: PLC0415
+
+        return getattr(importlib.import_module("injectq.diagnostics"), name)
+    if name in _DEPRECATED_COMPONENT_NAMES:
+        import importlib  # noqa: PLC0415
+        import warnings  # noqa: PLC0415
+
+        warnings.warn(
+            f"injectq.{name} is deprecated since 0.6 and will be removed in 0.7; "
+            "use injectq.Module / providers and container bindings instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return getattr(importlib.import_module("injectq.components"), name)
+    msg = f"module 'injectq' has no attribute {name!r}"
+    raise AttributeError(msg)

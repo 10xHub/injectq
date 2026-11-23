@@ -1,159 +1,68 @@
 # Testing
 
-InjectQ provides utilities to test dependency-injected code with proper isolation and mocking.
+Three tools cover most tests:
 
-## 🎯 Overview
+| Tool | Use it to |
+|---|---|
+| `isolated_container()` | get a fresh container that is also the global and current container for the block |
+| `container.override(key, value)` | replace one dependency for a block, [context-local and transitive](overrides.md) |
+| `MockModule` | bind mocks and fixed values as a module |
 
-InjectQ's testing utilities help you:
-
-- **Isolate dependencies** - Test services without their real implementations
-- **Mock services** - Simulate external services easily
-- **Override bindings** - Temporarily replace implementations for testing
-- **Verify behavior** - Ensure services work as expected
-
-## 📁 Testing Documentation
-
-This section covers:
-
-- **[Testing Patterns](testing-patterns.md)** - How to test with InjectQ
-
-## 🚀 Quick Start
-
-### Basic Test Setup
+## `isolated_container()`
 
 ```python
-from injectq.testing import test_container
+from injectq.testing import isolated_container
+
 
 def test_user_service():
-    """Test UserService with mocked dependencies."""
-    with test_container() as container:
-        # Bind dependencies
+    with isolated_container() as container:
         container[Database] = MockDatabase()
         container[UserService] = UserService
-        
-        # Get service from container
+
         service = container[UserService]
-        
-        # Test the service
-        user = service.get_user(1)
-        assert user is not None
+        assert service.get_user(1) is not None
 ```
 
-### Override Dependencies
+The container becomes the global instance (`InjectQ.get_instance()`) and the current context container, so `@inject` and the registration decorators (`@singleton`, `@scoped`, ...) use it too. Both are restored when the block ends.
+
+## `container_fixture(name="container")`
+
+Creates a pytest fixture that yields an `isolated_container()`. Assign it to a module-level name in `conftest.py`:
 
 ```python
-from injectq.testing import override_dependency
+# conftest.py
+from injectq.testing import container_fixture
 
-def test_with_override():
-    """Temporarily override a dependency."""
-    from injectq import InjectQ
-    
-    container = InjectQ.get_instance()
-    mock_service = MockUserService()
-    
-    with override_dependency(UserService, mock_service):
-        service = container[UserService]
-        result = service.get_user(1)
-        
-        assert isinstance(service, MockUserService)
+container = container_fixture()                 # fixture named "container"
+other = container_fixture(name="other")         # fixture named "other"
 ```
-
-## 🧪 Testing Patterns
-
-### Unit Testing
 
 ```python
-from injectq.testing import test_container
-
-def test_service_with_mocks():
-    """Test service with mocked external dependencies."""
-    with test_container() as container:
-        # Mock external services
-        container[EmailService] = MockEmailService()
-        container[Database] = MockDatabase()
-        
-        # Real internal service
-        container[UserService] = UserService
-        
-        # Test
-        service = container[UserService]
-        result = service.register_user("test@example.com")
-        
-        assert result.email == "test@example.com"
+def test_notifier(container):
+    container.bind(Mailer, FakeMailer)
+    ...
 ```
 
-### Error Handling
+## Overriding one dependency
 
 ```python
-import pytest
-from injectq.testing import test_container
+def test_with_fake_mailer(container):
+    container.bind(Mailer, Mailer)
+    container.bind(Notifier, Notifier)
 
-def test_error_handling():
-    """Test that services handle errors correctly."""
-    with test_container() as container:
-        container[UserService] = UserService
-        container[UserRepository] = MockUserRepository()
-        
-        service = container[UserService]
-        
-        with pytest.raises(UserNotFoundError):
-            service.get_user(999)
+    with container.override(Mailer, FakeMailer()):
+        assert isinstance(container.get(Notifier).mailer, FakeMailer)
 ```
 
-## 🏆 Best Practices
+`injectq.testing.override_dependency(key, value, container=None)` is the same call as a function, defaulting to the global container. See [Overrides](overrides.md) for the rules.
 
-### ✅ DO
+## Other helpers
 
-- **Use test_container()** for isolated tests
-- **Mock external dependencies** only (APIs, databases, email)
-- **Keep tests focused** - one behavior per test
-- **Use mocks with tracking** - verify calls were made
+- `MockModule().mock(Type, **attrs).bind_value(key, value)` builds a module of instance bindings. See [Testing patterns](testing-patterns.md#mock-modules).
+- `mock_factory.create_mock(Type, **attrs)` returns a simple mock whose other methods return `"mock_<name>_result"`.
+- `create_test_module({Key: value, ...})` builds a `MockModule` from a dict.
 
-```python
-# ✅ Good
-with test_container() as container:
-    mock_db = MockDatabase()
-    container[Database] = mock_db
-    container[UserService] = UserService
-    
-    service = container[UserService]
-    service.create_user("test@example.com")
-    
-    assert mock_db.save_called
-```
+!!! note
+    `test_container`, `TestModule` and `pytest_container_fixture` are the deprecated names of `isolated_container`, `MockModule` and `container_fixture`. See the [migration guide](../migration-0.6.md).
 
-### ❌ DON'T
-
-- **Don't use global container** in tests without override_dependency
-- **Don't over-mock** - only mock external services
-- **Don't test private methods**
-- **Don't share state** between tests
-
-```python
-# ❌ Bad - affects other tests
-container = InjectQ.get_instance()
-container[Database] = mock_db  # Persists across tests
-```
-
-## 📚 Testing Utilities
-
-```python
-from injectq.testing import (
-    test_container,            # Create isolated containers
-    override_dependency,       # Temporarily override a service
-    mock_factory,             # Mock factory functions
-    pytest_container_fixture, # Pytest fixture
-)
-```
-
-## 🎯 Summary
-
-Effective testing with InjectQ:
-
-- Use `test_container()` for test isolation
-- Use `override_dependency()` for temporary overrides
-- Mock external dependencies, use real internal services
-- Keep tests focused and independent
-- Verify behavior, not implementation
-
-Ready for more? Check out [testing patterns](testing-patterns.md)!
+Next: [Testing patterns](testing-patterns.md).

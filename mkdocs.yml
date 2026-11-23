@@ -101,11 +101,14 @@ nav:
       - Quick Start: getting-started/quick-start.md
       - Your First App: getting-started/first-app.md
       - Python 3.15 Lazy Imports: getting-started/lazy-imports.md
+      - AI Agent Skill: skill.md
   - Core Concepts:
       - What is Dependency Injection?: core-concepts/what-is-di.md
       - The Container Pattern: core-concepts/container-pattern.md
       - Service Lifetimes: core-concepts/service-lifetimes.md
       - Type Safety: core-concepts/type-safety.md
+      - Context and Concurrency: core-concepts/context-and-concurrency.md
+      - Debugging Generated Code: core-concepts/debugging-generated-code.md
   - Injection Patterns:
       - Dict-like Interface: injection-patterns/dict-interface.md
       - "@inject Decorator": injection-patterns/inject-decorator.md
@@ -115,6 +118,7 @@ nav:
       - Singleton Scope: scopes/singleton-scope.md
       - Transient Scope: scopes/transient-scope.md
       - Scoped Services: scopes/scoped-services.md
+      - Resources and Cleanup: scopes/resources.md
   - Modules & Providers:
       - Module Overview: modules/overview.md
   - Framework Integrations:
@@ -124,12 +128,13 @@ nav:
   - Testing:
       - Testing Overview: testing/overview.md
       - Testing Patterns: testing/testing-patterns.md
+      - Overrides: testing/overrides.md
   - Performance:
-      - Benchmark Report: benchmark-report.md
-      - Quick Guide: benchmark-guide.md
+      - Benchmarks: benchmarks.md
   - API Reference:
       - Overview: api-reference/index.md
       - Quick Reference: api-reference/quick-reference.md
+  - Upgrading to 0.6: migration-0.6.md
   - Contributing: contributing.md
   - Logger Usage: logging.md
   - Changelog: changelog.md
@@ -141,7 +146,7 @@ extra:
 
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/Iamsdt/injectq
+      link: https://github.com/10xhub/injectq
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/injectq/
 

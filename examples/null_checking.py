@@ -1,4 +1,4 @@
-from injectq import Inject, InjectQ
+from injectq import Inject, InjectQ, inject
 
 
 class A:
@@ -6,6 +6,7 @@ class A:
         self.value = "Service A"
 
 
+@inject
 def call_hello(name: str, service: A | None = Inject[A]) -> None:
     print(f"Hello, {name}!")
     if service is not None:

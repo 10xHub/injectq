@@ -1,10 +1,6 @@
 # Singleton Scope
 
-One instance shared across the entire application. Created once, reused everywhere.
-
-## What is Singleton?
-
-Singleton creates **one instance** for the entire application lifetime. Same instance is returned for all requests.
+One instance per container, created on first use and reused after that. This is the default scope for `bind`, `container[Key] = Class`, `@singleton` and `@register_as`.
 
 ```python
 from injectq import InjectQ, singleton
@@ -16,160 +12,27 @@ class Database:
     def __init__(self):
         print("Database created")
 
-# First access creates instance
-db1 = container[Database]  # "Database created"
-
-# Subsequent accesses return same instance
-db2 = container[Database]  # No output
-print(db1 is db2)  # True
+db1 = container[Database]   # prints "Database created"
+db2 = container[Database]   # no output
+assert db1 is db2
 ```
 
-## When to Use
-
-**✅ Use for:**
-- Database connections
-- Configuration objects
-- Caches
-- Loggers
-- Expensive resources
-
-**❌ Avoid for:**
-- Request-specific data
-- User sessions
-- Temporary state
-
-## Examples
-
-### Good Use Cases
+## Ways to bind
 
 ```python
-@singleton
-class DatabaseConnection:
-    """Shared connection pool"""
-    def __init__(self):
-        self.pool = create_connection_pool()
-
-@singleton
-class AppConfig:
-    """Application settings"""
-    def __init__(self):
-        self.database_url = os.getenv("DATABASE_URL")
-
-@singleton
-class RedisCache:
-    """Shared cache"""
-    def __init__(self):
-        self.client = redis.Redis()
+container.bind(Database, Database)                       # default scope is singleton
+container[Database] = Database                           # dict style
+container.bind_instance("config", AppConfig())           # a ready-made object
+container.bind_factory(Pool, make_pool, scope="singleton")  # built by a factory, once
 ```
 
-### Bad Use Cases
+Dependencies are injected as usual. A singleton can depend on other singletons. It should not depend on a scoped service: it would keep the first request's instance. See [Scoped services](scoped-services.md).
 
-```python
-@singleton
-class UserSession:
-    """❌ Bad - user data gets mixed up"""
-    def __init__(self):
-        self.user_id = None
+Re-binding a key drops that key's cached instance, so the next `get` builds a new one.
 
-@singleton
-class RequestContext:
-    """❌ Bad - request data gets overwritten"""
-    def __init__(self):
-        self.request_id = None
-```
+## Thread safety
 
-## Usage
-
-### Using the Decorator
-
-```python
-from injectq import singleton
-
-@singleton
-class Database:
-    pass
-
-# Automatically registered
-db = container[Database]
-```
-
-### With Dependencies
-
-```python
-@singleton
-class Database:
-    pass
-
-@singleton
-class UserRepository:
-    def __init__(self, db: Database):
-        self.db = db
-
-@singleton
-class UserService:
-    def __init__(self, repo: UserRepository):
-        self.repo = repo
-
-# All dependencies are singletons
-service = container[UserService]
-```
-
-## Thread Safety
-
-Singletons must be thread-safe for concurrent access:
-
-```python
-@singleton
-class ThreadSafeCache:
-    def __init__(self):
-        self._data = {}
-        self._lock = threading.Lock()
-
-    def get(self, key: str):
-        with self._lock:
-            return self._data.get(key)
-
-    def set(self, key: str, value):
-        with self._lock:
-            self._data[key] = value
-```
-
-## Common Mistakes
-
-### ❌ Storing Request Data
-
-```python
-@singleton
-class UserContext:
-    def __init__(self):
-        self.user_id = None  # Shared across requests!
-
-    def set_user(self, user_id):
-        self.user_id = user_id  # Overwrites for all users
-```
-
-### ✅ Use Scoped Instead
-
-```python
-@scoped("request")
-class UserContext:
-    def __init__(self):
-        self.user_id = None  # Isolated per request
-```
-
-### ❌ Not Thread-Safe
-
-```python
-@singleton
-class Counter:
-    def __init__(self):
-        self.count = 0
-
-    def increment(self):
-        self.count += 1  # Race condition!
-```
-
-### ✅ Use Locking
+Each singleton is created once, even when many threads or tasks ask for it at the same moment. `get()` and `aget()` return the same object. The object is shared, so its own mutable state must be safe for concurrent use:
 
 ```python
 @singleton
@@ -183,14 +46,8 @@ class Counter:
             self.count += 1
 ```
 
-## Summary
+## Cleanup
 
-- **One instance** per application
-- **Created once**, reused everywhere
-- **Lazy initialization** - created when first requested
-- **Thread safety** required for concurrent access
+A singleton that needs teardown should be a [`@resource`](resources.md). `container.shutdown()` or `await container.ashutdown()` closes it.
 
-**Use for:** Databases, config, caches, expensive resources  
-**Avoid for:** Request data, user sessions, temporary state
-
-Next: [Transient Scope](transient-scope.md) | [Scoped Services](scoped-services.md)
+Next: [Transient](transient-scope.md) | [Scoped services](scoped-services.md)

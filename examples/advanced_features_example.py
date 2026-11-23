@@ -1,19 +1,15 @@
 """
-InjectQ Component Architecture and Diagnostics Example
+InjectQ Scopes, Overrides and Diagnostics Example
 
-This example demonstrates the advanced features of InjectQ:
-1. Component Architecture - modular application design with component lifecycle
+This example demonstrates advanced features of InjectQ:
+1. Scopes, exit stacks and overrides
 2. Diagnostics & Profiling - performance monitoring and dependency analysis
 """
 
 import time
 from typing import Protocol
 
-from injectq import InjectQ
-from injectq.components import (
-    Component,
-    ComponentContainer,
-)
+from injectq import InjectQ, ScopeError
 from injectq.diagnostics import (
     DependencyProfiler,
     DependencyValidator,
@@ -101,182 +97,46 @@ class OrderService:
         return order_id
 
 
-# Component definitions
-class DatabaseComponent(Component):
-    """Database component providing database services."""
+def demonstrate_scopes_and_resources():
+    """Demonstrate request scopes, resources and overrides."""
+    print("=== Scopes, Resources and Overrides Demo ===\n")
 
-    name = "database"
-    provides = [IDatabaseService]
-    tags = {"persistence", "critical"}
-    priority = 10  # High priority - starts first
+    container = InjectQ()
+    container.bind(IDatabaseService, DatabaseService)
+    container.bind(ICacheService, CacheService)
+    container.bind(IUserService, UserService)
 
-    def __init__(self):
-        super().__init__()
-        self.service: DatabaseService | None = None
+    class RequestContext:
+        """One instance per request scope."""
 
-    def configure(self, **kwargs):
-        super().configure(**kwargs)
-        self.db_url = kwargs.get("db_url", "sqlite:///:memory:")
-        print(f"Database component configured with URL: {self.db_url}")
+    container.bind(RequestContext, RequestContext, scope="request")
 
-    def start(self):
-        super().start()
-        self.service = DatabaseService()
-        connection = self.service.connect()
-        print(f"Database component started: {connection}")
+    try:
+        container.get(RequestContext)
+    except ScopeError as error:
+        print(f"Outside a scope: {error}")
 
-    def connect(self) -> str:
-        return self.service.connect()  # type: ignore  # noqa: PGH003
+    with container.scope("request"):
+        first = container.get(RequestContext)
+        assert first is container.get(RequestContext)
+        # Cleanup that runs when the scope exits (last pushed, first run).
+        stack = container.current_exit_stack("request")
+        stack.callback(print, "request scope closed")
 
-    def query(self, sql: str) -> list:
-        return self.service.query(sql)  # type: ignore  # noqa: PGH003
+    with container.scope("request"):
+        assert container.get(RequestContext) is not first
 
-    def stop(self):
-        super().stop()
-        if self.service:
-            print("Database component stopped")
-            self.service = None
+    class FakeDatabase:
+        def connect(self) -> str:
+            return "fake"
 
+        def query(self, sql: str) -> list:
+            return []
 
-class CacheComponent(Component):
-    """Cache component providing caching services."""
-
-    name = "cache"
-    provides = [ICacheService]
-    tags = {"performance"}
-    priority = 5
-
-    def __init__(self):
-        super().__init__()
-        self.service = None
-
-    def configure(self, **kwargs):
-        super().configure(**kwargs)
-        self.cache_size = kwargs.get("cache_size", 1000)
-        print(f"Cache component configured with size: {self.cache_size}")
-
-    def start(self):
-        super().start()
-        self.service = CacheService()
-        print("Cache component started")
-
-    def stop(self):
-        super().stop()
-        if self.service:
-            print("Cache component stopped")
-            self.service = None
-
-
-class UserComponent(Component):
-    """User component providing user management services."""
-
-    name = "user"
-    provides = [IUserService]
-    requires = [IDatabaseService, ICacheService]
-    priority = 3
-
-    def __init__(self):
-        super().__init__()
-        self.service: UserService | None = None
-
-    def start(self):
-        super().start()
-        db_service = self.resolve_dependency(IDatabaseService)
-        cache_service = self.resolve_dependency(ICacheService)
-        self.service = UserService(db_service, cache_service)
-        print("User component started")
-
-    def get_user(self, user_id: int):
-        return self.service.get_user(user_id)  # type: ignore  # noqa: PGH003
-
-    def create_user(self, name: str) -> int:
-        return self.service.create_user(name)  # type: ignore  # noqa: PGH003
-
-    def stop(self):
-        super().stop()
-        if self.service:
-            print("User component stopped")
-            self.service = None
-
-
-class OrderComponent(Component):
-    """Order component providing order management services."""
-
-    name = "order"
-    provides = [IOrderService]
-    requires = [IUserService, IDatabaseService]
-    priority = 1  # Low priority - starts last
-
-    def __init__(self):
-        super().__init__()
-        self.service: OrderService | None = None
-
-    def start(self):
-        super().start()
-        user_service = self.resolve_dependency(IUserService)
-        db_service = self.resolve_dependency(IDatabaseService)
-        self.service = OrderService(user_service, db_service)
-        print("Order component started")
-
-    def get_order(self, order_id: int):
-        return self.service.get_order(order_id)  # type: ignore  # noqa: PGH003
-
-    def create_order(self, user_id: int, items: list) -> int:
-        return self.service.create_order(user_id, items)  # type: ignore  # noqa: PGH003
-
-    def stop(self):
-        super().stop()
-        if self.service:
-            print("Order component stopped")
-            self.service = None
-
-
-def demonstrate_component_architecture():
-    """Demonstrate component-based architecture."""
-    print("=== Component Architecture Demo ===\n")
-
-    # Create component container
-    container = ComponentContainer()
-
-    # Register components with configuration
-    container.register_component(
-        DatabaseComponent, configuration={"db_url": "postgresql://localhost/myapp"}
-    )
-    container.register_component(CacheComponent, configuration={"cache_size": 5000})
-    container.register_component(UserComponent)
-    container.register_component(OrderComponent)
-
-    print("Components registered. Starting components...\n")
-
-    # Start all components (in dependency order)
-    container.start_components()
-
-    print("\nComponent status:")
-    for name, state in container.list_components().items():
-        print(f"  {name}: {state.value}")
-
-    print("\nTesting services through components:")
-
-    # Use services through the container
-    user_service = container.get(IUserService)
-    order_service = container.get(IOrderService)
-
-    # Create and retrieve a user
-    user_id = user_service.create_user("Alice Johnson")
-    user = user_service.get_user(user_id)
-    print(f"Created user: {user}")
-
-    # Create and retrieve an order
-    order_id = order_service.create_order(user_id, ["laptop", "mouse"])
-    order = order_service.get_order(order_id)
-    print(f"Created order: {order}")
-
-    print("\nStopping components...")
-    container.stop_components()
-
-    print("\nFinal component status:")
-    for name, state in container.list_components().items():
-        print(f"  {name}: {state.value}")
+    with container.override(IDatabaseService, FakeDatabase()):
+        users = container.get(IUserService)
+        print(f"UserService inside override uses {type(users.db).__name__}")
+    print(f"UserService outside uses {type(container.get(IUserService).db).__name__}")
 
 
 def demonstrate_dependency_profiling():
@@ -455,7 +315,7 @@ def main():
     print("=" * 50)
 
     # Run all demonstrations
-    demonstrate_component_architecture()
+    demonstrate_scopes_and_resources()
     demonstrate_dependency_profiling()
     demonstrate_dependency_validation()
     demonstrate_dependency_visualization()
@@ -464,7 +324,7 @@ def main():
     print("\n" + "=" * 50)
     print("All demonstrations completed!")
     print("\nKey features demonstrated:")
-    print("✅ Component Architecture - modular application design")
+    print("✅ Scopes, exit stacks and overrides")
     print("✅ Dependency Profiling - performance monitoring")
     print("✅ Dependency Validation - early error detection")
     print("✅ Dependency Visualization - graph generation")

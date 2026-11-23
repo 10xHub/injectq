@@ -1,175 +1,240 @@
-"""Tests for async context variable scopes."""
+"""Tests for the ContextVar-based scope manager (sync and async scopes)."""
 
 import asyncio
+import threading
+from contextlib import AsyncExitStack, ExitStack
+
+import pytest
 
 from injectq import InjectQ
-from injectq.core.async_scopes import (
-    AsyncRequestScope,
-    HybridRequestScope,
-    async_request_context,
-    get_request_id,
-    request_context,
-    set_request_id,
-)
+from injectq.core.scopes import ScopeManager
+from injectq.utils import ScopeError
 
 
-def test_async_scope_basic():
-    """Test basic async scope functionality."""
-    scope = AsyncRequestScope()
-
-    # Test basic get/set
-    def create_service():
-        return "test_service"
-
-    service1 = scope.get("TestService", create_service)
-    service2 = scope.get("TestService", create_service)
-
-    # Should return same instance
-    assert service1 == service2
-    assert service1 == "test_service"
-
-    # Clear scope
-    scope.clear()
-    service3 = scope.get("TestService", create_service)
-    # Should create new instance after clear
-    assert service3 == "test_service"
+class Service:
+    pass
 
 
-def test_hybrid_scope_sync():
-    """Test hybrid scope in sync context."""
-    scope = HybridRequestScope()
-
-    def create_service():
-        return "sync_service"
-
-    service1 = scope.get("TestService", create_service)
-    service2 = scope.get("TestService", create_service)
-
-    assert service1 == service2
-    assert service1 == "sync_service"
+def _container(scope: str = "request") -> InjectQ:
+    container = InjectQ()
+    container.bind(Service, Service, scope=scope)
+    return container
 
 
-async def test_hybrid_scope_async():
-    """Test hybrid scope in async context."""
-    scope = HybridRequestScope()
-
-    def create_service():
-        return "async_service"
-
-    service1 = scope.get("TestService", create_service)
-    service2 = scope.get("TestService", create_service)
-
-    assert service1 == service2
-    assert service1 == "async_service"
+async def test_async_scope_reuses_instance_and_clear_drops_it():
+    container = _container()
+    async with container.async_scope("request"):
+        first = await container.aget(Service)
+        assert await container.aget(Service) is first
+        assert container.get(Service) is first
+        container.clear_scope("request")
+        assert await container.aget(Service) is not first
 
 
-def test_context_variables():
-    """Test context variable functionality."""
-    # Test setting and getting request ID
-    set_request_id("request-123")
-    assert get_request_id() == "request-123"
-
-    # Test context manager
-    with request_context("request-456", "user-789"):
-        assert get_request_id() == "request-456"
-
-    # Should be reset after context
-    assert get_request_id() == "request-123"
+async def test_sync_scope_inside_async_code():
+    container = _container()
+    with container.scope("request"):
+        service = container.get(Service)
+        assert await container.aget(Service) is service
 
 
-async def test_async_context_variables():
-    """Test async context variable functionality."""
-    set_request_id("async-request-123")
-    assert get_request_id() == "async-request-123"
-
-    async with async_request_context("async-request-456", "async-user-789"):
-        assert get_request_id() == "async-request-456"
-
-        # Test in async task
-        async def check_context():
-            return get_request_id()
-
-        task_result = await asyncio.create_task(check_context())
-        assert task_result == "async-request-456"
-
-    # Should be reset after context
-    assert get_request_id() == "async-request-123"
+async def test_tasks_inside_one_scope_share_it():
+    container = _container()
+    async with container.async_scope("request"):
+        outer = await container.aget(Service)
+        inner = await asyncio.create_task(container.aget(Service))
+        assert inner is outer
 
 
-def test_container_with_async_scopes():
-    """Test container with async scope support."""
-    container = InjectQ(use_async_scopes=True)
+async def test_concurrent_aget_in_scope_creates_once():
+    container = InjectQ()
+    calls = []
 
-    # Test that container was created successfully
-    assert container is not None
+    async def make() -> Service:
+        calls.append(1)
+        await asyncio.sleep(0.01)
+        return Service()
 
-    # Test basic binding
-    container.bind(str, "test_value")
-    value = container.get(str)
-    assert value == "test_value"
+    container.bind(Service, make, scope="request")
+    async with container.async_scope("request"):
+        results = await asyncio.gather(*(container.aget(Service) for _ in range(5)))
+    assert len({id(r) for r in results}) == 1
 
 
-async def test_container_async_scope_context():
-    """Test container async scope context usage."""
-    container = InjectQ(use_async_scopes=True)
-
-    # Bind a service
-    class TestService:
-        def __init__(self):
-            self.id = get_request_id() or "no-request"
-
-    container.bind(TestService, TestService, scope="request")
-
-    # Test with request context
-    async with async_request_context("test-request-999"):
-        # Use regular scope context for now since async_scope_context might not be available
+def test_use_async_scopes_flag_is_accepted_and_ignored():
+    for flag in (True, False):
+        with pytest.warns(DeprecationWarning):
+            container = InjectQ(use_async_scopes=flag)
+        container.bind(Service, Service, scope="request")
         with container.scope("request"):
-            service = container.get(TestService)
-            # The service should be created but might not have the request ID
-            # depending on when the context is captured
-            assert service is not None
+            assert container.get(Service) is container.get(Service)
 
 
-def test_multiple_async_contexts():
-    """Test multiple isolated async contexts."""
-    import asyncio
-
-    async def task_with_context(request_id, results):
-        async with async_request_context(request_id):
-            # Simulate some async work
-            await asyncio.sleep(0.01)
-            results[request_id] = get_request_id()
-
-    async def run_multiple_tasks():
-        results = {}
-        tasks = [
-            task_with_context("req-1", results),
-            task_with_context("req-2", results),
-            task_with_context("req-3", results),
-        ]
-        await asyncio.gather(*tasks)
-        return results
-
-    # Run the test
-    results = asyncio.run(run_multiple_tasks())
-
-    # Each task should have its own isolated context
-    assert results["req-1"] == "req-1"
-    assert results["req-2"] == "req-2"
-    assert results["req-3"] == "req-3"
+def test_unknown_scope_raises_scope_error():
+    container = InjectQ()
+    with pytest.raises(ScopeError), container.scope("nope"):
+        pass
 
 
-if __name__ == "__main__":
-    # Run sync tests
-    test_async_scope_basic()
-    test_hybrid_scope_sync()
-    test_context_variables()
-    test_container_with_async_scopes()
-    test_multiple_async_contexts()
+def test_register_custom_scope():
+    container = InjectQ()
+    container.register_scope("task")
+    container.bind(Service, Service, scope="task")
+    with pytest.raises(ScopeError):
+        container.get(Service)
+    with container.scope("task"):
+        first = container.get(Service)
+        assert container.get(Service) is first
+    with container.scope("task"):
+        assert container.get(Service) is not first
 
-    # Run async tests
-    asyncio.run(test_hybrid_scope_async())
-    asyncio.run(test_async_context_variables())
-    asyncio.run(test_container_async_scope_context())
 
-    print("✅ All async scope tests passed!")
+def test_register_builtin_scope_name_rejected():
+    with pytest.raises(ScopeError):
+        ScopeManager().register_scope("singleton")
+
+
+def test_sync_scope_exit_stack_runs_lifo():
+    manager = ScopeManager()
+    order: list[int] = []
+    with manager.scope_context("request"):
+        stack = manager.current_exit_stack("request")
+        assert isinstance(stack, ExitStack)
+        assert manager.current_exit_stack("request") is stack
+        stack.callback(order.append, 1)
+        stack.callback(order.append, 2)
+        assert order == []
+    assert order == [2, 1]
+
+
+async def test_async_scope_exit_stack_is_awaited():
+    manager = ScopeManager()
+    order: list[str] = []
+
+    async def aclose() -> None:
+        order.append("async")
+
+    async with manager.async_scope_context("request"):
+        stack = manager.current_exit_stack("request")
+        assert isinstance(stack, AsyncExitStack)
+        stack.callback(order.append, "sync")
+        stack.push_async_callback(aclose)
+    assert order == ["async", "sync"]
+
+
+def test_nested_scope_exit_stacks_are_separate():
+    manager = ScopeManager()
+    order: list[str] = []
+    with manager.scope_context("request"):
+        manager.current_exit_stack("request").callback(order.append, "outer")
+        with manager.scope_context("request"):
+            manager.current_exit_stack("request").callback(order.append, "inner")
+        assert order == ["inner"]
+    assert order == ["inner", "outer"]
+
+
+def test_scope_exits_even_if_exit_callback_raises():
+    manager = ScopeManager()
+
+    def boom() -> None:
+        msg = "boom"
+        raise RuntimeError(msg)
+
+    with pytest.raises(RuntimeError, match="boom"):  # noqa: SIM117
+        with manager.scope_context("request"):
+            manager.current_exit_stack("request").callback(boom)
+    assert not manager.is_active("request")
+
+
+def test_current_exit_stack_outside_scope_raises():
+    with pytest.raises(ScopeError):
+        ScopeManager().current_exit_stack("request")
+
+
+async def test_task_outliving_scope_gets_scope_error():
+    container = _container()
+    release = asyncio.Event()
+
+    async def late() -> Service:
+        await release.wait()
+        return await container.aget(Service)
+
+    async with container.async_scope("request"):
+        task = asyncio.create_task(late())
+        await asyncio.sleep(0)
+    release.set()
+    with pytest.raises(ScopeError):
+        await task
+
+
+def test_scopes_are_per_container():
+    a, b = _container(), _container()
+    with a.scope("request"):
+        a.get(Service)
+        with pytest.raises(ScopeError):
+            b.get(Service)
+
+
+def test_singleton_thread_race_creates_one_instance():
+    container = InjectQ()
+    calls = []
+    barrier = threading.Barrier(16)
+
+    class Slow:
+        def __init__(self) -> None:
+            calls.append(1)
+
+    container.bind(Slow, Slow, scope="singleton")
+    results: list[Slow] = []
+
+    def worker() -> None:
+        barrier.wait()
+        results.append(container.get(Slow))
+
+    threads = [threading.Thread(target=worker) for _ in range(16)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(calls) == 1
+    assert len({id(r) for r in results}) == 1
+
+
+async def test_async_singleton_failure_is_not_cached():
+    manager = ScopeManager()
+    attempts = []
+
+    async def flaky() -> object:
+        attempts.append(1)
+        await asyncio.sleep(0.005)
+        if len(attempts) == 1:
+            msg = "first"
+            raise ValueError(msg)
+        return object()
+
+    results = await asyncio.gather(
+        *(manager.aget_instance("k", flaky) for _ in range(3)),
+        return_exceptions=True,
+    )
+    assert all(isinstance(r, ValueError) for r in results)
+    assert len(attempts) == 1
+    ok = await manager.aget_instance("k", flaky)
+    assert await manager.aget_instance("k", flaky) is ok
+
+
+async def test_cancelled_async_singleton_creator_lets_waiter_retry():
+    manager = ScopeManager()
+    started = asyncio.Event()
+
+    async def make() -> object:
+        started.set()
+        await asyncio.sleep(0.05)
+        return object()
+
+    creator = asyncio.create_task(manager.aget_instance("k", make))
+    await started.wait()
+    waiter = asyncio.create_task(manager.aget_instance("k", make))
+    await asyncio.sleep(0)
+    creator.cancel()
+    result = await waiter
+    assert await manager.aget_instance("k", make) is result

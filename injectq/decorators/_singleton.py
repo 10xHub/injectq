@@ -1,187 +1,146 @@
-"""Singleton decorator for automatic service registration."""
+"""Registration decorators: @singleton, @transient, @scoped, @register_as."""
 
 import logging
 from collections.abc import Callable
-from typing import TypeVar
+from typing import Any, TypeVar, overload
 
 from injectq.core import InjectQ, ScopeType
-from injectq.core.context import ContainerContext
 from injectq.utils import BindingError
 
 
-# Create a logger for the decorators module
 _logger = logging.getLogger("injectq.decorators")
-
 
 T = TypeVar("T", bound=type)
 
+_DEFAULT_SCOPED = ScopeType.REQUEST
 
-def singleton(cls: T, container: InjectQ | None = None) -> T:
-    """Decorator to automatically register a class as a singleton service.
 
-    The decorated class will be automatically bound to itself in the
-    global container with singleton scope.
+def _scope_str(scope: str | ScopeType) -> str:
+    return scope.value if isinstance(scope, ScopeType) else str(scope)
 
-    Args:
-        cls: Class to register as singleton
-        container: Optional container to use (defaults to global or context container)
 
-    Returns:
-        The same class (unmodified)
+def _register(
+    target: Any,
+    key: Any,
+    scope: str | ScopeType,
+    container: InjectQ | None,
+    *,
+    factory: bool = False,
+) -> None:
+    """Bind ``target`` under ``key`` with ``scope``.
 
-    Example:
-        @singleton
-        class UserService:
-            def __init__(self, db: Database):
-                self.db = db
+    The container is the explicit one, else ``InjectQ.get_instance()`` (which
+    honours the active context container). ``factory=True`` binds a callable as
+    a factory of that scope instead of a class/instance.
     """
-    if not isinstance(cls, type):
-        msg = "@singleton can only be applied to classes"
+    target_container = container if container is not None else InjectQ.get_instance()
+    if factory:
+        target_container.bind_factory(key, target, scope=scope)
+    else:
+        target_container.bind(key, target, scope=scope)
+    _logger.info(
+        "Registered %s as %s with scope '%s'",
+        getattr(target, "__name__", str(target)),
+        getattr(key, "__name__", str(key)),
+        _scope_str(scope),
+    )
+
+
+def _check_class(target: Any, decorator: str) -> None:
+    if not isinstance(target, type):
+        msg = f"{decorator} can only be applied to classes"
         _logger.error(msg)
         raise BindingError(msg)
 
-    # Get the global container
-    target_container = container
-    if not target_container:
-        target_container = ContainerContext.get_current() if ContainerContext else None
-    if not target_container:
-        target_container = InjectQ.get_instance()
 
-    # Register the class as a singleton binding to itself
-    target_container.bind(cls, cls, scope=ScopeType.SINGLETON)
-    _logger.info("Registered singleton: %s", getattr(cls, "__name__", str(cls)))
-
-    return cls
-
-
-def transient(cls: T, container: InjectQ | None = None) -> T:
-    """Decorator to automatically register a class as a transient service.
-
-    The decorated class will be automatically bound to itself in the
-    global container with transient scope (new instance each time).
-
-    Args:
-        cls: Class to register as transient
-        container: Optional container to use (defaults to global or context container)
-
-    Returns:
-        The same class (unmodified)
-
-    Example:
-        @transient
-        class OrderProcessor:
-            def __init__(self, db: Database):
-                self.db = db
-    """
-    if not isinstance(cls, type):
-        msg = "@transient can only be applied to classes"
-        _logger.error(msg)
-        raise BindingError(msg)
-
-    target_container = container
-    if not target_container:
-        target_container = ContainerContext.get_current() if ContainerContext else None
-    if not target_container:
-        target_container = InjectQ.get_instance()
-
-    # Register the class as a transient binding to itself
-    target_container.bind(cls, cls, scope=ScopeType.TRANSIENT)
-    _logger.info("Registered transient: %s", getattr(cls, "__name__", str(cls)))
-
-    return cls
-
-
-def scoped(scope_name: str, container: InjectQ | None = None) -> Callable:
-    """Decorator factory to register a class with a specific scope.
-
-    Args:
-        scope_name: Name of the scope to use
-        container: Optional container to use (defaults to global or context container)
-
-    Returns:
-        Decorator function
-
-    Example:
-        @scoped("request")
-        class RequestContext:
-            def __init__(self, request_id: str):
-                self.request_id = request_id
-    """
-
+def _class_decorator(
+    name: str, scope: str | ScopeType, container: InjectQ | None
+) -> Callable[[T], T]:
     def decorator(cls: T) -> T:
-        if not isinstance(cls, type):
-            msg = f"@scoped('{scope_name}') can only be applied to classes"
-            _logger.error(msg)
-            raise BindingError(msg)
-
-        # Get the global container
-        target_container = container
-        if not target_container:
-            target_container = (
-                ContainerContext.get_current() if ContainerContext else None
-            )
-        if not target_container:
-            target_container = InjectQ.get_instance()
-
-        # Register the class with the specified scope
-        target_container.bind(cls, cls, scope=scope_name)
-        _logger.info(
-            "Registered scoped '%s': %s",
-            scope_name,
-            getattr(cls, "__name__", str(cls)),
-        )
-
+        _check_class(cls, name)
+        _register(cls, cls, scope, container)
         return cls
 
     return decorator
 
 
-def register_as(
-    service_type: type,
-    scope: str = "singleton",
+@overload
+def singleton(cls: T, container: InjectQ | None = ...) -> T: ...
+@overload
+def singleton(cls: None = ..., container: InjectQ | None = ...) -> Callable[[T], T]: ...
+def singleton(
+    cls: T | None = None, container: InjectQ | None = None
+) -> T | Callable[[T], T]:
+    """Register a class as a singleton service bound to itself.
+
+    Works bare (``@singleton``) and with arguments (``@singleton()``,
+    ``@singleton(container=c)``). The class is returned unchanged.
+    """
+    decorator = _class_decorator("@singleton", ScopeType.SINGLETON, container)
+    return decorator if cls is None else decorator(cls)
+
+
+@overload
+def transient(cls: T, container: InjectQ | None = ...) -> T: ...
+@overload
+def transient(cls: None = ..., container: InjectQ | None = ...) -> Callable[[T], T]: ...
+def transient(
+    cls: T | None = None, container: InjectQ | None = None
+) -> T | Callable[[T], T]:
+    """Register a class as a transient service (new instance on each resolve).
+
+    Works bare and with arguments, like ``@singleton``.
+    """
+    decorator = _class_decorator("@transient", ScopeType.TRANSIENT, container)
+    return decorator if cls is None else decorator(cls)
+
+
+@overload
+def scoped(
+    scope_name: T, container: InjectQ | None = ..., *, scope: None = ...
+) -> T: ...
+@overload
+def scoped(
+    scope_name: str | ScopeType | None = ...,
+    container: InjectQ | None = ...,
+    *,
+    scope: str | ScopeType | None = ...,
+) -> Callable[[T], T]: ...
+def scoped(
+    scope_name: Any = None,
     container: InjectQ | None = None,
-) -> Callable:
-    """Decorator factory to register a class as an implementation of a service type.
+    *,
+    scope: str | ScopeType | None = None,
+) -> Any:
+    """Register a class in a named scope (default: ``"request"``).
 
-    Args:
-        service_type: The service type/interface to register as
-        scope: The scope to use for the service
-        container: Optional container to use (defaults to global or context container)
+    Forms: ``@scoped``, ``@scoped()``, ``@scoped("request")``,
+    ``@scoped(ScopeType.REQUEST)``, ``@scoped(scope="request")``,
+    ``@scoped("request", container=c)``.
+    """
+    bare = isinstance(scope_name, type)
+    chosen = scope if scope is not None else scope_name
+    if bare or chosen is None:
+        chosen = scope if scope is not None else _DEFAULT_SCOPED
+    decorator = _class_decorator(f"@scoped({_scope_str(chosen)!r})", chosen, container)
+    return decorator(scope_name) if bare else decorator
 
-    Returns:
-        Decorator function
 
-    Example:
-        @register_as(UserRepository, scope="singleton")
-        class SqlUserRepository:
-            def __init__(self, db: Database):
-                self.db = db
+def register_as(
+    service_type: Any,
+    scope: str | ScopeType = ScopeType.SINGLETON,
+    container: InjectQ | None = None,
+) -> Callable[[T], T]:
+    """Register a class as the implementation of ``service_type``.
+
+    ``@register_as(Repo)``, ``@register_as(Repo, scope="request")``,
+    ``@register_as(Repo, container=c)``. There is no bare form: the key
+    cannot be inferred. The class is returned unchanged.
     """
 
     def decorator(cls: T) -> T:
-        if not isinstance(cls, type):
-            msg = f"@register_as({service_type}) can only be applied to classes"
-            _logger.error(msg)
-            raise BindingError(msg)
-
-        # Get the global container
-        target_container = container
-        if not target_container:
-            target_container = (
-                ContainerContext.get_current() if ContainerContext else None
-            )
-        if not target_container:
-            target_container = InjectQ.get_instance()
-
-        # Register the class as implementation of service_type
-        target_container.bind(service_type, cls, scope=scope)
-        _logger.info(
-            "Registered as %s with scope '%s': %s",
-            getattr(service_type, "__name__", str(service_type)),
-            scope,
-            getattr(cls, "__name__", str(cls)),
-        )
-
+        _check_class(cls, f"@register_as({service_type})")
+        _register(cls, service_type, scope, container)
         return cls
 
     return decorator

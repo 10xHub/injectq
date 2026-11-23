@@ -400,6 +400,6 @@ value = container.call_factory("data", "key1")
 
 ## See Also
 
-- [Factory Patterns](binding-patterns.md#factory-pattern)
+- [Factory Patterns](factory-methods.md)
 - [Dict-like Interface](dict-interface.md)
-- [Scopes](../scopes/overview.md)
+- [Scopes](../scopes/understanding-scopes.md)

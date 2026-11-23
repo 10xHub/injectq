@@ -1,520 +1,242 @@
 # Your First App
 
-Let's build a complete application with InjectQ! We'll create a simple user management system that demonstrates real-world patterns.
+A small user-management app, built in layers (config, database, repository, service), wired together by InjectQ. It runs as a script and has tests.
 
-## 🎯 Application Overview
-
-We'll build a user management API with:
-
-- User repository for data access
-- User service for business logic
-- Configuration management
-- Dependency injection throughout
-- Proper error handling
-
-## 📁 Project Structure
+## Layout
 
 ```
 my_injectq_app/
-├── main.py              # Application entry point
-├── config.py            # Configuration classes
-├── database.py          # Database layer
-├── repository.py        # Data access layer
-├── service.py           # Business logic layer
-└── models.py            # Data models
+├── __init__.py
+├── models.py
+├── config.py
+├── database.py
+├── repository.py
+├── service.py
+└── main.py
+tests/
+└── test_user_service.py
 ```
 
-## 🏗️ Step 1: Define Data Models
+Run everything from the directory that contains `my_injectq_app/`.
+
+## Models
 
 ```python
-# models.py
+# my_injectq_app/models.py
 from dataclasses import dataclass
-from typing import Optional
 from datetime import datetime
+
 
 @dataclass
 class User:
-    id: Optional[int]
+    id: int | None
     username: str
     email: str
     created_at: datetime
     is_active: bool = True
-
-@dataclass
-class CreateUserRequest:
-    username: str
-    email: str
-
-@dataclass
-class UpdateUserRequest:
-    username: Optional[str] = None
-    email: Optional[str] = None
-    is_active: Optional[bool] = None
 ```
 
-## ⚙️ Step 2: Configuration
+## Configuration
 
 ```python
-# config.py
+# my_injectq_app/config.py
 from injectq import singleton
 
-@singleton
-class DatabaseConfig:
-    def __init__(self):
-        self.host = "localhost"
-        self.port = 5432
-        self.database = "userdb"
-        self.user = "postgres"
-        self.password = "password"
-
-    @property
-    def connection_string(self) -> str:
-        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
 
 @singleton
 class AppConfig:
-    def __init__(self):
-        self.app_name = "User Management API"
-        self.version = "1.0.0"
-        self.debug = True
+    def __init__(self) -> None:
+        self.app_name = "User Management"
+        self.max_users = 100
 ```
 
-## 🗄️ Step 3: Database Layer
+## Database
 
 ```python
-# database.py
-from typing import List, Optional
+# my_injectq_app/database.py
 from injectq import singleton
-import asyncio
 
-from .config import DatabaseConfig
+from .config import AppConfig
 from .models import User
+
 
 @singleton
 class Database:
-    def __init__(self, config: DatabaseConfig):
+    """In-memory store standing in for a real database."""
+
+    def __init__(self, config: AppConfig) -> None:
         self.config = config
-        self._users = {}  # In-memory storage for demo
+        self._users: dict[int, User] = {}
         self._next_id = 1
-        print(f"Database initialized with config: {config.connection_string}")
 
-    async def create_user(self, user: User) -> User:
-        """Create a new user."""
+    async def save(self, user: User) -> User:
+        if len(self._users) >= self.config.max_users:
+            raise ValueError("user limit reached")
         user.id = self._next_id
-        self._users[user.id] = user
         self._next_id += 1
+        self._users[user.id] = user
         return user
 
-    async def get_user(self, user_id: int) -> Optional[User]:
-        """Get user by ID."""
-        return self._users.get(user_id)
+    async def find_by_username(self, username: str) -> User | None:
+        return next((u for u in self._users.values() if u.username == username), None)
 
-    async def get_user_by_username(self, username: str) -> Optional[User]:
-        """Get user by username."""
-        for user in self._users.values():
-            if user.username == username:
-                return user
-        return None
-
-    async def get_all_users(self) -> List[User]:
-        """Get all users."""
+    async def all(self) -> list[User]:
         return list(self._users.values())
-
-    async def update_user(self, user_id: int, updates: dict) -> Optional[User]:
-        """Update user."""
-        user = self._users.get(user_id)
-        if not user:
-            return None
-
-        for key, value in updates.items():
-            if hasattr(user, key):
-                setattr(user, key, value)
-
-        return user
-
-    async def delete_user(self, user_id: int) -> bool:
-        """Delete user."""
-        if user_id in self._users:
-            del self._users[user_id]
-            return True
-        return False
 ```
 
-## 📊 Step 4: Repository Layer
+`Database` asks for an `AppConfig` in its constructor. InjectQ reads the type hint and passes the singleton.
+
+## Repository and service
 
 ```python
-# repository.py
-from typing import List, Optional
+# my_injectq_app/repository.py
+from datetime import datetime
+
 from injectq import singleton
 
 from .database import Database
-from .models import User, CreateUserRequest, UpdateUserRequest
+from .models import User
+
 
 @singleton
 class UserRepository:
-    def __init__(self, db: Database):
+    def __init__(self, db: Database) -> None:
         self.db = db
 
-    async def create(self, request: CreateUserRequest) -> User:
-        """Create a new user."""
-        from datetime import datetime
-        user = User(
-            id=None,
-            username=request.username,
-            email=request.email,
-            created_at=datetime.now(),
-            is_active=True
-        )
-        return await self.db.create_user(user)
+    async def create(self, username: str, email: str) -> User:
+        user = User(id=None, username=username, email=email, created_at=datetime.now())
+        return await self.db.save(user)
 
-    async def get_by_id(self, user_id: int) -> Optional[User]:
-        """Get user by ID."""
-        return await self.db.get_user(user_id)
+    async def get_by_username(self, username: str) -> User | None:
+        return await self.db.find_by_username(username)
 
-    async def get_by_username(self, username: str) -> Optional[User]:
-        """Get user by username."""
-        return await self.db.get_user_by_username(username)
-
-    async def get_all(self) -> List[User]:
-        """Get all users."""
-        return await self.db.get_all_users()
-
-    async def update(self, user_id: int, request: UpdateUserRequest) -> Optional[User]:
-        """Update user."""
-        updates = {}
-        if request.username is not None:
-            updates["username"] = request.username
-        if request.email is not None:
-            updates["email"] = request.email
-        if request.is_active is not None:
-            updates["is_active"] = request.is_active
-
-        return await self.db.update_user(user_id, updates)
-
-    async def delete(self, user_id: int) -> bool:
-        """Delete user."""
-        return await self.db.delete_user(user_id)
+    async def list_all(self) -> list[User]:
+        return await self.db.all()
 ```
 
-## 🔧 Step 5: Service Layer
-
 ```python
-# service.py
-from typing import List, Optional
+# my_injectq_app/service.py
 from injectq import singleton
 
+from .models import User
 from .repository import UserRepository
-from .models import User, CreateUserRequest, UpdateUserRequest
+
+
+class UserAlreadyExistsError(Exception):
+    pass
+
 
 @singleton
 class UserService:
-    def __init__(self, repo: UserRepository):
+    def __init__(self, repo: UserRepository) -> None:
         self.repo = repo
 
-    async def create_user(self, request: CreateUserRequest) -> User:
-        """Create a new user with validation."""
-        # Check if username already exists
-        existing = await self.repo.get_by_username(request.username)
-        if existing:
-            raise ValueError(f"Username '{request.username}' already exists")
+    async def create_user(self, username: str, email: str) -> User:
+        if await self.repo.get_by_username(username):
+            raise UserAlreadyExistsError(username)
+        return await self.repo.create(username, email)
 
-        # Check if email already exists
-        # In a real app, you'd check this too
-        return await self.repo.create(request)
-
-    async def get_user(self, user_id: int) -> Optional[User]:
-        """Get user by ID."""
-        return await self.repo.get_by_id(user_id)
-
-    async def get_user_by_username(self, username: str) -> Optional[User]:
-        """Get user by username."""
-        return await self.repo.get_by_username(username)
-
-    async def get_all_users(self) -> List[User]:
-        """Get all users."""
-        return await self.repo.get_all()
-
-    async def update_user(self, user_id: int, request: UpdateUserRequest) -> Optional[User]:
-        """Update user with validation."""
-        # Check if user exists
-        existing = await self.repo.get_by_id(user_id)
-        if not existing:
-            return None
-
-        # Check username uniqueness if being updated
-        if request.username and request.username != existing.username:
-            duplicate = await self.repo.get_by_username(request.username)
-            if duplicate:
-                raise ValueError(f"Username '{request.username}' already exists")
-
-        return await self.repo.update(user_id, request)
-
-    async def delete_user(self, user_id: int) -> bool:
-        """Delete user."""
-        return await self.repo.delete(user_id)
-
-    async def deactivate_user(self, user_id: int) -> Optional[User]:
-        """Deactivate user."""
-        return await self.update_user(user_id, UpdateUserRequest(is_active=False))
-
-    async def activate_user(self, user_id: int) -> Optional[User]:
-        """Activate user."""
-        return await self.update_user(user_id, UpdateUserRequest(is_active=True))
+    async def list_users(self) -> list[User]:
+        return await self.repo.list_all()
 ```
 
-## 🚀 Step 6: Application Entry Point
+No manual bindings are needed. `@singleton` registers each class when its module is imported, and `UserService` -> `UserRepository` -> `Database` -> `AppConfig` is resolved from the constructor type hints.
+
+## Entry point
 
 ```python
-# main.py
+# my_injectq_app/main.py
 import asyncio
-from injectq import InjectQ, inject
 
-from .config import DatabaseConfig, AppConfig
-from .database import Database
-from .repository import UserRepository
-from .service import UserService
-from .models import CreateUserRequest, UpdateUserRequest
+from injectq import inject
 
-async def setup_container() -> None:
-    """Set up the dependency injection container using the public convenience container."""
-    from injectq import InjectQ
-
-    # use the global convenience container directly
-    container = InjectQ.get_instance()
-
-    # Bind configurations
-    container[DatabaseConfig] = DatabaseConfig
-    container[AppConfig] = AppConfig
-
-    # Bind services (automatically resolved)
-    container[Database] = Database
-    container[UserRepository] = UserRepository
-    container[UserService] = UserService
+from .config import AppConfig
+from .service import UserAlreadyExistsError, UserService
 
 
 @inject
-async def demo_user_operations(service: UserService, config: AppConfig):
-    """Demonstrate user operations."""
-    print(f"🚀 {config.app_name} v{config.version}")
-    print("=" * 50)
+async def run(service: UserService, config: AppConfig) -> None:
+    print(config.app_name)
+    await service.create_user("john_doe", "john@example.com")
+    await service.create_user("jane_smith", "jane@example.com")
+    try:
+        await service.create_user("john_doe", "other@example.com")
+    except UserAlreadyExistsError as exc:
+        print(f"Rejected duplicate: {exc}")
+    for user in await service.list_users():
+        print(f"{user.id}: {user.username} <{user.email}>")
 
-    # Create users
-    print("\n📝 Creating users...")
-    user1 = await service.create_user(CreateUserRequest(
-        username="john_doe",
-        email="john@example.com"
-    ))
-    print(f"Created user: {user1.username} (ID: {user1.id})")
-
-    user2 = await service.create_user(CreateUserRequest(
-        username="jane_smith",
-        email="jane@example.com"
-    ))
-    print(f"Created user: {user2.username} (ID: {user2.id})")
-
-    # Get user
-    print("\n🔍 Getting user...")
-    retrieved = await service.get_user(user1.id)
-    if retrieved:
-        print(f"Retrieved user: {retrieved.username}")
-
-    # Update user
-    print("\n✏️  Updating user...")
-    updated = await service.update_user(user1.id, UpdateUserRequest(
-        email="john.doe@example.com"
-    ))
-    if updated:
-        print(f"Updated user email: {updated.email}")
-
-    # List all users
-    print("\n📋 All users:")
-    users = await service.get_all_users()
-    for user in users:
-        status = "Active" if user.is_active else "Inactive"
-        print(f"  - {user.username} ({user.email}) - {status}")
-
-    # Deactivate user
-    print("\n🚫 Deactivating user...")
-    deactivated = await service.deactivate_user(user2.id)
-    if deactivated:
-        print(f"Deactivated user: {deactivated.username}")
-
-    # List users again
-    print("\n📋 Users after deactivation:")
-    users = await service.get_all_users()
-    for user in users:
-        status = "Active" if user.is_active else "Inactive"
-        print(f"  - {user.username} ({user.email}) - {status}")
-
-async def main():
-    """Main application entry point."""
-    # Set up container
-    await setup_container()
-
-    # Run demo
-    await demo_user_operations()
-
-    print("\n✅ Demo completed successfully!")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(run())
 ```
 
-## 🎯 Step 7: Running the Application
-
-Create the files above and run:
+`@inject` works on async functions. Calling `run()` with no arguments resolves `UserService` and `AppConfig` from the global container.
 
 ```bash
-python main.py
+python -m my_injectq_app.main
 ```
 
-You should see output like:
-
 ```
-🚀 User Management API v1.0.0
-==================================================
-
-📝 Creating users...
-Database initialized with config: postgresql://postgres:password@localhost:5432/userdb
-Created user: john_doe (ID: 1)
-Created user: jane_smith (ID: 2)
-
-🔍 Getting user...
-Retrieved user: john_doe
-
-✏️  Updating user...
-Updated user email: john.doe@example.com
-
-📋 All users:
-  - john_doe (john.doe@example.com) - Active
-  - jane_smith (jane@example.com) - Active
-
-🚫 Deactivating user...
-Deactivated user: jane_smith
-
-📋 Users after deactivation:
-  - john_doe (john.doe@example.com) - Active
-  - jane_smith (jane@example.com) - Inactive
-
-✅ Demo completed successfully!
+User Management
+Rejected duplicate: john_doe
+1: john_doe <john@example.com>
+2: jane_smith <jane@example.com>
 ```
 
-## 🔧 Step 8: Adding Error Handling
+## Tests
 
-Let's enhance our application with proper error handling:
-
-```python
-# Add to service.py
-class UserServiceError(Exception):
-    """Base exception for user service errors."""
-    pass
-
-class UserNotFoundError(UserServiceError):
-    """Raised when a user is not found."""
-    pass
-
-class UserAlreadyExistsError(UserServiceError):
-    """Raised when trying to create a user that already exists."""
-    pass
-
-# Update UserService methods
-async def get_user(self, user_id: int) -> User:
-    """Get user by ID."""
-    user = await self.repo.get_by_id(user_id)
-    if not user:
-        raise UserNotFoundError(f"User with ID {user_id} not found")
-    return user
-
-async def create_user(self, request: CreateUserRequest) -> User:
-    """Create a new user with validation."""
-    # Check if username already exists
-    existing = await self.repo.get_by_username(request.username)
-    if existing:
-        raise UserAlreadyExistsError(f"Username '{request.username}' already exists")
-
-    return await self.repo.create(request)
-```
-
-## 🧪 Step 9: Adding Tests
+Replace the repository with a fake inside `isolated_container()`. The container is fresh for the block and the previous one is restored afterwards. `container[UserService] = UserService` binds the class so it is built from the fake repository.
 
 ```python
 # tests/test_user_service.py
 import pytest
-from injectq.testing import test_container
 
-from ..service import UserService
-from ..models import CreateUserRequest
+from injectq.testing import isolated_container
+from my_injectq_app.models import User
+from my_injectq_app.repository import UserRepository
+from my_injectq_app.service import UserAlreadyExistsError, UserService
 
-class MockRepository:
-    def __init__(self):
-        self.users = {}
 
-    async def create(self, request):
-        # Mock implementation
-        from ..models import User
-        from datetime import datetime
-        user = User(
-            id=len(self.users) + 1,
-            username=request.username,
-            email=request.email,
-            created_at=datetime.now()
-        )
-        self.users[user.id] = user
+class FakeRepository:
+    def __init__(self) -> None:
+        self.users: dict[str, User] = {}
+
+    async def get_by_username(self, username):
+        return self.users.get(username)
+
+    async def create(self, username, email):
+        user = User(id=len(self.users) + 1, username=username, email=email, created_at=None)
+        self.users[username] = user
         return user
 
-    async def get_by_id(self, user_id):
-        return self.users.get(user_id)
 
 @pytest.mark.asyncio
 async def test_create_user():
-    with test_container() as container:
-        # Bind mock repository
-        mock_repo = MockRepository()
-        container[UserRepository] = mock_repo
-
-        # Bind service
+    with isolated_container() as container:
+        container[UserRepository] = FakeRepository()
         container[UserService] = UserService
-
         service = container[UserService]
-
-        # Test user creation
-        request = CreateUserRequest(username="test", email="test@example.com")
-        user = await service.create_user(request)
-        
+        user = await service.create_user("test", "test@example.com")
         assert user.username == "test"
-        assert user.email == "test@example.com"
+
 
 @pytest.mark.asyncio
-async def test_get_user_not_found():
-    with test_container() as container:
-        mock_repo = MockRepository()
-        container[UserRepository] = mock_repo
+async def test_duplicate_username():
+    with isolated_container() as container:
+        container[UserRepository] = FakeRepository()
         container[UserService] = UserService
-
         service = container[UserService]
-
-        # Should raise error for non-existent user
-        from ..service import UserNotFoundError
-        with pytest.raises(UserNotFoundError):
-            await service.get_user(999)
+        await service.create_user("test", "a@example.com")
+        with pytest.raises(UserAlreadyExistsError):
+            await service.create_user("test", "b@example.com")
 ```
 
-## 🚀 What's Next?
+Run with `pytest` (async tests need `pytest-asyncio`, included in `injectq[dev]`).
 
-Congratulations! You've built a complete application with InjectQ. Here are some next steps:
+## Next steps
 
-1. **[FastAPI Integration](../integrations/fastapi.md)**: Turn this into a REST API
-2. **[Taskiq Integration](../integrations/taskiq.md)**: Add background job processing
-3. **[Testing Patterns](../testing/testing-patterns.md)**: Write comprehensive tests
-4. **[Modules & Organization](../modules/overview.md)**: Organize larger applications
-
-## 💡 Key Takeaways
-
-- **Separation of Concerns**: Each layer has a single responsibility
-- **Dependency Injection**: Clean, testable, and maintainable code
-- **Type Safety**: Full type hints throughout
-- **Async Support**: Modern Python async/await patterns
-- **Error Handling**: Proper exception handling and validation
-- **Testing**: Easy to test with dependency overrides
-
-Your InjectQ journey has just begun! 🎉
+- [FastAPI integration](../integrations/fastapi.md): expose the service over HTTP
+- [Taskiq integration](../integrations/taskiq.md): run it from background tasks
+- [Testing](../testing/overview.md)
+- [Modules](../modules/overview.md): group bindings in larger apps

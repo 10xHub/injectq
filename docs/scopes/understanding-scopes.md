@@ -1,162 +1,98 @@
 # Understanding Scopes
 
-Scopes control how long service instances live and when they're created.
+A scope decides how long a service instance lives and who shares it.
 
-## What are Scopes?
+| Scope | Instances | Use for |
+|---|---|---|
+| `singleton` | One per container, created on first use | Database pools, config, caches |
+| `transient` | A new one on every resolve | Stateless helpers, validators |
+| `request` | One per `with container.scope("request")` block | Per-request state, sessions, unit of work |
+| `action` | Works like `request`, under its own name | A second, independent unit of work |
 
-A scope defines the **lifecycle** of a service:
-- **When** it's created
-- **How long** it lives
-- **Whether** instances are shared
+You can also [register your own scope names](#custom-scopes).
 
-## Built-in Scopes
-
-### Singleton - One Instance Forever
+## Choosing a scope
 
 ```python
-from injectq import singleton, InjectQ
+from injectq import InjectQ, singleton, transient, scoped
+
+container = InjectQ.get_instance()
 
 @singleton
-class Database:
-    def __init__(self):
-        print("Database created")
-
-container = InjectQ.get_instance()
-
-# Created once, reused everywhere
-db1 = container[Database]
-db2 = container[Database]
-assert db1 is db2  # True
-```
-
-**Use for:** Database connections, configuration, caches, loggers
-
-### Transient - New Instance Every Time
-
-```python
-from injectq import transient
-import uuid
+class Database: ...
 
 @transient
-class RequestHandler:
-    def __init__(self):
-        self.id = uuid.uuid4()
+class Validator: ...
 
-# New instance each time
-handler1 = container[RequestHandler]
-handler2 = container[RequestHandler]
-assert handler1 is not handler2  # True
+@scoped("request")          # bare @scoped means "request"
+class UserSession: ...
 ```
 
-**Use for:** Request handlers, validators, temporary objects
-
-### Scoped - One Instance Per Scope
+Without a decorator, pass the scope to `bind`. `bind` defaults to `singleton`:
 
 ```python
-from injectq import scoped
-
-@scoped("request")
-class UserSession:
-    def __init__(self):
-        self.user_id = None
-
-# One instance within a scope
-async with container.scope("request"):
-    session1 = container[UserSession]
-    session2 = container[UserSession]
-    assert session1 is session2  # True
-
-# New scope = new instance
-async with container.scope("request"):
-    session3 = container[UserSession]
-    assert session1 is not session3  # True
+container.bind(Database, Database, scope="singleton")
+container.bind(UserSession, UserSession, scope="request")
+container.bind_factory(Validator, make_validator)                    # transient by default
+container.bind_factory(Session, make_session, scope="request")
 ```
 
-**Use for:** Request context, user sessions, transaction data
+Details: [Singleton](singleton-scope.md), [Transient](transient-scope.md), [Scoped services](scoped-services.md), [Resources and cleanup](resources.md).
 
-## Choosing the Right Scope
-
-| Scope | When to Use | Examples |
-|-------|-------------|----------|
-| **Singleton** | Shared across app | Database, Config, Cache |
-| **Transient** | Stateless operations | Validators, Handlers |
-| **Scoped** | Per-request state | Session, Context |
-
-## Working with Scopes
-
-### Creating Scopes
+## Entering a scope
 
 ```python
-from injectq import InjectQ
-
-container = InjectQ.get_instance()
-
-# Sync scope
 with container.scope("request"):
-    service = container[RequestService]
+    a = container[UserSession]
+    assert a is container[UserSession]       # same block, same instance
 
-# Async scope
-async with container.scope("request"):
-    service = await container.aget(AsyncService)
+with container.scope("request"):
+    assert container[UserSession] is not a   # new block, new instance
+
+async with container.async_scope("request"):
+    session = await container.aget(UserSession)
+
+container[UserSession]   # ScopeError: No active 'request' scope
 ```
 
-### Clearing Scopes
+Use `async_scope` when scoped services need async teardown. Resolving a scoped key outside a block raises `ScopeError`.
+
+Frameworks enter a `"request"` scope for you: once per HTTP request (FastAPI), MCP message (FastMCP) or task (Taskiq).
+
+## Custom scopes
 
 ```python
-# Clear specific scope
-container.clear_scope("request")
+container.register_scope("job")
 
-# Clear all scopes
-container.clear_all_scopes()
+@scoped("job")
+class JobContext: ...
+
+with container.scope("job"):
+    ctx = container[JobContext]
 ```
 
-## Common Mistakes
+Entering a name that is not `request`, `action` or registered raises `ScopeError: Unknown scope`. Registering `"singleton"` also raises `ScopeError`.
 
-### ❌ Wrong: Singleton with Request Data
+## Cleanup
+
+When a block exits, its exit stack runs, last pushed first. `@resource("request")` services are closed there. See [Resources and cleanup](resources.md).
+
+## Scopes and concurrency
+
+A scope lives in a `ContextVar`. Tasks and `asyncio.to_thread` calls started inside a block see it. `run_in_executor` and plain threads do not. Scopes belong to one container: two containers never share instances. See [Context and concurrency](../core-concepts/context-and-concurrency.md).
+
+## Picking wrongly
+
+A singleton lives for the whole process, so request data in a singleton is shared by every request. A singleton that depends on a scoped service keeps the instance from the first request. Use `scoped("request")` for per-request state, and keep expensive objects (connections, parsed schemas) in singletons.
 
 ```python
 @singleton
-class UserContext:
-    def __init__(self):
-        self.user_id = None  # Shared across all requests!
-```
+class UserContext:       # wrong: one user_id for every request
+    user_id = None
 
-### ✅ Right: Scoped for Request Data
-
-```python
 @scoped("request")
-class UserContext:
-    def __init__(self):
-        self.user_id = None  # Isolated per request
+class UserContext:       # right: one per request
+    user_id = None
 ```
 
-### ❌ Wrong: Transient for Expensive Resources
-
-```python
-@transient
-class DatabaseConnection:
-    def __init__(self):
-        self.conn = create_connection()  # Created every time!
-```
-
-### ✅ Right: Singleton for Expensive Resources
-
-```python
-@singleton
-class DatabaseConnection:
-    def __init__(self):
-        self.conn = create_connection()  # Created once
-```
-
-## Summary
-
-- **Singleton** → One instance app-wide (databases, config)
-- **Transient** → New instance each time (validators, handlers)
-- **Scoped** → One instance per scope (request context, sessions)
-
-Choose based on:
-- Data sharing needs
-- Resource costs
-- Thread safety requirements
-
-Next: [Singleton Scope](singleton-scope.md) | [Transient Scope](transient-scope.md) | [Scoped Services](scoped-services.md)
+Singletons are shared by all threads and tasks, so they must be safe to share. See [Singleton](singleton-scope.md#thread-safety).

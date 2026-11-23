@@ -1,18 +1,22 @@
 """Tests for InjectQ FastAPI integration — HTTP, WebSocket, and edge cases."""
 
+import contextvars
 import sys
 from typing import Annotated, Any
 from unittest.mock import AsyncMock
 
 import pytest
+
+
+pytest.importorskip("fastapi")
+
 from fastapi import FastAPI, WebSocket
 from fastapi.testclient import TestClient
 
-from injectq import InjectQ
+from injectq import ContainerContext, InjectQ
 from injectq.integrations.fastapi import (
     InjectFastAPI,
     InjectQRequestMiddleware,
-    _request_container,
     get_container_fastapi,
     setup_fastapi,
 )
@@ -84,12 +88,12 @@ def test_websocket_multiple_connections():
 
 
 def test_get_container_fastapi_raises_when_no_container():
-    token = _request_container.set(None)
-    try:
+    def check() -> None:
+        ContainerContext.clear_current()  # only inside this copied context
         with pytest.raises(InjectionError, match="No InjectQ container"):
             get_container_fastapi()
-    finally:
-        _request_container.reset(token)
+
+    contextvars.copy_context().run(check)
 
 
 @pytest.mark.asyncio
@@ -101,22 +105,19 @@ async def test_middleware_passes_through_non_http_websocket_scopes():
     scope: dict[str, Any] = {"type": "lifespan"}
     receive = AsyncMock()
     send = AsyncMock()
+    before = ContainerContext.get_current()
 
     await middleware(scope, receive, send)
 
     mock_app.assert_awaited_once_with(scope, receive, send)
-    assert _request_container.get() is None
+    assert ContainerContext.get_current() is before
 
 
 def test_inject_fastapi_raises_when_fastapi_not_installed(monkeypatch):
-    real_import = __builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__
+    # A None entry in sys.modules makes any import of the package raise ImportError.
+    monkeypatch.setitem(sys.modules, "fastapi", None)
 
-    def blocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "fastapi":
-            raise ImportError("No module named 'fastapi'")
-        return real_import(name, *args, **kwargs)
-
-    monkeypatch.setattr("builtins.__import__", blocked_import)
-
-    with pytest.raises(RuntimeError, match="InjectFastAPI requires the 'fastapi' package"):
+    with pytest.raises(
+        RuntimeError, match="InjectFastAPI requires the 'fastapi' package"
+    ):
         InjectFastAPI(int)

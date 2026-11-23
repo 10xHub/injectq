@@ -1,8 +1,8 @@
 # InjectQ
 [![PyPI version](https://badge.fury.io/py/injectq.svg)](https://pypi.org/project/injectq/)
 [![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15-blue.svg)](https://pypi.org/project/injectq/)
-[![License](https://img.shields.io/github/license/Iamsdt/injectq.svg)](https://github.com/Iamsdt/injectq/blob/main/LICENSE)
-[![Coverage](https://img.shields.io/badge/coverage-80%25-yellow.svg)](#)
+[![License](https://img.shields.io/github/license/10xhub/injectq.svg)](https://github.com/10xhub/injectq/blob/main/LICENSE)
+[![Coverage](https://img.shields.io/badge/coverage-87%25-green.svg)](#)
 
 
 InjectQ is a modern, lightweight Python dependency injection library focused on clarity, type-safety, and seamless framework integration.
@@ -12,14 +12,92 @@ Full documentation is hosted at [Documentation](https://10xhub.github.io/injectq
 
 ## Key features
 
-- Simplicity-first dict-like API for quick starts
-- Flexible decorator- and type-based injection (`@inject`, `Inject[T]`)
-- Type-friendly: designed to work with static type checkers
-- Built-in integrations for frameworks (FastAPI, Taskiq) as optional extras
-- Factory and async factory support
-- 🆕 Hybrid factory methods combining DI with manual arguments (`invoke()`, `ainvoke()`)
-- Scope management and testing utilities
+- Simple dict-like API for quick starts
+- Decorator- and type-based injection (`@inject`, `Inject[T]`), for sync, async and generator functions
+- Type-friendly: `get`, `aget`, `try_get` and `atry_get` are typed with overloads, so `container.get(Service)` is a `Service` (abstract classes as keys trigger mypy's `type-abstract` check)
+- One resolver compiled per service (generated code, or plain closures with `InjectQ(debug=True)`)
+- Scopes: `@singleton`, `@transient`, `@scoped("request")`. A request scope is one `with container.scope("request"):` block, sync or async, with exit stacks and `@resource` cleanup
+- Safe under threads and asyncio: the current container, scopes and overrides live in `ContextVar`s
+- Context-local overrides for tests: `container.override(Key, fake)` reaches every service that depends on `Key`
+- Integrations for FastAPI, FastMCP and Taskiq as optional extras: the right container and a request scope for every request, message or task
+- Factory and async factory support, and hybrid factory methods that mix DI with manual arguments (`invoke()`, `ainvoke()`)
+- Modules and providers, validation (`validate()`, `compile()`), a dependency graph and a profiler
 - Supports Python 3.10 through 3.15, including Python 3.15 lazy imports (PEP 810)
+
+## Benchmarks
+
+injectq compared with 13 other Python dependency injection libraries on the same object graphs. Every library first passes the same correctness checks (types, singleton identity, fresh transients, request-scope isolation), then is timed in its own process. Lower is better.
+
+<!-- BENCH:README_TABLE -->
+| µs/op (median, lower is better) | S1 singleton | S2 transient chain | S3 wide graph | S4 request scope | S5 injected call | S6 async chain |
+|---|--:|--:|--:|--:|--:|--:|
+| **injectq** | 0.083 | **0.302** | **0.550** | 0.968 | **0.143** | **0.427** |
+| aioinject [1] | 0.295 | 0.787 | 1.768 | 2.278 | n/a | 0.992 |
+| dependency-injector [2] | **0.057** | 1.203 | 3.038 | n/a | 1.127 | 37.8 |
+| dishka [3] | 0.307 | 0.516 | 1.069 | 1.526 | 1.165 | 1.068 |
+| diwire [4] | 0.424 | 0.609 | 0.884 | 4.609 | 6.820 | 0.874 |
+| inject [5] | 0.158 | 4.785 | 12.2 | n/a | 2.462 | n/a |
+| injector [6] | 1.331 | 42.7 | 90.6 | 14.4 | 16.8 | n/a |
+| kink [7] | 0.168 | 3.688 | 12.6 | n/a | 2.366 | n/a |
+| lagom [8] | 0.155 | 5.624 | 12.0 | n/a | 1.474 | n/a |
+| punq [9] | 1.097 | 36.5 | 90.6 | n/a | n/a | n/a |
+| rodi [10] | 0.290 | 0.758 | 1.852 | **0.836** | 1.056 | n/a |
+| svcs [11] | 0.189 | 2.590 | 8.087 | 1.940 | n/a | 3.068 |
+| that-depends [12] | 0.077 | 0.938 | 3.479 | 24.7 | 3.163 | 1.569 |
+| wireup [13] | 0.092 | 0.512 | 1.434 | 1.130 | 0.269 | 0.676 |
+| _hand-written (floor)_ | _0.019_ | _0.166_ | _0.355_ | _0.345_ | _0.041_ | _0.229_ |
+| **injectq rank** | **3 of 14** | **1 of 14** | **1 of 14** | **2 of 9** | **1 of 11** | **1 of 8** |
+| fastest DI library | dependency-injector | injectq | injectq | rodi | injectq | injectq |
+
+Bold: fastest DI library in the column (hand-written excluded). n/a: the library has no such feature.
+
+<details>
+<summary>Setup notes per library ([1]-[13])</summary>
+
+
+[1] **aioinject**: sync `SyncContainer` for S1-S5/S7, async `Container` for S6; transients registered in the lifetime scope to resolve from the root context. n/a: S5 no generic injection decorator (per-framework `inject` only).
+
+[2] **dependency-injector**: S6 uses providers in async mode. n/a: S4 no enter/exit request scope (only context-local singletons, a different mechanism).
+
+[3] **dishka**: no transient lifetime; `cache=False` is its equivalent.
+
+[4] **diwire**: default `SCOPED` lifetime at the root scope = singleton; transient via `Lifetime.TRANSIENT`; S5 passes `diwire_resolver=` explicitly.
+
+[5] **inject**: one global injector; singletons via `bind_to_constructor`, transients via `bind_to_provider`, constructors wired with `autoparams`. n/a: S4 no request scope; S6 no async resolution.
+
+[6] **injector**: request scope is a custom `Scope` subclass (cache swapped on enter/exit); constructors need `@inject` (applied to the benchmark classes). n/a: S6 no async API.
+
+[7] **kink**: `@inject` on a class registers it (singleton; `use_factory=True` = transient) and mutates `__init__`; S7 restores `__init__` before re-decorating. n/a: S4 no request scope; S6 no async resolution.
+
+[8] **lagom**: unregistered classes are autowired as transient. n/a: S4 no request scope; S6 no async resolution.
+
+[9] **punq**: transient is the default scope. n/a: S4 no request scope (only transient and singleton); S5 no injection decorator; S6 no async API.
+
+[10] **rodi**: resolved with `provider.get` / `provider.exec` (each call creates an activation scope); S7 includes `build_provider()`, which validates and wires eagerly. n/a: S6 no async resolution (sync only).
+
+[11] **svcs**: caches per `Container`, so transient = a new `Container` per operation (its construction is timed). n/a: S5 no generic injection decorator (framework integrations only).
+
+[12] **that-depends**: S5 with `@inject(scope=None)`; S4 via a `ContextResource` in `ContextScopes.REQUEST`.
+
+[13] **wireup**: transients and scoped services resolve from a scope: S2, S3, S6 use one long-lived scope, S4/S5 enter one per operation.
+
+</details>
+
+_14 libraries, AMD Ryzen 5 5600G with Radeon Graphics, CPython 3.13.13, median of 25 repeats, 2026-11-23. Full table, chart and method: `docs/benchmarks.md`._
+<!-- /BENCH:README_TABLE -->
+
+![Benchmark chart: injectq vs 13 Python DI libraries, µs per operation, log scale](https://raw.githubusercontent.com/10xhub/injectq/main/docs/assets/benchmarks.svg)
+
+Scenarios: **S1** resolve a cached singleton, **S2** a 3-level transient chain, **S3** a wide graph (5 transients sharing a singleton), **S4** enter a request scope, resolve, exit, **S5** call an `@inject` function with 3 dependencies, **S6** S2 through the async API.
+Full results, the chart, method and per-library notes: [Benchmarks](https://10xhub.github.io/injectq/benchmarks/) ([source](docs/benchmarks.md)). Raw JSON for every run: [`benchmarks/results/`](benchmarks/results/). Reproduce with `make bench-compare`.
+
+## Upgrading from 0.5
+
+0.6 changes how the current container, scopes, overrides and `get()` on async factories behave, and it renames or removes some names. Read the [0.6 migration guide](docs/migration-0.6.md) ([online](https://10xhub.github.io/injectq/migration-0.6/)). It lists every change with before and after code. To find old names in your code, run your tests with `pytest -W error::DeprecationWarning`.
+
+## Using an AI coding agent?
+
+Using an AI coding agent (Claude Code, Cursor, Copilot, ...)? Give it [docs/skill.md](https://raw.githubusercontent.com/10xhub/injectq/main/docs/skill.md): one file with everything it needs to use injectq correctly: recommended approach, API, pitfalls, limitations and benchmarks. Rendered page: [AI Agent Skill](https://10xhub.github.io/injectq/skill/).
 
 ## Quick Start (recommended pattern)
 
@@ -52,6 +130,43 @@ if __name__ == "__main__":
 Notes:
 - Use `container[...]` for simple bindings and values.
 - Use `@inject` and `Inject[T]` for function/class injection.
+
+### Scopes and tests
+
+```python
+from injectq import InjectQ, ScopeError, scoped
+
+container = InjectQ()
+container.activate()          # decorators and @inject use this container
+
+
+@scoped("request")
+class Session: ...
+
+
+with container.scope("request"):
+    assert container[Session] is container[Session]   # one per block
+
+try:
+    container[Session]        # outside a block
+except ScopeError:
+    print("no active request scope")
+
+
+class Mailer:
+    def send(self) -> str:
+        return "sent"
+
+
+class FakeMailer(Mailer):
+    def send(self) -> str:
+        return "fake"
+
+
+container.bind(Mailer, Mailer)
+with container.override(Mailer, FakeMailer()):            # tests: swap one dependency
+    assert container[Mailer].send() == "fake"
+```
 
 ## Enhanced Features
 
@@ -167,6 +282,7 @@ Optional framework integrations (install only what you need):
 
 ```bash
 pip install injectq[fastapi]   # FastAPI integration (optional)
+pip install injectq[fastmcp]   # FastMCP integration (optional)
 pip install injectq[taskiq]    # Taskiq integration (optional)
 ```
 
@@ -209,7 +325,11 @@ See [Python 3.15 Lazy Imports](https://10xhub.github.io/injectq/getting-started/
 - `docs/injection-patterns/dict-interface.md` — dict-like API
 - `docs/injection-patterns/inject-decorator.md` — `@inject` usage
 - `docs/injection-patterns/factory-methods.md` — factory patterns (DI, parameterized, hybrid)
-- `docs/integrations/` — integration guides for FastAPI and Taskiq
+- `docs/migration-0.6.md` — upgrading from 0.5
+- `docs/core-concepts/context-and-concurrency.md` — tasks, threads and the current container
+- `docs/scopes/scoped-services.md` and `docs/scopes/resources.md` — request scopes and cleanup
+- `docs/testing/overrides.md` — overrides for tests
+- `docs/integrations/` — integration guides for FastAPI, FastMCP and Taskiq
 
 ## License
 
@@ -226,26 +346,11 @@ python -m pytest
 
 Coverage reports are written to `htmlcov/` and `coverage.xml`.
 
-## Performance Benchmarks
-
-InjectQ includes comprehensive performance benchmarks to ensure production-ready performance:
+## Running the benchmarks
 
 ```bash
-# Run all benchmarks
-pytest tests/test_benchmarks.py --benchmark-only
-
-# Run with verbose statistics
-pytest tests/test_benchmarks.py --benchmark-only --benchmark-verbose
-
-# Save results for comparison
-pytest tests/test_benchmarks.py --benchmark-only --benchmark-autosave
+make bench          # injectq only, checked against benchmarks/baseline.json
+make bench-compare  # injectq vs the other DI libraries, in an isolated venv
 ```
 
-### Performance Highlights
-- **Ultra-fast operations:** Basic operations (bind, get, has) execute in 270-780 nanoseconds
-- **Efficient resolution:** Dependency resolution completes in ~1 microsecond
-- **Excellent scalability:** Handles 1,000+ operations with sub-millisecond performance
-- **Thread-safe:** Concurrent access with minimal overhead (~24 μs)
-- **Production-ready:** Web request simulation (10 services) completes in 142 microseconds
-
-📊 See `BENCHMARK_REPORT.md` for detailed analysis and `BENCHMARK_QUICK_GUIDE.md` for usage guide.
+See [`benchmarks/README.md`](benchmarks/README.md) for the scenarios, the result files and how to add a library.

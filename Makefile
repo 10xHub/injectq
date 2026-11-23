@@ -1,6 +1,6 @@
 # Makefile for PyAgenity packaging, publishing, and docs
 
-.PHONY: build publish testpublish clean test test-cov docs-serve docs-build docs-deploy
+.PHONY: build publish testpublish clean test test-cov bench bench-compare bench-publish docs-serve docs-build docs-deploy
 
 # Build and upload with uv-managed tools, so the result doesn't depend on
 # whichever virtualenv (and twine version) happens to be active.
@@ -24,6 +24,19 @@ test:
 
 test-cov:
 	uv run pytest --cov=pyagenity --cov-report=html --cov-report=term-missing --cov-report=xml -v
+
+# ---------- Benchmarks ----------
+bench:
+	uv run python benchmarks/run.py
+	uv run python benchmarks/check.py --current benchmarks/latest.json
+
+bench-compare:
+	uv venv --allow-existing .bench-venv
+	PYTHON=$(CURDIR)/.bench-venv/bin/python sh benchmarks/compare/run_all.sh
+
+bench-publish:
+	uv venv --allow-existing .bench-venv
+	PUBLISH=1 PYTHON=$(CURDIR)/.bench-venv/bin/python sh benchmarks/compare/run_all.sh
 
 # ---------- Docs Section ----------
 docs-serve:

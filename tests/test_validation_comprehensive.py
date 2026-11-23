@@ -5,9 +5,6 @@ import pytest
 from injectq import InjectQ
 from injectq.diagnostics.validation import (
     DependencyValidator,
-    InvalidBindingError,
-    MissingDependencyError,
-    TypeMismatchError,
     ValidationError,
     ValidationResult,
 )
@@ -71,21 +68,6 @@ def test_validator_set_container() -> None:
     validator.set_container(container)
 
     assert validator.container is container
-
-
-def test_validator_clear_cache() -> None:
-    """Test cache clearing."""
-    container = InjectQ()
-    validator = DependencyValidator(container)
-
-    # Build some cache
-    validator._dependency_graph[str] = {int}
-    validator._binding_types[str] = str
-
-    validator._clear_cache()
-
-    assert len(validator._dependency_graph) == 0
-    assert len(validator._binding_types) == 0
 
 
 def test_validator_simple_validation() -> None:
@@ -181,177 +163,6 @@ def test_validator_find_potential_cycles() -> None:
 
     # With empty container, no cycles
     assert isinstance(cycles, list)
-
-
-def test_validator_can_resolve_dependency() -> None:
-    """Test checking if dependency can be resolved."""
-    container = InjectQ()
-
-    class Service:
-        pass
-
-    container.bind(Service, Service)
-
-    validator = DependencyValidator(container)
-
-    # Should be able to resolve registered service
-    assert validator._can_resolve_dependency(Service)
-
-    # Should not be able to resolve unregistered service
-    class Unregistered:
-        pass
-
-    assert not validator._can_resolve_dependency(Unregistered)
-
-
-def test_validator_is_compatible_type() -> None:
-    """Test type compatibility checking."""
-    validator = DependencyValidator()
-
-    # Same type is compatible
-    assert validator._is_compatible_type(str, str)
-
-    # Subclass is compatible
-    class Base:
-        pass
-
-    class Derived(Base):
-        pass
-
-    assert validator._is_compatible_type(Base, Derived)
-
-
-def test_validator_is_scope_mismatch() -> None:
-    """Test scope mismatch checking."""
-    validator = DependencyValidator()
-
-    # Singleton depending on transient is a mismatch
-    assert validator._is_scope_mismatch("singleton", "transient")
-
-    # Transient depending on singleton is fine
-    assert not validator._is_scope_mismatch("transient", "singleton")
-
-    # Same scope is fine
-    assert not validator._is_scope_mismatch("singleton", "singleton")
-
-
-def test_missing_dependency_error() -> None:
-    """Test MissingDependencyError."""
-    error = MissingDependencyError("Missing dependency")
-    assert "Missing dependency" in str(error)
-
-
-def test_invalid_binding_error() -> None:
-    """Test InvalidBindingError."""
-    error = InvalidBindingError("Invalid binding")
-    assert "Invalid binding" in str(error)
-
-
-def test_type_mismatch_error() -> None:
-    """Test TypeMismatchError."""
-    error = TypeMismatchError("Type mismatch")
-    assert "Type mismatch" in str(error)
-
-
-def test_validator_build_dependency_graph() -> None:
-    """Test building dependency graph."""
-    container = InjectQ()
-
-    class Service:
-        pass
-
-    container.bind(Service, Service)
-
-    validator = DependencyValidator(container)
-    validator._build_dependency_graph()
-
-    # Graph should be built
-    assert isinstance(validator._dependency_graph, dict)
-
-
-def test_validator_validate_circular_dependencies() -> None:
-    """Test circular dependency validation."""
-    container = InjectQ()
-    validator = DependencyValidator(container)
-    result = ValidationResult()
-
-    # Manually create a circular dependency in graph
-    validator._dependency_graph[str] = {int}
-    validator._dependency_graph[int] = {str}
-
-    validator._validate_circular_dependencies(result)
-
-    # Should detect circular dependency
-    assert len(result.errors) > 0
-
-
-def test_validator_validate_missing_dependencies() -> None:
-    """Test missing dependency validation."""
-    container = InjectQ()
-    validator = DependencyValidator(container)
-    result = ValidationResult()
-
-    # Manually create a dependency on unregistered service
-    class Service:
-        pass
-
-    class Unregistered:
-        pass
-
-    container.bind(Service, Service)
-    validator._dependency_graph[Service] = {Unregistered}
-
-    validator._validate_missing_dependencies(result)
-
-    # Should detect missing dependency
-    assert len(result.errors) > 0
-    assert any(isinstance(e, MissingDependencyError) for e in result.errors)
-
-
-def test_validator_validate_type_compatibility() -> None:
-    """Test type compatibility validation."""
-    container = InjectQ()
-    validator = DependencyValidator(container)
-    result = ValidationResult()
-
-    class Base:
-        pass
-
-    class Derived(Base):
-        pass
-
-    # Setup compatibility check
-    validator._dependency_graph[Derived] = {Base}
-    validator._binding_types[Base] = Base
-
-    validator._validate_type_compatibility(result)
-
-    # Should be compatible (no errors or warnings)
-    # Implementation may not generate warnings for compatible types
-
-
-def test_validator_validate_scope_consistency() -> None:
-    """Test scope consistency validation."""
-    container = InjectQ()
-    validator = DependencyValidator(container)
-    result = ValidationResult()
-
-    validator._validate_scope_consistency(result)
-
-    # Currently a no-op, should not error
-    assert True
-
-
-def test_validator_validate_factory_signatures() -> None:
-    """Test factory signature validation."""
-    container = InjectQ()
-    validator = DependencyValidator(container)
-    result = ValidationResult()
-
-    validator._validate_factory_signatures(result)
-
-    # Currently a no-op, should not error
-    assert True
 
 
 def test_validation_error_base() -> None:

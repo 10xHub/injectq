@@ -1,0 +1,47 @@
+{
+  "lib": "injectq",
+  "python": "3.13.13",
+  "results": {
+    "S1": 0.0828365021442775,
+    "S2": 0.30189121413183223,
+    "S3": 0.549776530822309,
+    "S4": 0.9675350894017328,
+    "S5": 0.14317760636475446,
+    "S6": 0.42659155563590695,
+    "S7": 27.437499738880433,
+    "S7r": 251.10350179602392
+  },
+  "verified": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S7r"
+  ],
+  "meta": {
+    "date": "2026-11-23T11:11:36Z",
+    "cpu": "AMD Ryzen 5 5600G with Radeon Graphics",
+    "cpu_count": 12,
+    "os": "Linux-7.3.4-1-cachyos-x86_64-with-glibc2.44",
+    "python": {
+      "version": "3.13.13",
+      "full": "3.13.13 (main, Jun  2 2026, 22:27:49) [Clang 22.1.3 ]",
+      "implementation": "CPython",
+      "build": "main Jun  2 2026 22:27:49",
+      "compiler": "Clang 22.1.3 ",
+      "gil_enabled": true,
+      "optimized_build": true,
+      "lto": true
+    },
+    "libraries": {
+      "injectq": "0.6.0"
+    },
+    "repeats": 25,
+    "target_seconds_per_repeat": 0.02,
+    "statistic": "median of repeats, microseconds per operation"
+  },
+  "injectq_version": "0.6.0"
+}

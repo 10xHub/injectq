@@ -1,355 +1,123 @@
 # Scoped Services
 
-One instance **per scope context**. Same instance within a scope, different instances across scopes.
-
-## What are Scoped Services?
-
-Scoped services create **one instance per scope**. All requests within the same scope get the **same instance**.
+A scoped service has one instance per scope block. Inside the block you get the same instance every time. A new block gives a new instance. For the scope basics, see [Understanding scopes](understanding-scopes.md).
 
 ```python
+import uuid
 from injectq import InjectQ, scoped
 
-container = InjectQ.get_instance()
+container = InjectQ()
+container.activate()          # the decorator binds into the current container
 
-@scoped("request")
+@scoped("request")            # bare @scoped means "request" too
 class RequestContext:
-    def __init__(self):
+    def __init__(self) -> None:
         self.request_id = str(uuid.uuid4())
-        print(f"Context created: {self.request_id}")
 
-# Within same scope - same instance
 with container.scope("request"):
     ctx1 = container[RequestContext]
-    ctx2 = container[RequestContext]
-    print(ctx1 is ctx2)  # True
-
-# Different scopes - different instances
-with container.scope("request"):
-    ctx_a = container[RequestContext]
+    assert ctx1 is container[RequestContext]
 
 with container.scope("request"):
-    ctx_b = container[RequestContext]
-
-print(ctx_a is not ctx_b)  # True
+    assert container[RequestContext] is not ctx1
 ```
 
-## When to Use
-
-**✅ Use for:**
-- Web request data
-- Database transactions
-- User sessions
-- Request-scoped cache
-- Per-operation context
-
-**❌ Avoid for:**
-- Global config (use singleton)
-- Stateless operations (use transient)
-- Cross-request data (use singleton)
-
-## Examples
-
-### Good Use Cases
+Without the decorator:
 
 ```python
-@scoped("request")
-class UserSession:
-    """Per-user session data"""
-    def __init__(self):
-        self.user_id = None
-        self.permissions = []
-
-@scoped("request")
-class DatabaseTransaction:
-    """Per-request transaction"""
-    def __init__(self, db: Database):
-        self.db = db
-        self.transaction = db.begin_transaction()
-
-    def commit(self):
-        self.transaction.commit()
-
-@scoped("request")
-class RequestCache:
-    """Cache per request"""
-    def __init__(self):
-        self.data = {}
+container.bind(RequestContext, RequestContext, scope="request")
+container.bind_factory(DbSession, open_session, scope="request")
 ```
 
-### Bad Use Cases
+## Outside a scope
 
 ```python
-@scoped("request")
-class AppConfig:
-    """❌ Bad - config should be global"""
-    pass
-
-@scoped("request")
-class EmailValidator:
-    """❌ Bad - validation is stateless"""
-    pass
+container[RequestContext]
+# ScopeError: No active 'request' scope; enter one with container.scope('request')
 ```
 
-## Usage Patterns
+This keeps a request-scoped object from leaking into the next request. Enter a scope, or use a framework integration that does it for you.
 
-### Web Request Scope
-
-```python
-from fastapi import FastAPI
-from injectq.integrations.fastapi import InjectFastAPI
-
-app = FastAPI()
-inject_fastapi = InjectFastAPI(app)
-
-@scoped("request")
-class ShoppingCart:
-    def __init__(self):
-        self.items = []
-
-    def add_item(self, item: dict):
-        self.items.append(item)
-
-@app.post("/cart/add")
-def add_to_cart(
-    item: dict,
-    cart: Annotated[ShoppingCart, Depends()]
-):
-    cart.add_item(item)
-    return {"items": len(cart.items)}
-
-# Each HTTP request gets its own cart instance
-```
-
-### Manual Scope Management
+## Sync and async
 
 ```python
-@scoped("request")
-class RequestContext:
-    def __init__(self):
-        self.request_id = str(uuid.uuid4())
-
-# Sync scope
 with container.scope("request"):
     ctx = container[RequestContext]
-    # ... use context
 
-# Async scope
-async with container.scope("request"):
+async with container.async_scope("request"):
     ctx = await container.aget(RequestContext)
-    # ... use context
 ```
 
-### Nested Scopes
+`get()` and `aget()` return the same instance inside one block. Use `async_scope` when your services need async teardown ([Resources](resources.md)).
+
+## Names
+
+`"request"` and `"action"` exist by default. Other names need `container.register_scope(name)`. The name in the `with` must match the name on the service:
 
 ```python
 @scoped("request")
-class RequestData:
-    pass
+class Service: ...
 
-@scoped("transaction")
-class TransactionData:
-    pass
-
-# Nested scopes
-with container.scope("request"):
-    req_data = container[RequestData]
-
-    with container.scope("transaction"):
-        tx_data = container[TransactionData]
-        # Both available here
-
-    # tx_data cleaned up, req_data still available
-
-# req_data cleaned up
-```
-
-## Working with Scopes
-
-### Creating Named Scopes
-
-```python
-# Define scope names
-@scoped("request")
-class RequestService:
-    pass
-
-@scoped("session")
-class SessionService:
-    pass
-
-@scoped("transaction")
-class TransactionService:
-    pass
-
-# Use appropriate scopes
-with container.scope("request"):
-    req_svc = container[RequestService]
-
+container.register_scope("session")
 with container.scope("session"):
-    sess_svc = container[SessionService]
+    container[Service]       # ScopeError: No active 'request' scope
 ```
 
-### Clearing Scopes
+## Nesting
+
+Blocks of the same name can nest. Leaving the inner block restores the outer one:
 
 ```python
-# Clear specific scope
-container.clear_scope("request")
-
-# Clear all scopes
-container.clear_all_scopes()
-```
-
-### Scope Lifecycle
-
-```python
-@scoped("request")
-class Service:
-    def __init__(self):
-        print("Service created")
-
-    def __del__(self):
-        print("Service destroyed")
-
-# Lifecycle
 with container.scope("request"):
-    svc = container[Service]  # "Service created"
-    # ... use service
-# "Service destroyed" when scope exits
+    outer = container[RequestContext]
+    with container.scope("request"):
+        assert container[RequestContext] is not outer
+    assert container[RequestContext] is outer
 ```
 
-## FastAPI Integration
+## Concurrency
+
+The active scope is stored in a `ContextVar`.
+
+- Tasks started inside a block (`asyncio.create_task`) see the block's instances.
+- `asyncio.to_thread` inside a block gets the caller's instances.
+- `loop.run_in_executor` and plain `threading.Thread` do not see the scope. Resolving a scoped key there raises `ScopeError`.
+- Two requests handled at the same time each have their own block.
+
+See [Context and concurrency](../core-concepts/context-and-concurrency.md).
+
+## Web frameworks
+
+You do not enter scopes yourself in a web app. The integration enters one `"request"` scope per HTTP request or WebSocket connection (FastAPI), per MCP message (FastMCP), or per task (Taskiq).
 
 ```python
-from fastapi import FastAPI, Depends
 from typing import Annotated
-from injectq import scoped
-from injectq.integrations.fastapi import InjectFastAPI
+from fastapi import FastAPI
+from injectq import InjectQ, scoped
+from injectq.integrations.fastapi import InjectFastAPI, setup_fastapi
 
+container = InjectQ()
+container.activate()
 app = FastAPI()
-inject_fastapi = InjectFastAPI(app)
+setup_fastapi(container, app)
 
-@scoped("request")
+@scoped
 class UserContext:
-    def __init__(self):
-        self.user_id = None
+    def __init__(self) -> None:
+        self.user_id: int | None = None
 
 @app.get("/user/{user_id}")
-def get_user(
-    user_id: int,
-    ctx: Annotated[UserContext, Depends()]
-):
-    ctx.user_id = user_id
+def get_user(user_id: int, ctx: Annotated[UserContext, InjectFastAPI(UserContext)]):
+    ctx.user_id = user_id          # this instance belongs to this request only
     return {"user_id": ctx.user_id}
-
-# InjectFastAPI automatically manages request scope
 ```
 
-## Async Support
+## Clearing a scope
 
-```python
-@scoped("request")
-class AsyncService:
-    async def process(self):
-        await asyncio.sleep(0.1)
-        return "processed"
+`container.clear_scope("request")` drops the instances of the active scope, and `container.clear_all_scopes()` drops all of them. Neither runs teardown code. Leave the `with` block for that. You rarely need these.
 
-# Async scope context
-async with container.scope("request"):
-    service = await container.aget(AsyncService)
-    result = await service.process()
-```
+## A singleton cannot depend on a scoped service
 
-## Common Mistakes
+A singleton lives for the whole process, so it keeps the instance from the first request. Resolve the scoped service inside the request instead.
 
-### ❌ Using Scoped Without Scope Context
-
-```python
-@scoped("request")
-class Service:
-    pass
-
-# ❌ No scope context
-service = container[Service]  # Error or unexpected behavior
-```
-
-### ✅ Always Use Scope Context
-
-```python
-@scoped("request")
-class Service:
-    pass
-
-# ✅ Within scope
-with container.scope("request"):
-    service = container[Service]  # Works correctly
-```
-
-### ❌ Mixing Scope Names
-
-```python
-@scoped("request")
-class Service:
-    pass
-
-# ❌ Wrong scope name
-with container.scope("session"):
-    service = container[Service]  # May not work as expected
-```
-
-### ✅ Match Scope Names
-
-```python
-@scoped("request")
-class Service:
-    pass
-
-# ✅ Correct scope name
-with container.scope("request"):
-    service = container[Service]  # Works correctly
-```
-
-## Testing Scoped Services
-
-```python
-from injectq.testing import test_container
-
-def test_scoped_service():
-    with test_container() as container:
-        @scoped("request")
-        class Service:
-            def __init__(self):
-                self.value = 0
-
-        # Test same instance within scope
-        with container.scope("request"):
-            svc1 = container[Service]
-            svc2 = container[Service]
-            assert svc1 is svc2
-
-        # Test different instances across scopes
-        with container.scope("request"):
-            svc3 = container[Service]
-
-        with container.scope("request"):
-            svc4 = container[Service]
-
-        assert svc3 is not svc4
-```
-
-## Summary
-
-- **One instance per scope** context
-- **Same instance** within a scope
-- **Different instances** across scopes
-- **Automatic cleanup** when scope exits
-
-**Use for:** Request data, transactions, sessions  
-**Avoid for:** Global config, stateless operations
-
-**Key patterns:**
-- Use `with container.scope("name"):` for sync
-- Use `async with container.scope("name"):` for async
-- Match scope names between decorator and context
-- Always use within scope context
-
-Next: [Singleton Scope](singleton-scope.md) | [Transient Scope](transient-scope.md)
+Next: [Resources and cleanup](resources.md) | [Singleton](singleton-scope.md) | [Transient](transient-scope.md)

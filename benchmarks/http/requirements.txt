@@ -1,0 +1,21 @@
+# Exact versions used for the published HTTP numbers.
+# injectq is installed from this checkout (pip install -e .).
+fastapi==0.165.0
+starlette==1.10.0
+uvicorn[standard]==0.54.0
+uvloop==0.23.0
+httptools==0.9.0
+pydantic==2.14.4
+httpx==0.28.1
+wireup==2.13.1
+dishka==1.10.1
+that-depends==4.3.0
+dependency-injector==4.49.1
+svcs==26.2.0
+aioinject==1.11.0
+diwire==1.5.0
+fastapi-injector==0.9.0
+injector==0.24.0
+kink==0.9.0
+punq==0.9.0
+rodi==2.1.0

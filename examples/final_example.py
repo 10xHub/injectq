@@ -21,6 +21,7 @@ def main():
     # === 1. Basic Container Usage ===
     print("\n📦 1. Basic Container Interface:")
     container = injectq.InjectQ()
+    container.activate()  # @inject and the decorators use the current container
 
     # Dict-like interface for simple values
     container[str] = "postgresql://localhost:5432/myapp"
@@ -156,7 +157,7 @@ def main():
     print("\n🧪 7. Testing Support:")
 
     # Test with isolated container
-    with injectq.testing.test_container() as test_cont:
+    with injectq.testing.isolated_container() as test_cont:
         test_cont.bind_instance(str, "sqlite://test.db")
         test_cont.bind_instance(int, 3000)
 

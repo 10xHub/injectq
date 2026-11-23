@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 
 import pytest
 
-from injectq import InjectQ, inject
+from injectq import ContainerContext, InjectQ, inject
 from injectq.core.registry import _UNSET, ServiceRegistry
 from injectq.core.scopes import ScopeType
 from injectq.utils.exceptions import BindingError, InjectionError
@@ -435,10 +435,12 @@ class TestIntegrationWithExistingFeatures:
 
         container = InjectQ()
         container.bind(SimpleService, None, allow_none=True)
-        container.activate()
-
-        result = function_with_nullable_dep()
-        assert result == "No service"
+        token = container.activate()
+        try:
+            result = function_with_nullable_dep()
+            assert result == "No service"
+        finally:
+            ContainerContext.reset_current(token)
 
     def test_abstract_validation_with_factories(self):
         """Test abstract class validation with factory functions."""

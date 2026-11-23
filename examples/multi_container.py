@@ -27,5 +27,9 @@ def test2(i: int, name: str):
     print(name)
 
 
-test1()  # type: ignore # should use c1
-test2()  # type: ignore # should use c1, but int is not bound in c1,
+# @inject uses the current container. Make one current for a block:
+with c1.context():
+    test1()  # type: ignore # uses c1
+
+with c2.context():
+    test2()  # type: ignore # uses c2
