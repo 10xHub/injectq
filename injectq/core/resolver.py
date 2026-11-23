@@ -1386,21 +1386,44 @@ class DependencyResolver:
         """Every registered key."""
         return list(self.registry.get_all_providers())
 
-    def validate(self) -> list[str]:
-        """Build the plan of every registered key; return the errors found."""
+    def _check_all(self) -> tuple[list[str], set[Any]]:
+        """Build every registered plan; return ``(errors, deferred_keys)``.
+
+        A factory whose plan cannot be built (parameters the container cannot
+        fill, i.e. call-time arguments) is deferred, not an error; resolving
+        it raises. Cycles and failing classes are always errors.
+        """
         errors: list[str] = []
+        deferred: set[Any] = set()
         with self._lock:
             self._dirty = True
             for key in self.registered_keys():
                 try:
                     self._node(key)
-                except InjectQError as exc:  # noqa: PERF203
+                except CircularDependencyError as exc:
                     errors.append(f"{_label(key)}: {exc}")
-        return errors
+                except InjectQError as exc:
+                    binding = self.provider(key)
+                    if binding is not None and getattr(binding, "is_factory", False):
+                        deferred.add(key)
+                    else:
+                        errors.append(f"{_label(key)}: {exc}")
+        return errors, deferred
+
+    def validate(self) -> list[str]:
+        """Build the plan of every registered key; return the errors found.
+
+        Factories whose parameters the container cannot fill (call-time
+        arguments) are skipped; resolving them raises.
+        """
+        return self._check_all()[0]
 
     def compile_all(self) -> None:
-        """Compile every registered key; raise ``InjectionError`` on errors."""
-        errors = self.validate()
+        """Compile every registered key; raise ``InjectionError`` on errors.
+
+        Deferred factories (call-time arguments) are skipped.
+        """
+        errors, deferred = self._check_all()
         if errors:
             raise InjectionError(
                 "Dependency validation failed:\n"
@@ -1411,6 +1434,8 @@ class DependencyResolver:
             self._eager = True  # generate code now, no closure warm-up
             try:
                 for key in self.registered_keys():
+                    if key in deferred:
+                        continue
                     self._compile_sync(key)
                     if self._node(key).needs_async:
                         self._compile_async(key)

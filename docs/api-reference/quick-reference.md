@@ -217,8 +217,8 @@ di = container_fixture(name="di")             # custom fixture name
 ## Validation and diagnostics
 
 ```python
-container.validate()               # raises InjectionError listing every problem (cycles, missing dependencies)
-container.compile()                # build every resolver now; raises on errors. Call at startup.
+container.validate()               # raises InjectionError listing every problem (cycles, missing dependencies); skips factories with call-time arguments
+container.compile()                # build every resolver now; raises on errors. Call at startup. Skips factories with call-time arguments.
 container.get_dependency_graph()   # {key: [dependency keys]}
 
 from injectq.diagnostics import DependencyProfiler, DependencyValidator, DependencyVisualizer

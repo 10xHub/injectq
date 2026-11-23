@@ -30,7 +30,7 @@ if __name__ == "__main__":
     # recommended global convenience container
     container = InjectQ.get_instance()
     # Don't bind anything for BaseCheckpointer to get None
-    container.bind(BaseCheckpointer, None)
+    container.bind(BaseCheckpointer, None, allow_none=True)
     container.bind("name", "value")
 
     call()  # type: ignore

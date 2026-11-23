@@ -917,7 +917,9 @@ class InjectQ:
 
         Builds the resolution plan of each registered key (factories
         included) and reports missing dependencies and cycles. Parameters
-        with defaults and ``allow_none`` bindings are valid.
+        with defaults and ``allow_none`` bindings are valid. A factory whose
+        parameters the container cannot fill (call-time arguments) is
+        skipped; resolving it with ``get()``/``aget()``/``@inject`` raises.
 
         Raises:
             BindingError: If a binding is malformed.

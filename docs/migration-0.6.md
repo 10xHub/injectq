@@ -294,7 +294,7 @@ except ValueError:            # your exception, unchanged
 
 ### `validate()` and `compile()`
 
-- `container.validate()` reports circular dependencies and accepts parameters that have defaults or `allow_none`. It raises `InjectionError` listing every problem.
+- `container.validate()` reports circular dependencies and accepts parameters that have defaults or `allow_none`. It raises `InjectionError` listing every problem. A factory whose parameters the container cannot fill (call-time arguments) is skipped by `validate()` and `compile()`; resolving it with `get()`/`aget()`/`@inject` raises.
 - `container.compile()` builds every resolver now and raises on the first set of errors. Call it at startup to fail fast.
 - `get_dependency_graph()` includes factory-bound keys and applies the lookup-by-name rule.
 

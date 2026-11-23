@@ -348,10 +348,17 @@ def test_container_validate_reports_every_error():
     container.bind_instance(Missing2, None, allow_none=True)
     container.validate()  # all resolvable
 
-    container.bind_factory("three", lambda x: x)  # unannotated, no default
+    container.bind_factory("three", lambda x: x)  # call-time argument: skipped
+    container.validate()
+
+    class NeedsMissing:
+        def __init__(self, x) -> None:  # noqa: ANN001
+            self.x = x
+
+    container.bind(NeedsMissing, NeedsMissing)  # classes stay strict
     with pytest.raises(InjectionError) as info:
         container.validate()
-    assert "'three'" in str(info.value)
+    assert "NeedsMissing" in str(info.value)
 
 
 def test_container_dependency_graph_lists_factories():
