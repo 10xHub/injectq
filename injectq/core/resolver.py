@@ -34,7 +34,8 @@ import functools
 import inspect
 import sys
 import threading
-from typing import TYPE_CHECKING, Any, get_type_hints
+import types
+from typing import TYPE_CHECKING, Any, NoReturn, get_type_hints
 
 from injectq.utils import (
     CircularDependencyError,
@@ -109,11 +110,11 @@ class Param:
     __slots__ = (
         "annotation",
         "default",
+        "error",
         "has_default",
         "is_positional",
         "is_positional_only",
         "marker",
-        "error",
         "name",
         "unresolved",
     )
@@ -158,7 +159,7 @@ def _hint_source(fn: Any) -> Any:
         return fn
     if isinstance(fn, functools.partial):
         return _hint_source(fn.func)
-    call = getattr(type(fn), "__call__", None)  # noqa: B004 - callable instance
+    call = getattr(type(fn), "__call__", None)  # noqa: B004
     return call if call is not None else fn
 
 
@@ -170,7 +171,7 @@ def _hints(fn: Any) -> tuple[dict[str, Any], dict[str, Exception]]:
     src = _hint_source(fn)
     try:
         return get_type_hints(src), {}
-    except Exception:  # noqa: BLE001 - any failure falls back to raw annotations
+    except Exception:  # noqa: BLE001, S110 - fall back to the raw annotations
         pass
     try:
         raw = dict(getattr(src, "__annotations__", None) or {})
@@ -185,13 +186,70 @@ def _hints(fn: Any) -> tuple[dict[str, Any], dict[str, Exception]]:
     for name, ann in raw.items():
         if isinstance(ann, str):
             try:
-                hints[name] = eval(ann, globalns)  # noqa: S307 - as get_type_hints
+                hints[name] = eval(ann, globalns)  # noqa: S307 - as get_type_hints does
             except Exception as exc:  # noqa: BLE001
                 errors[name] = exc
                 hints[name] = ann  # left as a string: unresolved
             continue
         hints[name] = ann
     return hints, errors
+
+
+def _plain_class(annotation: Any) -> bool:
+    return isinstance(annotation, type) and not isinstance(
+        annotation, types.GenericAlias
+    )
+
+
+def _fast_params(fn: Any, *, skip_first: bool) -> tuple[Param, ...] | None:
+    """Analysis straight from ``__code__`` / ``__annotations__``.
+
+    Only for plain functions whose annotations are all plain classes (the
+    common case); anything else returns None and goes through
+    ``inspect.signature`` + ``get_type_hints``, which give the same result.
+    """
+    if (
+        type(fn) is not types.FunctionType
+        or "__wrapped__" in fn.__dict__
+        or "__signature__" in fn.__dict__
+    ):
+        return None
+    try:
+        annotations = fn.__annotations__
+    except Exception:  # noqa: BLE001 - e.g. 3.14 deferred annotation NameError
+        return None
+    for name, annotation in annotations.items():
+        if name != "return" and not _plain_class(annotation):
+            return None
+    code = fn.__code__
+    n_pos = code.co_argcount
+    n_posonly = code.co_posonlyargcount
+    names = code.co_varnames[: n_pos + code.co_kwonlyargcount]
+    defaults = fn.__defaults__ or ()
+    first_default = n_pos - len(defaults)
+    kwdefaults = fn.__kwdefaults__ or {}
+    marker_cls = _marker_type()
+    params: list[Param] = []
+    for i, name in enumerate(names):
+        if (skip_first and i == 0) or name in ("self", "cls"):
+            continue
+        kind: Any
+        if i < n_pos:
+            kind = (
+                inspect.Parameter.POSITIONAL_ONLY
+                if i < n_posonly
+                else inspect.Parameter.POSITIONAL_OR_KEYWORD
+            )
+            default = defaults[i - first_default] if i >= first_default else _EMPTY
+        else:
+            kind = inspect.Parameter.KEYWORD_ONLY
+            default = kwdefaults.get(name, _EMPTY)
+        marker = _MISSING
+        if default is not _EMPTY and isinstance(default, marker_cls):
+            marker = default.service_type
+        annotation = annotations.get(name, _EMPTY)
+        params.append(Param(name, kind, annotation, default, marker, None))
+    return tuple(params)
 
 
 def analyze(target: Any) -> tuple[tuple[Param, ...], bool]:
@@ -204,6 +262,9 @@ def analyze(target: Any) -> tuple[tuple[Param, ...], bool]:
     fn, skip_first = _signature_target(target)
     if fn is None:
         return (), True
+    fast = _fast_params(fn, skip_first=skip_first)
+    if fast is not None:
+        return fast, True
     try:
         sig = inspect.signature(fn)
     except (TypeError, ValueError):
@@ -250,7 +311,9 @@ class Dep:
 
     __slots__ = ("key", "name", "positional", "value")
 
-    def __init__(self, name: str, key: Any, positional: bool, value: Any) -> None:
+    def __init__(
+        self, name: str, key: Any, *, positional: bool, value: Any = None
+    ) -> None:
         self.name = name
         self.key = key  # _MISSING for a constant (a default filling a gap)
         self.positional = positional
@@ -279,6 +342,7 @@ class Node:
         target: Any,
         scope: str,
         deps: tuple[Dep, ...],
+        *,
         is_async: bool,
     ) -> None:
         self.key = key
@@ -310,6 +374,142 @@ def _needs_aget(key: Any) -> InjectionError:
     )
 
 
+def _fail(node: Node, exc: Exception) -> NoReturn:
+    """Re-raise injectq errors as-is; wrap anything else in InjectionError."""
+    if isinstance(exc, InjectQError):
+        raise exc
+    raise _wrap_error(node, exc) from exc
+
+
+def _creator(  # noqa: PLR0911
+    node: Node,
+    pos: tuple[Callable[[], Any], ...],
+    kw: tuple[tuple[str, Callable[[], Any]], ...],
+) -> Callable[[], Any]:
+    """Zero-argument creation closure, specialised on the argument shape.
+
+    Each variant calls the target directly (one frame per node); the
+    try/except costs nothing unless an exception is raised.
+    """
+    target = node.target
+    n = len(pos)
+    if kw:
+
+        def create_kw() -> Any:
+            try:
+                return target(*[r() for r in pos], **{k: r() for k, r in kw})
+            except Exception as exc:  # noqa: BLE001
+                _fail(node, exc)
+
+        return create_kw
+    if n == 0:
+
+        def create0() -> Any:
+            try:
+                return target()
+            except Exception as exc:  # noqa: BLE001
+                _fail(node, exc)
+
+        return create0
+    if n == 1:
+        (r0,) = pos
+
+        def create1() -> Any:
+            try:
+                return target(r0())
+            except Exception as exc:  # noqa: BLE001
+                _fail(node, exc)
+
+        return create1
+    if n == 2:
+        r0, r1 = pos
+
+        def create2() -> Any:
+            try:
+                return target(r0(), r1())
+            except Exception as exc:  # noqa: BLE001
+                _fail(node, exc)
+
+        return create2
+    if n == 3:
+        r0, r1, r2 = pos
+
+        def create3() -> Any:
+            try:
+                return target(r0(), r1(), r2())
+            except Exception as exc:  # noqa: BLE001
+                _fail(node, exc)
+
+        return create3
+    if n == 4:
+        r0, r1, r2, r3 = pos
+
+        def create4() -> Any:
+            try:
+                return target(r0(), r1(), r2(), r3())
+            except Exception as exc:  # noqa: BLE001
+                _fail(node, exc)
+
+        return create4
+    if n == 5:
+        r0, r1, r2, r3, r4 = pos
+
+        def create5() -> Any:
+            try:
+                return target(r0(), r1(), r2(), r3(), r4())
+            except Exception as exc:  # noqa: BLE001
+                _fail(node, exc)
+
+        return create5
+
+    def create_n() -> Any:
+        try:
+            return target(*[r() for r in pos])
+        except Exception as exc:  # noqa: BLE001
+            _fail(node, exc)
+
+    return create_n
+
+
+def _constant(value: Any) -> Callable[[], Any]:
+    def constant() -> Any:
+        return value
+
+    return constant
+
+
+def _instrument(profiler: Any, key: Any, fn: Callable[[], Any]) -> Callable[[], Any]:
+    start, end = profiler.on_resolve_start, profiler.on_resolve_end
+
+    def profiled() -> Any:
+        token = start(key)
+        try:
+            value = fn()
+        except BaseException:
+            end(token, cache_hit=False)
+            raise
+        end(token, cache_hit=False)
+        return value
+
+    return profiled
+
+
+def _ainstrument(profiler: Any, key: Any, fn: Callable[[], Any]) -> Callable[[], Any]:
+    start, end = profiler.on_resolve_start, profiler.on_resolve_end
+
+    async def profiled() -> Any:
+        token = start(key)
+        try:
+            value = await fn()
+        except BaseException:
+            end(token, cache_hit=False)
+            raise
+        end(token, cache_hit=False)
+        return value
+
+    return profiled
+
+
 class DependencyResolver:
     """Compiles and caches per-key resolvers for one container."""
 
@@ -318,8 +518,10 @@ class DependencyResolver:
         self.scope_manager = scope_manager
         # Override layer consulted when compiling a key (filled by step 6).
         self.overrides: Mapping[ServiceKey, ServiceBinding] = {}
-        # Profiler hook: when set at compile time, resolvers are wrapped with
-        # ``profiler.wrap(key, fn, is_async)``; None costs nothing at runtime.
+        # Profiler hook: when set at compile time, every compiled resolver is
+        # wrapped by ``_instrument`` (``on_resolve_start`` / ``on_resolve_end``
+        # protocol of ``injectq.diagnostics.profiling``); None costs nothing.
+        # The container's singleton fast path bypasses resolvers entirely.
         self.profiler: Any = None
         self._lock = threading.RLock()
         self._analysis: dict[Any, tuple[Param, ...]] = {}
@@ -327,17 +529,21 @@ class DependencyResolver:
         self.sync: dict[Any, Callable[[], Any]] = {}
         self.async_: dict[Any, tuple[Callable[[], Any], bool]] = {}
         self._building: list[Any] = []
-        self.version = registry.version
+        self._dirty = False
 
     # ------------------------------------------------------------ invalidation
 
     def invalidate(self) -> None:
         """Drop every compiled node and resolver (new dicts, never in place)."""
+        if not self._dirty:
+            # Nothing compiled and no compile in progress (a compile sets the
+            # flag, under the lock, before it reads the registry).
+            return
         with self._lock:
             self._nodes = {}
             self.sync = {}
             self.async_ = {}
-            self.version = self.registry.version
+            self._dirty = False
 
     # ----------------------------------------------------------------- lookup
 
@@ -388,6 +594,7 @@ class DependencyResolver:
         if node is not None:
             return node
         with self._lock:
+            self._dirty = True
             return self._node(key)
 
     def _node(self, key: Any) -> Node:
@@ -412,7 +619,7 @@ class DependencyResolver:
             else:
                 kind = INSTANCE
         if kind == INSTANCE:
-            node = Node(key, binding, kind, target, SINGLETON, (), False)
+            node = Node(key, binding, kind, target, SINGLETON, (), is_async=False)
             self._nodes[key] = node
             return node
 
@@ -426,7 +633,7 @@ class DependencyResolver:
                 target,
                 scope,
                 deps,
-                kind == FACTORY and is_async_callable(target),
+                is_async=kind == FACTORY and is_async_callable(target),
             )
             for dep in deps:
                 if dep.key is not _MISSING and self._node(dep.key).needs_async:
@@ -449,7 +656,14 @@ class DependencyResolver:
             if dep_key is _MISSING:
                 if param.has_default:
                     if param.is_positional_only and positional:
-                        pending.append(Dep(param.name, _MISSING, True, param.default))
+                        pending.append(
+                            Dep(
+                                param.name,
+                                _MISSING,
+                                positional=True,
+                                value=param.default,
+                            )
+                        )
                     else:
                         positional = False
                     continue
@@ -459,22 +673,21 @@ class DependencyResolver:
                         f"annotation {param.unresolved!r} could not be resolved"
                     )
                     raise InjectionError(msg) from param.error
-                else:
-                    msg = (
-                        f"Cannot resolve parameter '{param.name}' of {target}: "
-                        f"it has no type annotation and no default"
-                    )
+                msg = (
+                    f"Cannot resolve parameter '{param.name}' of {target}: "
+                    f"it has no type annotation and no default"
+                )
                 raise InjectionError(msg)
             if not param.is_positional:
                 positional = False
             if positional and param.is_positional:
                 deps.extend(pending)
                 pending.clear()
-                deps.append(Dep(param.name, dep_key, True, None))
+                deps.append(Dep(param.name, dep_key, positional=True))
             else:
                 pending.clear()
                 positional = False
-                deps.append(Dep(param.name, dep_key, False, None))
+                deps.append(Dep(param.name, dep_key, positional=False))
         return tuple(deps)
 
     # ---------------------------------------------------------- sync compile
@@ -485,6 +698,7 @@ class DependencyResolver:
         if fn is not None:
             return fn
         with self._lock:
+            self._dirty = True
             return self._compile_sync(key)
 
     def _compile_sync(self, key: Any) -> Callable[[], Any]:
@@ -493,18 +707,15 @@ class DependencyResolver:
             return fn
         node = self._node(key)
         if node.kind == INSTANCE:
-            value = node.target
-
-            def fn() -> Any:
-                return value
+            fn = _constant(node.target)
         else:
             fn = self._scoped(node, self._create(node))
         if self.profiler is not None:
-            fn = self.profiler.wrap(key, fn, False)
+            fn = _instrument(self.profiler, key, fn)
         self.sync[key] = fn
         return fn
 
-    def _create(self, node: Node) -> Callable[[], Any]:  # noqa: C901, PLR0915
+    def _create(self, node: Node) -> Callable[[], Any]:
         """Build the zero-argument creation function of a class/factory node."""
         if node.is_async:
             key = node.key
@@ -514,59 +725,18 @@ class DependencyResolver:
 
             return create_async_only
 
-        target = node.target
         pos: list[Callable[[], Any]] = []
         kw: list[tuple[str, Callable[[], Any]]] = []
         for dep in node.deps:
             if dep.key is _MISSING:
-                value = dep.value
-                r: Callable[[], Any] = lambda value=value: value  # noqa: E731
+                r: Callable[[], Any] = _constant(dep.value)
             else:
                 r = self._compile_sync(dep.key)
             if dep.positional:
                 pos.append(r)
             else:
                 kw.append((dep.name, r))
-
-        n = len(pos)
-        if kw:
-            kws = tuple(kw)
-            ps = tuple(pos)
-
-            def call() -> Any:
-                return target(*[r() for r in ps], **{k: r() for k, r in kws})
-        elif n == 0:
-            call = target
-        elif n == 1:
-            (r0,) = pos
-
-            def call() -> Any:
-                return target(r0())
-        elif n == 2:  # noqa: PLR2004
-            r0, r1 = pos
-
-            def call() -> Any:
-                return target(r0(), r1())
-        elif n == 3:  # noqa: PLR2004
-            r0, r1, r2 = pos
-
-            def call() -> Any:
-                return target(r0(), r1(), r2())
-        else:
-            ps = tuple(pos)
-
-            def call() -> Any:
-                return target(*[r() for r in ps])
-
-        def create() -> Any:
-            try:
-                return call()
-            except InjectQError:
-                raise
-            except Exception as exc:
-                raise _wrap_error(node, exc) from exc
-
-        return create
+        return _creator(node, tuple(pos), tuple(kw))
 
     def _scoped(self, node: Node, create: Callable[[], Any]) -> Callable[[], Any]:
         key, scope = node.key, node.scope
@@ -607,6 +777,7 @@ class DependencyResolver:
         if entry is not None:
             return entry
         with self._lock:
+            self._dirty = True
             return self._compile_async(key)
 
     def _compile_async(self, key: Any) -> tuple[Callable[[], Any], bool]:
@@ -619,7 +790,7 @@ class DependencyResolver:
         else:
             fn = self._ascoped(node, self._acreate(node))
             if self.profiler is not None:
-                fn = self.profiler.wrap(key, fn, True)
+                fn = _ainstrument(self.profiler, key, fn)
             entry = (fn, True)
         self.async_[key] = entry
         return entry
@@ -630,11 +801,7 @@ class DependencyResolver:
         kw: list[tuple[str, Callable[[], Any], bool]] = []
         for dep in node.deps:
             if dep.key is _MISSING:
-                value = dep.value
-                entry: tuple[Callable[[], Any], bool] = (
-                    lambda value=value: value,
-                    False,
-                )
+                entry: tuple[Callable[[], Any], bool] = (_constant(dep.value), False)
             else:
                 entry = self._compile_async(dep.key)
             if dep.positional:
@@ -692,10 +859,11 @@ class DependencyResolver:
         """Build the plan of every registered key; return the errors found."""
         errors: list[str] = []
         with self._lock:
+            self._dirty = True
             for key in self.registered_keys():
                 try:
                     self._node(key)
-                except InjectQError as exc:
+                except InjectQError as exc:  # noqa: PERF203
                     errors.append(f"{_label(key)}: {exc}")
         return errors
 
@@ -708,6 +876,7 @@ class DependencyResolver:
                 + "\n".join(f"  - {error}" for error in errors)
             )
         with self._lock:
+            self._dirty = True
             for key in self.registered_keys():
                 self._compile_sync(key)
                 if self._node(key).needs_async:
@@ -722,11 +891,12 @@ class DependencyResolver:
         """
         graph: dict[ServiceKey, list[ServiceKey]] = {}
         with self._lock:
+            self._dirty = True
             for key in self.registered_keys():
                 try:
                     node = self._node(key)
                     graph[key] = [d.key for d in node.deps if d.key is not _MISSING]
-                except InjectQError:
+                except InjectQError:  # noqa: PERF203
                     graph[key] = self._declared_deps(key)
         return graph
 

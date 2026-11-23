@@ -1,7 +1,8 @@
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import warnings; warnings.simplefilter("ignore")
-from common import define, run
+from contextlib import contextmanager
+from common import Verifier, define, run
 from that_depends import BaseContainer, providers, Provide, inject, container_context, ContextScopes
 
 g = define()
@@ -13,10 +14,6 @@ SS1, SS2, SS3, SS4, SS5 = S
 
 
 def req_gen(cfg):
-    yield Req(cfg)
-
-
-async def areq_gen(cfg):
     yield Req(cfg)
 
 
@@ -34,19 +31,21 @@ class DI(BaseContainer):
     x1 = providers.Singleton(X1); x2 = providers.Singleton(X2); x3 = providers.Singleton(X3)
 
 
-assert DI.cfg.resolve_sync() is DI.cfg.resolve_sync()
-assert DI.c.resolve_sync() is not DI.c.resolve_sync()
-with container_context(scope=ContextScopes.REQUEST):
-    assert DI.req.resolve_sync() is DI.req.resolve_sync()
-
-
 # scope=None: don't enter the INJECT scope on every call (cheapest idiomatic form)
 @inject(scope=None)
 def f(x1: X1 = Provide[DI.x1], x2: X2 = Provide[DI.x2], x3: X3 = Provide[DI.x3]):
     return x1
 
 
-assert f() is DI.x1.resolve_sync()
+@inject(scope=None)
+def fcheck(x1: X1 = Provide[DI.x1], x2: X2 = Provide[DI.x2], x3: X3 = Provide[DI.x3]):
+    return (x1, x2, x3)
+
+
+@contextmanager
+def open_scope():
+    with container_context(scope=ContextScopes.REQUEST):
+        yield DI.req.resolve_sync
 
 
 def s4():
@@ -71,6 +70,16 @@ async def s6():
     return await DI.c.resolve()
 
 
+v = Verifier("that-depends", g)
+v.s1(DI.cfg.resolve_sync)
+v.s2(DI.c.resolve_sync)
+v.s3(DI.wide.resolve_sync)
+v.s4(open_scope, DI.cfg.resolve_sync)
+assert isinstance(s4(), Req)
+v.s5(f, fcheck, [DI.x1.resolve_sync, DI.x2.resolve_sync, DI.x3.resolve_sync])
+v.s6(s6)
+v.s7(build50_resolve)
+
 run("that-depends", {
     "S1": ("sync", DI.cfg.resolve_sync),
     "S2": ("sync", DI.c.resolve_sync),
@@ -80,4 +89,4 @@ run("that-depends", {
     "S6": ("async", s6),
     "S7": ("build", build50),
     "S7r": ("build", build50_resolve),
-})
+}, v, packages=["that-depends"])

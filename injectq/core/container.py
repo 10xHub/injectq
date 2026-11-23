@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 import threading
 from contextlib import (
@@ -9,7 +10,6 @@ from contextlib import (
     AbstractContextManager,
     contextmanager,
 )
-import inspect
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from injectq.utils import (
@@ -30,6 +30,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
     from injectq.diagnostics import DependencyVisualizer
+
+    from .registry import ServiceBinding
 
 
 _logger = logging.getLogger("injectq.core")
@@ -156,14 +158,14 @@ class InjectQ:
         cls._instance = None
 
     # Registry changes
-    def _on_registry_change(self, key: Any) -> None:
+    def _on_registry_change(self, key: Any, binding: ServiceBinding | None) -> None:
         """Drop compiled resolvers; keep the singleton cache in step with ``key``."""
-        self._resolver.invalidate()
+        resolver = self._resolver
+        if resolver._dirty:  # noqa: SLF001
+            resolver.invalidate()
         if key is ALL_KEYS:
             self._singletons.clear()
-            return
-        binding = self._resolver.provider(key)
-        if (
+        elif (
             binding is not None
             and not binding.is_factory
             and not isinstance(binding.implementation, type)
@@ -590,7 +592,7 @@ class InjectQ:
             if key is not _MISSING:
                 plan.append((param.name, key))
             elif not param.has_default:
-                dependency = (
+                dependency: Any = (
                     param.annotation
                     if param.annotation is not inspect.Parameter.empty
                     else param.name

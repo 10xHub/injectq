@@ -10,17 +10,6 @@ __version__ = "0.5.0"
 # Testing exports
 from . import testing
 
-# Component exports
-from .components import (
-    Component,
-    ComponentBinding,
-    ComponentContainer,
-    ComponentError,
-    ComponentInterface,
-    ComponentRegistry,
-    ComponentScope,
-    ComponentState,
-)
 from .core import (
     ContainerContext,
     InjectQ,
@@ -87,15 +76,6 @@ __all__ = [
     "AsyncResourceProvider",
     "BindingError",
     "CircularDependencyError",
-    # Components
-    "Component",
-    "ComponentBinding",
-    "ComponentContainer",
-    "ComponentError",
-    "ComponentInterface",
-    "ComponentRegistry",
-    "ComponentScope",
-    "ComponentState",
     "Configurable",
     "ConfigurationModule",
     "ContainerContext",
@@ -142,3 +122,34 @@ __all__ = [
     "testing",
     "transient",
 ]
+
+
+# Deprecated since 0.6, removed in 0.7. Not in __all__, so `import *` stays silent.
+_DEPRECATED_COMPONENT_NAMES = frozenset(
+    {
+        "Component",
+        "ComponentBinding",
+        "ComponentContainer",
+        "ComponentError",
+        "ComponentInterface",
+        "ComponentRegistry",
+        "ComponentScope",
+        "ComponentState",
+    }
+)
+
+
+def __getattr__(name: str) -> object:
+    if name in _DEPRECATED_COMPONENT_NAMES:
+        import importlib
+        import warnings
+
+        warnings.warn(
+            f"injectq.{name} is deprecated since 0.6 and will be removed in 0.7; "
+            "use injectq.Module / providers and container bindings instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return getattr(importlib.import_module("injectq.components"), name)
+    msg = f"module 'injectq' has no attribute {name!r}"
+    raise AttributeError(msg)

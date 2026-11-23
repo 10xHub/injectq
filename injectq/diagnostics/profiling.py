@@ -1,12 +1,44 @@
-"""Performance monitoring and profiling for dependency injection."""
+"""Performance monitoring and profiling for dependency injection.
 
+Engine hook interface
+---------------------
+The resolver calls the profiler only when one is attached to the container
+(``if profiler is not None``), so the normal path pays nothing. The hooks are
+a cheap, context-manager-free pair::
+
+    token = profiler.on_resolve_start(key)            # -> opaque token (or None)
+    try:
+        value = ...                                   # do the resolution
+    except BaseException:
+        profiler.on_resolve_end(token, cache_hit=False)
+        raise
+    profiler.on_resolve_end(token, cache_hit=was_cached)
+
+``on_resolve_start`` returns ``None`` when the profiler is inactive and
+``on_resolve_end(None, ...)`` is a no-op, so the engine need not check
+``is_active()``. Nested resolutions are timed correctly: start times live in a
+per-thread AND per-asyncio-task stack (a ``ContextVar`` holding an immutable
+tuple). ``begin_resolution(key)`` / ``end_resolution(key, cache_hit)`` remain
+as the keyed public API and use the same stack.
+
+Behaviour notes:
+- The metrics buffer is bounded (``max_metrics``, default 10_000, oldest
+  dropped); aggregated per-service stats are never dropped.
+- ``stop()`` only deactivates. Resolutions still in flight are finished
+  silently-ignored: their ``end`` call is a no-op, so they are not recorded
+  (already recorded data is kept). ``start()`` does NOT clear data; call
+  ``reset()`` explicitly.
+"""
+
+import functools
+import inspect
 import logging
-import statistics
 import threading
 import time
-from collections import defaultdict
+from collections import deque
 from collections.abc import Callable
 from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -86,18 +118,24 @@ class DependencyProfiler:
         ```
     """
 
-    def __init__(self, enable_stack_tracing: bool = False) -> None:
+    def __init__(
+        self,
+        enable_stack_tracing: bool = False,
+        max_metrics: int | None = 10_000,
+    ) -> None:
         """Initialize the profiler.
 
         Args:
             enable_stack_tracing: Whether to track call stack information
+            max_metrics: Max individual metrics kept (oldest dropped);
+                None for unbounded.
         """
-        self._metrics: list[ResolutionMetrics] = []
+        self._metrics: deque[ResolutionMetrics] = deque(maxlen=max_metrics)
         self._aggregated: dict[ServiceKey, AggregatedMetrics] = {}
-        self._active_resolutions: dict[int, float] = {}  # thread_id -> start_time
-        self._resolution_stack: dict[int, list[ServiceKey]] = defaultdict(
-            list
-        )  # thread_id -> stack
+        # Per-thread and per-task stack of (key, start_time); immutable tuple.
+        self._stack: ContextVar[tuple[tuple[ServiceKey, float], ...]] = ContextVar(
+            f"injectq_profiler_stack_{id(self)}", default=()
+        )
         self._enable_stack_tracing = enable_stack_tracing
         self._is_active = False
         self._lock = threading.RLock()
@@ -112,17 +150,17 @@ class DependencyProfiler:
         self.stop()
 
     def start(self) -> None:
-        """Start profiling."""
+        """Start profiling. Existing data is kept; call ``reset()`` to clear."""
         with self._lock:
             self._is_active = True
-            self._metrics.clear()
-            self._aggregated.clear()
-            self._active_resolutions.clear()
-            self._resolution_stack.clear()
             _logger.info("DependencyProfiler started")
 
     def stop(self) -> None:
-        """Stop profiling."""
+        """Stop profiling.
+
+        Recorded data is kept. Resolutions still in flight are not recorded
+        (their end call becomes a no-op once the profiler is inactive).
+        """
         with self._lock:
             self._is_active = False
             _logger.info("DependencyProfiler stopped")
@@ -131,62 +169,84 @@ class DependencyProfiler:
         """Check if profiler is active."""
         return self._is_active
 
+    # -- engine hooks ---------------------------------------------------------
+
+    def on_resolve_start(self, service_type: ServiceKey) -> Any:
+        """Engine hook: a resolution begins. Returns a token for the end hook."""
+        if not self._is_active:
+            return None
+        stack = self._stack.get()
+        return self._stack.set((*stack, (service_type, time.perf_counter())))
+
+    def on_resolve_end(self, token: Any, cache_hit: bool = False) -> None:
+        """Engine hook: the resolution identified by ``token`` finished."""
+        if token is None:
+            return
+        end_time = time.perf_counter()
+        stack = self._stack.get()
+        if not stack:
+            return
+        service_type, start_time = stack[-1]
+        try:
+            self._stack.reset(token)
+        except ValueError:
+            # Token from a different context (e.g. ended in another task).
+            self._stack.set(stack[:-1])
+        if not self._is_active:
+            return
+        self._record(service_type, end_time - start_time, cache_hit, len(stack) - 1)
+
     def begin_resolution(self, service_type: ServiceKey) -> None:
         """Mark the beginning of a dependency resolution."""
         if not self._is_active:
             return
-
-        thread_id = threading.get_ident()
-        current_time = time.perf_counter()
-
-        with self._lock:
-            self._active_resolutions[thread_id] = current_time
-            if self._enable_stack_tracing:
-                self._resolution_stack[thread_id].append(service_type)
-            _logger.debug("Begin resolution for %s", service_type)
+        self._stack.set((*self._stack.get(), (service_type, time.perf_counter())))
+        _logger.debug("Begin resolution for %s", service_type)
 
     def end_resolution(self, service_type: ServiceKey, cache_hit: bool = False) -> None:
         """Mark the end of a dependency resolution."""
         if not self._is_active:
             return
-
-        thread_id = threading.get_ident()
         end_time = time.perf_counter()
+        stack = self._stack.get()
+        # Pop the innermost matching entry (tolerates unbalanced calls).
+        idx = next(
+            (i for i in range(len(stack) - 1, -1, -1) if stack[i][0] == service_type),
+            None,
+        )
+        if idx is None:
+            start_time, depth = end_time, len(stack)
+        else:
+            start_time, depth = stack[idx][1], idx
+            self._stack.set(stack[:idx])
+        self._record(service_type, end_time - start_time, cache_hit, depth)
 
+    def _record(
+        self,
+        service_type: ServiceKey,
+        resolution_time: float,
+        cache_hit: bool,
+        depth: int,
+    ) -> None:
+        metrics = ResolutionMetrics(
+            service_type=service_type,
+            resolution_time=resolution_time,
+            cache_hit=cache_hit,
+            dependency_count=0,
+            stack_depth=depth if self._enable_stack_tracing else 0,
+        )
         with self._lock:
-            start_time = self._active_resolutions.pop(thread_id, end_time)
-            resolution_time = end_time - start_time
-
-            stack_depth = 0
-            dependency_count = 0
-
-            if self._enable_stack_tracing:
-                stack = self._resolution_stack[thread_id]
-                if stack and stack[-1] == service_type:
-                    stack.pop()
-                stack_depth = len(stack)
-                dependency_count = len(set(stack))
-
-            metrics = ResolutionMetrics(
-                service_type=service_type,
-                resolution_time=resolution_time,
-                cache_hit=cache_hit,
-                dependency_count=dependency_count,
-                stack_depth=stack_depth,
-            )
-
             self._metrics.append(metrics)
-
-            # Update aggregated metrics
-            if service_type not in self._aggregated:
-                self._aggregated[service_type] = AggregatedMetrics(service_type)
-            self._aggregated[service_type].update(metrics)
-            _logger.debug(
-                "End resolution for %s (cache_hit=%s, time=%.4fs)",
-                service_type,
-                cache_hit,
-                resolution_time,
-            )
+            agg = self._aggregated.get(service_type)
+            if agg is None:
+                agg = self._aggregated[service_type] = AggregatedMetrics(service_type)
+            agg.update(metrics)
+        _logger.debug(
+            "End resolution for %s (cache_hit=%s, time=%.4fs)",
+            service_type,
+            cache_hit,
+            resolution_time,
+        )
 
     @contextmanager
     def profile_resolution(
@@ -202,10 +262,20 @@ class DependencyProfiler:
             self.end_resolution(service_type, cache_hit)
 
     def profile_method(self, func: Callable) -> Callable:
-        """Decorator for profiling method calls."""
+        """Decorator for profiling sync and async function calls."""
+        method_name = f"{func.__module__}.{func.__qualname__}"
 
+        if inspect.iscoroutinefunction(func):
+
+            @functools.wraps(func)
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                with self.profile_resolution(method_name):
+                    return await func(*args, **kwargs)
+
+            return async_wrapper
+
+        @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            method_name = f"{func.__module__}.{func.__qualname__}"
             with self.profile_resolution(method_name):
                 return func(*args, **kwargs)
 
@@ -255,6 +325,8 @@ class DependencyProfiler:
             if not self._metrics:
                 return {}
 
+            import statistics
+
             times = [m.resolution_time for m in self._metrics]
             return {
                 "total_time": sum(times),
@@ -270,8 +342,7 @@ class DependencyProfiler:
         with self._lock:
             self._metrics.clear()
             self._aggregated.clear()
-            self._active_resolutions.clear()
-            self._resolution_stack.clear()
+            self._stack.set(())
 
     def report(self, detailed: bool = False) -> str:
         """Generate a profiling report.
@@ -320,7 +391,9 @@ class DependencyProfiler:
 
             if detailed:
                 lines.append("Detailed Service Metrics:")
-                for service_type, metrics in sorted(self._aggregated.items()):
+                for service_type, metrics in sorted(
+                    self._aggregated.items(), key=lambda kv: str(kv[0])
+                ):
                     lines.append(f"\n  {service_type}:")
                     lines.append(f"    Resolutions: {metrics.total_resolutions}")
                     lines.append(f"    Total time: {metrics.total_time:.4f}s")

@@ -1,0 +1,8 @@
+# Exact versions used for the published numbers (installed by run_all.sh).
+# injectq itself is installed from this checkout (pip install -e .), not pinned here.
+wireup==2.13.1
+dishka==1.10.1
+that-depends==4.3.0
+dependency-injector==4.49.1
+lagom==2.7.7
+svcs==26.2.0

@@ -1,6 +1,7 @@
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from common import define, run
+from contextlib import contextmanager
+from common import Verifier, define, run
 import svcs
 
 g = define()
@@ -20,7 +21,7 @@ reg.register_factory(Wide, lambda svcs_container: Wide(*svcs_container.get(D1, D
 reg.register_factory(Req, lambda svcs_container: Req(svcs_container.get(Config)))
 
 root = svcs.Container(reg)
-assert root.get(Config) is root.get(Config)
+
 
 # svcs caches every service per Container: "transient" == a fresh Container per op.
 def s2():
@@ -29,6 +30,12 @@ def s2():
 
 def s3():
     return svcs.Container(reg).get(Wide)
+
+
+@contextmanager
+def open_scope():
+    with svcs.Container(reg) as con:
+        yield lambda: con.get(Req)
 
 
 def s4():
@@ -52,13 +59,23 @@ def build50_resolve():
     return svcs.Container(build50()).get(K[-1])
 
 
+v = Verifier("svcs", g)
+v.s1(lambda: root.get(Config))
+v.s2(s2)
+v.s3(s3)
+v.s4(open_scope, lambda: root.get(Config))
+assert isinstance(s4(), Req)
+# S5: svcs has no generic inject decorator (framework integrations only): n/a.
+v.s6(s6)
+v.s7(build50_resolve)
+
 run("svcs", {
     "S1": ("sync", lambda: root.get(Config)),
     "S2": ("sync", s2),
     "S3": ("sync", s3),
     "S4": ("sync", s4),
-    "S5": None,  # no generic inject decorator (framework integrations only)
+    "S5": None,
     "S6": ("async", s6),
     "S7": ("build", build50),
     "S7r": ("build", build50_resolve),
-})
+}, v, packages=["svcs"])

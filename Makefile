@@ -1,6 +1,6 @@
 # Makefile for PyAgenity packaging, publishing, and docs
 
-.PHONY: build publish testpublish clean test test-cov bench bench-compare docs-serve docs-build docs-deploy
+.PHONY: build publish testpublish clean test test-cov bench bench-compare bench-publish docs-serve docs-build docs-deploy
 
 # Build and upload with uv-managed tools, so the result doesn't depend on
 # whichever virtualenv (and twine version) happens to be active.
@@ -32,8 +32,11 @@ bench:
 
 bench-compare:
 	uv venv --allow-existing .bench-venv
-	uv pip install --python .bench-venv/bin/python wireup dishka that-depends dependency-injector lagom svcs
 	PYTHON=$(CURDIR)/.bench-venv/bin/python sh benchmarks/compare/run_all.sh
+
+bench-publish:
+	uv venv --allow-existing .bench-venv
+	PUBLISH=1 PYTHON=$(CURDIR)/.bench-venv/bin/python sh benchmarks/compare/run_all.sh
 
 # ---------- Docs Section ----------
 docs-serve:

@@ -1,7 +1,7 @@
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-import asyncio
-from common import define, run
+from contextlib import contextmanager
+from common import Verifier, define, run
 from dishka import Provider, Scope, make_container, make_async_container, FromDishka
 from dishka.integrations.base import wrap_injection
 
@@ -31,18 +31,23 @@ def make_provider():
 c = make_container(make_provider())
 ac = make_async_container(make_provider())
 
-assert c.get(Config) is c.get(Config)
-assert c.get(C) is not c.get(C)
-with c() as r:
-    assert r.get(Req) is r.get(Req)
-
 
 def f(x1: FromDishka[X1], x2: FromDishka[X2], x3: FromDishka[X3]):
     return x1
 
 
+def fcheck(x1: FromDishka[X1], x2: FromDishka[X2], x3: FromDishka[X3]):
+    return (x1, x2, x3)
+
+
 f = wrap_injection(func=f, container_getter=lambda args, kwargs: c, is_async=False)
-assert f() is c.get(X1)
+fcheck = wrap_injection(func=fcheck, container_getter=lambda args, kwargs: c, is_async=False)
+
+
+@contextmanager
+def open_scope():
+    with c() as r:
+        yield lambda: r.get(Req)
 
 
 def s4():
@@ -65,6 +70,16 @@ async def s6():
     return await ac.get(C)
 
 
+v = Verifier("dishka", g)
+v.s1(lambda: c.get(Config))
+v.s2(lambda: c.get(C))
+v.s3(lambda: c.get(Wide))
+v.s4(open_scope, lambda: c.get(Config))
+assert isinstance(s4(), Req)
+v.s5(f, fcheck, [lambda x=x: c.get(x) for x in X])
+v.s6(s6)
+v.s7(build50_resolve)
+
 run("dishka", {
     "S1": ("sync", lambda: c.get(Config)),
     "S2": ("sync", lambda: c.get(C)),
@@ -74,4 +89,4 @@ run("dishka", {
     "S6": ("async", s6),
     "S7": ("build", build50),
     "S7r": ("build", build50_resolve),
-})
+}, v, packages=["dishka"])

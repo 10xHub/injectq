@@ -20,7 +20,6 @@ def _run(code: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-@xf(10, "import injectq must not import injectq.components eagerly")
 def test_import_injectq_does_not_import_components():
     proc = _run(
         "import sys, injectq\n"
@@ -42,7 +41,6 @@ def test_import_injectq_emits_no_deprecation_warning():
     assert proc.stdout.strip() == "[]"
 
 
-@xf(10, "importing injectq.components emits DeprecationWarning")
 def test_importing_components_emits_deprecation_warning():
     proc = _run(
         "import warnings\n"
@@ -55,7 +53,6 @@ def test_importing_components_emits_deprecation_warning():
     assert proc.stdout.strip() == "True"
 
 
-@xf(10, "root-level Component names still resolve lazily, with a DeprecationWarning")
 def test_root_level_component_names_resolve_lazily_with_warning():
     proc = _run(
         "import sys, warnings, injectq\n"
@@ -70,7 +67,6 @@ def test_root_level_component_names_resolve_lazily_with_warning():
     assert proc.stdout.strip() == "True"
 
 
-@xf(10, "using ComponentContainer emits DeprecationWarning")
 def test_using_component_container_warns():
     with pytest.warns(DeprecationWarning):
         from injectq.components import ComponentContainer

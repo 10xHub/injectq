@@ -9,7 +9,6 @@ registered listeners (the container uses this to drop compiled resolvers).
 
 from __future__ import annotations
 
-import inspect
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -30,11 +29,13 @@ if TYPE_CHECKING:
 # Sentinel value to detect when implementation is not provided
 _UNSET: Any = object()
 
+_TPFLAGS_IS_ABSTRACT = 1 << 20  # what inspect.isabstract checks
+
 # Passed to listeners when every key may have changed (``clear()``).
 ALL_KEYS: Any = object()
 
 
-@dataclass
+@dataclass(slots=True)
 class ServiceBinding:
     """One provider: a class, an instance, or (``is_factory``) a factory."""
 
@@ -51,13 +52,17 @@ class ServiceBinding:
             raise BindingError(msg)
 
 
+def _scope_name(scope: Any) -> str:
+    return scope.value if isinstance(scope, ScopeType) else str(scope)
+
+
 class ServiceRegistry:
     """Registry for managing service bindings and their configurations."""
 
     def __init__(self) -> None:
         self._providers: dict[ServiceKey, ServiceBinding] = {}
         self._version = 0
-        self._listeners: list[Callable[[Any], None]] = []
+        self._listeners: list[Callable[[Any, ServiceBinding | None], None]] = []
 
     # ---------------------------------------------------------------- changes
 
@@ -66,14 +71,19 @@ class ServiceRegistry:
         """Incremented on every bind / unbind / override / clear."""
         return self._version
 
-    def add_listener(self, listener: Callable[[Any], None]) -> None:
-        """Call ``listener(key)`` after every change (``ALL_KEYS`` on clear)."""
+    def add_listener(
+        self, listener: Callable[[Any, ServiceBinding | None], None]
+    ) -> None:
+        """Call ``listener(key, new_binding_or_None)`` after every change.
+
+        On ``clear()`` the key is ``ALL_KEYS``.
+        """
         self._listeners.append(listener)
 
-    def _changed(self, key: Any) -> None:
+    def _changed(self, key: Any, binding: ServiceBinding | None) -> None:
         self._version += 1
         for listener in self._listeners:
-            listener(key)
+            listener(key, binding)
 
     def _check_override(self, key: ServiceKey, allow_override: bool) -> None:
         if not allow_override and key in self._providers:
@@ -81,16 +91,16 @@ class ServiceRegistry:
 
     def _store(self, binding: ServiceBinding) -> None:
         self._providers[binding.service_type] = binding
-        self._changed(binding.service_type)
+        self._changed(binding.service_type, binding)
 
     def set_provider(self, key: ServiceKey, binding: ServiceBinding | None) -> None:
         """Install ``binding`` for ``key`` as-is (``None`` removes it)."""
         if binding is None:
             if self._providers.pop(key, None) is not None:
-                self._changed(key)
+                self._changed(key, None)
             return
         self._providers[key] = binding
-        self._changed(key)
+        self._changed(key, binding)
 
     # ---------------------------------------------------------------- binding
 
@@ -133,31 +143,34 @@ class ServiceRegistry:
             msg = f"Implementation cannot be None for {service_type}"
             raise BindingError(msg)
 
-        if isinstance(implementation, type) and inspect.isabstract(implementation):
-            msg = f"Cannot bind abstract class {implementation}"
-            raise BindingError(msg)
+        if isinstance(implementation, type):
+            if implementation.__flags__ & _TPFLAGS_IS_ABSTRACT:
+                msg = f"Cannot bind abstract class {implementation}"
+                raise BindingError(msg)
+            concrete = None
+        else:
+            concrete = self._concrete_type(service_type, implementation, allow_concrete)
 
-        self._check_override(service_type, allow_override)
-        scope_name = scope.value if isinstance(scope, ScopeType) else str(scope)
-        concrete = self._concrete_type(service_type, implementation, allow_concrete)
-        if concrete is not None:
-            self._check_override(concrete, allow_override)
-
-        self._store(
-            ServiceBinding(
-                service_type=service_type,
-                implementation=implementation,
-                scope=scope_name,
-                allow_none=allow_none,
+        providers = self._providers
+        if not allow_override and (
+            service_type in providers
+            or (concrete is not None and concrete in providers)
+        ):
+            raise AlreadyRegisteredError(
+                service_type if service_type in providers else concrete
             )
+        scope_name = scope if type(scope) is str else _scope_name(scope)
+
+        # Inlined _store(): bind() is the hot path of container setup.
+        binding = ServiceBinding(
+            service_type, implementation, scope_name, allow_none=allow_none
         )
+        providers[service_type] = binding
+        self._changed(service_type, binding)
         if concrete is not None:
             self._store(
                 ServiceBinding(
-                    service_type=concrete,
-                    implementation=implementation,
-                    scope=scope_name,
-                    allow_none=allow_none,
+                    concrete, implementation, scope_name, allow_none=allow_none
                 )
             )
 
@@ -265,7 +278,7 @@ class ServiceRegistry:
         binding = self._providers.get(service_type)
         if binding is None or not binding.is_factory:
             return None
-        return binding.implementation  # type: ignore[no-any-return]
+        return binding.implementation
 
     def has_binding(self, service_type: ServiceKey) -> bool:
         """Check if a key has a class/instance binding."""
@@ -280,7 +293,7 @@ class ServiceRegistry:
         if self.get_binding(service_type) is None:
             return False
         del self._providers[service_type]
-        self._changed(service_type)
+        self._changed(service_type, None)
         return True
 
     def remove_factory(self, service_type: ServiceKey) -> bool:
@@ -288,13 +301,13 @@ class ServiceRegistry:
         if self.get_factory(service_type) is None:
             return False
         del self._providers[service_type]
-        self._changed(service_type)
+        self._changed(service_type, None)
         return True
 
     def clear(self) -> None:
         """Clear all bindings and factories."""
         self._providers.clear()
-        self._changed(ALL_KEYS)
+        self._changed(ALL_KEYS, None)
 
     def get_all_providers(self) -> dict[ServiceKey, ServiceBinding]:
         """Get a copy of the provider map."""
@@ -306,9 +319,7 @@ class ServiceRegistry:
 
     def get_all_factories(self) -> dict[ServiceKey, ServiceFactory]:
         """Get all factories."""
-        return {
-            k: b.implementation for k, b in self._providers.items() if b.is_factory
-        }
+        return {k: b.implementation for k, b in self._providers.items() if b.is_factory}
 
     def validate(self) -> None:
         """Validate all bindings for consistency."""

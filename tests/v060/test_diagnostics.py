@@ -141,7 +141,6 @@ def test_profiler_inactive_records_nothing():
     assert profiler.get_metrics() == []
 
 
-@xf(10, "profiler: nested timings keep the outer resolution's start")
 def test_profiler_nested_timings_are_correct():
     profiler = DependencyProfiler()
     with profiler:
@@ -177,7 +176,6 @@ def test_profiler_timings_are_per_thread_guard():
     assert times["t2"] >= 0.025
 
 
-@xf(10, "profiler: report(detailed=True) works with mixed key types")
 def test_profiler_detailed_report_with_mixed_key_types():
     profiler = DependencyProfiler()
     with profiler:

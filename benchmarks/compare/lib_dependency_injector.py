@@ -1,7 +1,6 @@
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-import sys
-from common import define, run
+from common import Verifier, define, run
 from dependency_injector import containers, providers
 from dependency_injector.wiring import inject, Provide
 
@@ -34,9 +33,12 @@ def f(x1: X1 = Provide[DI.x1], x2: X2 = Provide[DI.x2], x3: X3 = Provide[DI.x3])
     return x1
 
 
+@inject
+def fcheck(x1: X1 = Provide[DI.x1], x2: X2 = Provide[DI.x2], x3: X3 = Provide[DI.x3]):
+    return (x1, x2, x3)
+
+
 c.wire(modules=[sys.modules[__name__]])
-assert c.cfg() is c.cfg() and c.c() is not c.c()
-assert f() is c.x1()
 
 ac = DI()
 ac.c.enable_async_mode(); ac.b.enable_async_mode(); ac.a.enable_async_mode()
@@ -59,13 +61,23 @@ def build50_resolve():
     return build50().k49()
 
 
+v = Verifier("dependency-injector", g)
+v.s1(c.cfg)
+v.s2(c.c)
+v.s3(c.wide)
+# S4: dependency-injector has no enter/exit request scope (only context-local
+# singletons, which are a different mechanism): reported as n/a.
+v.s5(f, fcheck, [c.x1, c.x2, c.x3])
+v.s6(s6)
+v.s7(build50_resolve)
+
 run("dependency-injector", {
     "S1": ("sync", c.cfg),
     "S2": ("sync", c.c),
     "S3": ("sync", c.wide),
-    "S4": None,  # no native enter/exit request scope
+    "S4": None,
     "S5": ("sync", f),
     "S6": ("async", s6),
     "S7": ("build", build50),
     "S7r": ("build", build50_resolve),
-})
+}, v, packages=["dependency-injector"])

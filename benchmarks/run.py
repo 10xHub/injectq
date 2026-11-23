@@ -1,7 +1,8 @@
 """Run the S1-S7 benchmark scenarios against injectq and write JSON.
 
 Usage:  python benchmarks/run.py [--out benchmarks/latest.json]
-Env:    BENCH_REPEATS (default 25) controls statistical repeats.
+Env:    BENCH_REPEATS (default 25) controls statistical repeats;
+        BENCH_TARGET (default 0.02 s per repeat). Tiny values = smoke test only.
 """
 # ruff: noqa
 import argparse
@@ -10,17 +11,17 @@ import json
 import logging
 import os
 import sys
-from contextlib import redirect_stdout
+from contextlib import contextmanager, redirect_stdout
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from common import define, run  # noqa: E402
+from common import Verifier, define, run  # noqa: E402
 
 from injectq import InjectQ, inject  # noqa: E402
 
 logging.disable(logging.CRITICAL)
 
-COLS = ["S1", "S2", "S3", "S4", "S5", "S6", "S7"]
+COLS = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S7r"]
 DESCR = {
     "S1": "cached singleton get",
     "S2": "transient chain C->B->A",
@@ -29,6 +30,7 @@ DESCR = {
     "S5": "@inject call, 3 deps",
     "S6": "async S2 (aget)",
     "S7": "build container, 50 services",
+    "S7r": "build container, 50 services + resolve the chain",
 }
 
 
@@ -55,20 +57,18 @@ def main(argv=None) -> dict:
         c.bind(x, x, scope="singleton")
     X1, X2, X3 = X
 
-    # sanity checks so a broken engine cannot produce flattering numbers
-    assert c.get(Config) is c.get(Config)
-    assert c.get(C) is not c.get(C) and isinstance(c.get(C).b.a, A)
-    w1, w2 = c.get(Wide), c.get(Wide)
-    assert w1 is not w2 and w1.d[0].s is w2.d[0].s
-    with c.scope("request"):
-        r = c.get(Req)
-        assert r is c.get(Req) and r.cfg is c.get(Config)
-
     @inject(container=c)
     def f(x1: X1, x2: X2, x3: X3):
         return x1
 
-    assert f() is c.get(X1)
+    @inject(container=c)
+    def fcheck(x1: X1, x2: X2, x3: X3):
+        return (x1, x2, x3)
+
+    @contextmanager
+    def open_scope():
+        with c.scope("request"):
+            yield lambda: c.get(Req)
 
     def s4():
         with c.scope("request"):
@@ -80,8 +80,23 @@ def main(argv=None) -> dict:
             cc.bind(k, k, scope="transient")
         return cc
 
+    def build50_resolve():
+        return build50().get(K[-1])
+
     async def s6():
         return await c.aget(C)
+
+    # Equivalence contracts (benchmarks/common.py): abort before timing if the
+    # engine does not do the same work as every other library.
+    v = Verifier("injectq", g)
+    v.s1(lambda: c.get(Config))
+    v.s2(lambda: c.get(C))
+    v.s3(lambda: c.get(Wide))
+    v.s4(open_scope, lambda: c.get(Config))
+    assert isinstance(s4(), Req)
+    v.s5(f, fcheck, [lambda x=x: c.get(x) for x in X])
+    v.s6(s6)
+    v.s7(build50_resolve)
 
     buf = io.StringIO()
     with redirect_stdout(buf):
@@ -93,7 +108,8 @@ def main(argv=None) -> dict:
             "S5": ("sync", f),
             "S6": ("async", s6),
             "S7": ("build", build50),
-        })
+            "S7r": ("build", build50_resolve),
+        }, v, packages=["injectq"])
     import injectq
 
     out["injectq_version"] = injectq.__version__

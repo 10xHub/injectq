@@ -599,7 +599,9 @@ def test_sync_resource_contention():
             resource = container.get("limited_resource")
             results.append(resource)
             time.sleep(0.01)  # Hold resource briefly
-        except RuntimeError:
+        except InjectionError:
+            # The factory's RuntimeError, wrapped. Resolution is no longer
+            # serialised by a container lock, so the pool can run dry.
             errors.append("RuntimeError")
         finally:
             # Return resource to pool if we got one
@@ -1021,6 +1023,9 @@ async def test_async_cascading_dependencies():
         service = container.get(Level3Service)
         results.append(
             {
+                # Keep the service alive: ids of freed objects get reused
+                # (CPython 3.12 reuses them every time here).
+                "service": service,
                 "level3_id": id(service),
                 "level2_id": id(service.level2),
                 "level1_id": id(service.level2.level1),
