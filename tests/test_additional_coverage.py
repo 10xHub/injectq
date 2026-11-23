@@ -4,8 +4,9 @@ import pytest
 
 from injectq import InjectQ
 from injectq.core.registry import ServiceBinding, ServiceRegistry
-from injectq.core.scopes import RequestScope, ScopeType, SingletonScope, TransientScope
+from injectq.core.scopes import ScopeManager, ScopeType
 from injectq.decorators.resource import resource
+from injectq.utils import ScopeError
 from injectq.utils.exceptions import AlreadyRegisteredError, BindingError
 
 
@@ -242,40 +243,33 @@ def test_registry_repr() -> None:
 
 def test_singleton_scope_basic() -> None:
     """Test singleton scope basic usage."""
-    scope = SingletonScope()
+    manager = ScopeManager()
 
-    def factory() -> str:
-        return "value"
+    def factory() -> object:
+        return object()
 
-    # First call creates instance
-    value1 = scope.get(str, factory)
+    value1 = manager.get_instance(str, factory, "singleton")
+    value2 = manager.get_instance(str, factory, "singleton")
 
-    # Second call returns same instance
-    value2 = scope.get(str, factory)
-
-    assert value1 == value2
     assert value1 is value2
 
 
 def test_singleton_scope_clear() -> None:
-    """Test clearing singleton scope."""
-    scope = SingletonScope()
+    """Test clearing singleton scope creates a new instance afterwards."""
+    manager = ScopeManager()
 
-    def factory() -> str:
-        return "value"
+    def factory() -> object:
+        return object()
 
-    scope.get(str, factory)
+    first = manager.get_instance(str, factory, "singleton")
+    manager.clear_scope("singleton")
 
-    scope.clear()
-
-    # After clear, should create new instance
-    # (can't test identity easily, but clear shouldn't error)
-    assert True
+    assert manager.get_instance(str, factory, "singleton") is not first
 
 
 def test_transient_scope_basic() -> None:
     """Test transient scope always creates new instances."""
-    scope = TransientScope()
+    manager = ScopeManager()
 
     counter = 0
 
@@ -284,50 +278,46 @@ def test_transient_scope_basic() -> None:
         counter += 1
         return counter
 
-    # Each call should increment
-    value1 = scope.get(int, factory)
-    value2 = scope.get(int, factory)
-
-    assert value1 == 1
-    assert value2 == 2
+    assert manager.get_instance(int, factory, "transient") == 1
+    assert manager.get_instance(int, factory, "transient") == 2
 
 
 def test_transient_scope_clear() -> None:
     """Test transient scope clear (no-op)."""
-    scope = TransientScope()
-
-    scope.clear()  # Should not error
-
-    assert True
+    ScopeManager().clear_scope("transient")  # Should not error
 
 
 def test_request_scope_basic() -> None:
-    """Test request scope basic usage."""
-    scope = RequestScope()
+    """Test request scope reuses instances inside one scope."""
+    manager = ScopeManager()
 
-    def factory() -> str:
-        return "value"
+    def factory() -> object:
+        return object()
 
-    # Within same scope context, should return same instance
-    value1 = scope.get(str, factory)
-    value2 = scope.get(str, factory)
+    with manager.scope_context("request"):
+        value1 = manager.get_instance(str, factory, "request")
+        value2 = manager.get_instance(str, factory, "request")
 
-    assert value1 == value2
+    assert value1 is value2
+
+
+def test_request_scope_outside_scope_raises() -> None:
+    """Test request-scoped lookups outside a scope raise ScopeError."""
+    with pytest.raises(ScopeError):
+        ScopeManager().get_instance(str, object, "request")
 
 
 def test_request_scope_clear() -> None:
-    """Test request scope clear."""
-    scope = RequestScope()
+    """Test request scope clear drops the active scope's instances."""
+    manager = ScopeManager()
 
-    def factory() -> str:
-        return "value"
+    def factory() -> object:
+        return object()
 
-    scope.get(str, factory)
-
-    scope.clear()
-
-    # After clear, should be empty
-    assert True
+    with manager.scope_context("request"):
+        first = manager.get_instance(str, factory, "request")
+        manager.clear_scope("request")
+        assert manager.get_instance(str, factory, "request") is not first
 
 
 def test_scope_type_enum() -> None:

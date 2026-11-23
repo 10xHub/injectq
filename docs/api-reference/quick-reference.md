@@ -359,14 +359,27 @@ def process(service: IUserService):
 ```python
 from injectq import ContainerContext
 
-# Create a context
-with ContainerContext.create(container):
+# Activate a container for a block (async: `async with ContainerContext.use_async(container):`)
+with ContainerContext.use(container):  # same as `with container.context():`
     # InjectQ.get_instance() returns this container
     service = InjectQ.get_instance()
     assert service is container
 
 # Outside context, InjectQ.get_instance() returns global singleton
+
+# Token API: set_current() / activate() return a token to restore the outer value
+token = ContainerContext.set_current(container)
+try:
+    ...
+finally:
+    ContainerContext.reset_current(token)
 ```
+
+The active container is stored in a `ContextVar`: it applies to the current
+task/thread and to anything started from it afterwards (`asyncio.create_task`,
+`asyncio.to_thread`, anyio worker threads), never to sibling tasks. Plain
+`threading.Thread` and `loop.run_in_executor` do not inherit it.
+`clear_current()` sets it to `None` and cannot restore an outer value.
 
 ## Common Patterns
 

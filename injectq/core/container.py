@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 import logging
-from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any
+import threading
+from contextlib import (
+    AbstractAsyncContextManager,
+    AbstractContextManager,
+    contextmanager,
+)
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from injectq.utils import (
     BindingError,
@@ -20,6 +25,7 @@ from .thread_safety import HybridLock
 
 
 if TYPE_CHECKING:
+    import contextvars
     from collections.abc import Callable, Iterator
 
     from injectq.diagnostics import DependencyVisualizer
@@ -67,6 +73,7 @@ class InjectQ:
     """
 
     _instance: InjectQ | None = None
+    _instance_lock: ClassVar[threading.RLock] = threading.RLock()
 
     def __init__(
         self,
@@ -79,15 +86,16 @@ class InjectQ:
 
         Args:
             modules: List of modules to register
-            use_async_scopes: Whether to use async scope management
+            use_async_scopes: Deprecated and ignored. There is one scope
+                manager (ContextVar-based) that serves both ``scope()`` and
+                ``async_scope()``.
             thread_safe: Whether to use thread-safe operations
             allow_override: Whether to allow overriding existing registrations
                           (default: True)
         """
+        del use_async_scopes  # deprecated, ignored
         _logger.info(
-            "Initializing InjectQ container "
-            "(async_scopes=%s, thread_safe=%s, allow_override=%s)",
-            use_async_scopes,
+            "Initializing InjectQ container (thread_safe=%s, allow_override=%s)",
             thread_safe,
             allow_override,
         )
@@ -95,14 +103,7 @@ class InjectQ:
         self._registry = ServiceRegistry()
         self._resolver = DependencyResolver(self._registry)
 
-        # Choose scope manager based on async support requirement
-        if use_async_scopes:
-            from .async_scopes import create_enhanced_scope_manager
-
-            self._scope_manager = create_enhanced_scope_manager()
-        else:
-            self._scope_manager = ScopeManager()
-
+        self._scope_manager = ScopeManager()
         self._resolver.scope_manager = self._scope_manager
         self._factories = FactoryProxy(self)
 
@@ -137,9 +138,13 @@ class InjectQ:
         if ctx is not None:
             return ctx
 
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+        instance = cls._instance
+        if instance is None:
+            with cls._instance_lock:
+                instance = cls._instance
+                if instance is None:
+                    instance = cls._instance = cls()
+        return instance
 
     @classmethod
     def reset_instance(cls) -> None:
@@ -620,21 +625,28 @@ class InjectQ:
         return factory(*args, **complete_kwargs)
 
     # Scope management
-    def scope(self, scope_name: str | ScopeType) -> Any:
-        """Enter a scope context."""
-        if isinstance(scope_name, ScopeType):
-            scope_name = scope_name.value
+    def scope(self, scope_name: str | ScopeType) -> AbstractContextManager[None]:
+        """Enter a named scope (e.g. ``"request"``) for a ``with`` block.
+
+        Instances of keys bound to that scope live until the block exits; the
+        scope's exit stack is then closed. Nested scopes of the same name
+        restore the outer one on exit.
+        """
         return self._scope_manager.scope_context(scope_name)
 
-    def async_scope(self, scope_name: str | ScopeType) -> Any:
-        """Enter an async scope context."""
-        if isinstance(scope_name, ScopeType):
-            scope_name = scope_name.value
-        # Check if scope manager supports async contexts
-        if hasattr(self._scope_manager, "async_scope_context"):
-            return self._scope_manager.async_scope_context(scope_name)  # type: ignore  # noqa: PGH003
-        # Fallback to regular scope context
-        return self._scope_manager.scope_context(scope_name)
+    def async_scope(
+        self, scope_name: str | ScopeType
+    ) -> AbstractAsyncContextManager[None]:
+        """Enter a named scope for an ``async with`` block.
+
+        Same as ``scope()``, but the scope's exit stack is an
+        ``AsyncExitStack`` that is awaited on exit.
+        """
+        return self._scope_manager.async_scope_context(scope_name)
+
+    def register_scope(self, scope_name: str) -> None:
+        """Register a custom named context scope (like ``"request"``)."""
+        self._scope_manager.register_scope(scope_name)
 
     def clear_scope(self, scope_name: str | ScopeType) -> None:
         """Clear all instances in a scope."""
@@ -647,8 +659,7 @@ class InjectQ:
         self._ensure_thread_safe(lambda: self._scope_manager.clear_all_scopes())
 
     # Context management for multi-container support
-    @contextmanager
-    def context(self) -> Iterator[None]:
+    def context(self) -> AbstractContextManager[None]:
         """Use this container as the active context for dependency resolution.
 
         This allows the container to be used without the global singleton pattern.
@@ -661,27 +672,25 @@ class InjectQ:
         """
         from .context import ContainerContext
 
-        old_container = ContainerContext.get_current()
-        ContainerContext.set_current(self)
-        try:
-            yield
-        finally:
-            if old_container is not None:
-                ContainerContext.set_current(old_container)
-            else:
-                ContainerContext.clear_current()
+        return ContainerContext.use(self)
 
-    def activate(self) -> None:
+    def activate(self) -> contextvars.Token[InjectQ | None]:
         """Activate this container as the current default context.
 
-        This sets the container as the active context for all subsequent
-        dependency resolution calls that don't specify a container explicitly.
+        This sets the container as the active context for subsequent
+        dependency resolution in the current task/thread and anything started
+        from it afterwards (``create_task``, ``to_thread``, anyio). Other tasks
+        already running on the same thread are not affected.
 
         Note: Use context() manager for temporary activation instead.
+
+        Returns:
+            A token; pass it to ``ContainerContext.reset_current`` to restore
+            the previously active container.
         """
         from .context import ContainerContext
 
-        ContainerContext.set_current(self)
+        return ContainerContext.set_current(self)
 
     # Module installation
     def install_module(self, module: Any) -> None:

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextvars
 import logging
-import threading
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING
 
@@ -19,67 +18,73 @@ _logger = logging.getLogger("injectq.core")
 
 
 class ContainerContext:
-    """Context manager for multi-container support.
+    """Tracks the active container for the current execution context.
 
-    Provides thread-local and async task-local context isolation
-    to allow multiple containers to coexist without interference.
+    The active container lives only in a ``ContextVar``. Each asyncio task gets
+    a copy of the context it was created from, so a container set in one task
+    is never visible to a sibling task. ``asyncio.to_thread`` and anyio worker
+    threads copy the caller's context and therefore see the caller's container;
+    plain ``threading.Thread`` and ``loop.run_in_executor`` do not.
     """
 
-    _thread_local = threading.local()
     _context_var: contextvars.ContextVar[InjectQ | None] = contextvars.ContextVar(
         "container_context", default=None
     )
 
     @classmethod
     def get_current(cls) -> InjectQ | None:
-        """Get the current active container.
-
-        First tries async context variable, then falls back to thread-local storage.
-
-        Returns:
-            The current active container or None if no container is active.
-        """
-        # Try async context first
-        try:
-            container = cls._context_var.get()
-            if container is not None:
-                _logger.debug("Found container in async context")
-                return container
-        except LookupError:
-            pass
-
-        # Fall back to thread-local storage
-        container = getattr(cls._thread_local, "container", None)
-        if container is not None:
-            _logger.debug("Found container in thread-local storage")
-        return container
+        """Get the active container for the current context, or None."""
+        return cls._context_var.get()
 
     @classmethod
-    def set_current(cls, container: InjectQ) -> None:
-        """Set the current active container.
+    def set_current(cls, container: InjectQ) -> contextvars.Token[InjectQ | None]:
+        """Set the active container for the current context.
 
-        Sets in both async context variable and thread-local storage
-        to ensure compatibility with both sync and async contexts.
+        Applies to the current task/thread and anything started from it
+        afterwards (``create_task``, ``to_thread``, anyio), not to other tasks.
 
         Args:
             container: The container to set as current.
+
+        Returns:
+            A token that restores the previous value via ``reset_current``.
         """
-        _logger.debug("Setting current container in context")
-        cls._context_var.set(container)
-        cls._thread_local.container = container
+        return cls._context_var.set(container)
+
+    @classmethod
+    def reset_current(cls, token: contextvars.Token[InjectQ | None]) -> None:
+        """Restore the container that was current before ``set_current``.
+
+        If the token was created in another context (e.g. an async generator
+        finalised from a different task) or was already used, nothing is
+        restored: the value lapses with the context it was set in.
+
+        Args:
+            token: The token returned by ``set_current``.
+        """
+        cls._reset(token)
 
     @classmethod
     def clear_current(cls) -> None:
-        """Clear the current active container."""
-        _logger.debug("Clearing current container from context")
+        """Set the active container to None for the current context.
+
+        This cannot restore an outer value; to undo a ``set_current`` use the
+        token API (``reset_current``) or ``use()`` / ``use_async()``.
+        """
         cls._context_var.set(None)
-        if hasattr(cls._thread_local, "container"):
-            delattr(cls._thread_local, "container")
+
+    @classmethod
+    def _reset(cls, token: contextvars.Token[InjectQ | None]) -> None:
+        try:
+            cls._context_var.reset(token)
+        except (ValueError, RuntimeError) as exc:
+            # ValueError: token from another Context; RuntimeError: already used.
+            _logger.debug("Container context token not reset: %s", exc)
 
     @classmethod
     @contextmanager
     def use(cls, container: InjectQ) -> Generator[None]:
-        """Context manager to temporarily set a container as active.
+        """Temporarily make ``container`` the active container.
 
         Args:
             container: The container to activate.
@@ -87,22 +92,16 @@ class ContainerContext:
         Yields:
             None
         """
-        _logger.debug("Entering container context")
-        old_container = cls.get_current()
-        cls.set_current(container)
+        token = cls._context_var.set(container)
         try:
             yield
         finally:
-            _logger.debug("Exiting container context")
-            if old_container is not None:
-                cls.set_current(old_container)
-            else:
-                cls.clear_current()
+            cls._reset(token)
 
     @classmethod
     @asynccontextmanager
     async def use_async(cls, container: InjectQ) -> AsyncGenerator[None]:
-        """Async context manager to temporarily set a container as active.
+        """Async form of ``use()``.
 
         Args:
             container: The container to activate.
@@ -110,14 +109,5 @@ class ContainerContext:
         Yields:
             None
         """
-        _logger.debug("Entering async container context")
-        old_container = cls.get_current()
-        cls.set_current(container)
-        try:
+        with cls.use(container):
             yield
-        finally:
-            _logger.debug("Exiting async container context")
-            if old_container is not None:
-                cls.set_current(old_container)
-            else:
-                cls.clear_current()

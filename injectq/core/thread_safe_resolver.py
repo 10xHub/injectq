@@ -17,9 +17,8 @@ from injectq.utils import (
     is_injectable_class,
 )
 
-from .base_scope_manager import BaseScopeManager
 from .registry import ServiceBinding, ServiceRegistry
-from .scopes import get_scope_manager
+from .scopes import ScopeManager, get_scope_manager
 from .thread_safety import HybridLock
 
 
@@ -32,7 +31,7 @@ class ThreadSafeDependencyResolver:
     def __init__(
         self,
         registry: ServiceRegistry,
-        scope_manager: BaseScopeManager | None = None,
+        scope_manager: ScopeManager | None = None,
     ) -> None:
         self.registry = registry
         self.scope_manager = scope_manager or get_scope_manager()

@@ -16,9 +16,8 @@ from injectq.utils import (
     is_injectable_class,
 )
 
-from .base_scope_manager import BaseScopeManager
 from .registry import ServiceBinding, ServiceRegistry
-from .scopes import get_scope_manager
+from .scopes import ScopeManager, get_scope_manager
 
 
 _logger = logging.getLogger("injectq.core")
@@ -30,7 +29,7 @@ class DependencyResolver:
     def __init__(
         self,
         registry: ServiceRegistry,
-        scope_manager: BaseScopeManager | None = None,
+        scope_manager: ScopeManager | None = None,
     ) -> None:
         self.registry = registry
         self.scope_manager = scope_manager or get_scope_manager()
@@ -174,9 +173,12 @@ class DependencyResolver:
             )
             raise InjectionError(msg)
 
-        # For async resolution, we always create instances directly to avoid
-        # the complexity of async factories with the scope manager
-        return await self._create_instance_async(binding.implementation)
+        def factory() -> Any:
+            return self._create_instance_async(binding.implementation)
+
+        return await self.scope_manager.aget_instance(
+            key=binding.service_type, factory=factory, scope_name=binding.scope
+        )
 
     async def _resolve_factory_async(
         self,

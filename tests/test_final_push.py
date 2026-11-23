@@ -6,7 +6,7 @@ import time
 import pytest
 
 from injectq import InjectQ
-from injectq.core.scopes import RequestScope, SingletonScope, TransientScope
+from injectq.core.scopes import ScopeManager
 from injectq.core.thread_safety import HybridLock
 from injectq.utils.helpers import ThreadLocalStorage
 
@@ -77,30 +77,6 @@ def test_thread_local_storage_different_threads() -> None:
     assert "thread2" in results
 
 
-def test_singleton_scope_repr() -> None:
-    """Test SingletonScope __repr__."""
-    scope = SingletonScope()
-
-    repr_str = repr(scope)
-    assert "SingletonScope" in repr_str or "singleton" in repr_str
-
-
-def test_transient_scope_repr() -> None:
-    """Test TransientScope __repr__."""
-    scope = TransientScope()
-
-    repr_str = repr(scope)
-    assert "TransientScope" in repr_str or "transient" in repr_str
-
-
-def test_request_scope_repr() -> None:
-    """Test RequestScope __repr__."""
-    scope = RequestScope()
-
-    repr_str = repr(scope)
-    assert "RequestScope" in repr_str or "request" in repr_str
-
-
 def test_container_with_thread_safe_true() -> None:
     """Test container created with thread_safe=True."""
     container = InjectQ(thread_safe=True)
@@ -163,17 +139,17 @@ def test_container_multithreaded_access() -> None:
 
 def test_scope_clear_idempotent() -> None:
     """Test that scope clear can be called multiple times."""
-    scope = SingletonScope()
+    manager = ScopeManager()
 
     def factory() -> str:
         return "value"
 
-    scope.get(str, factory)
+    manager.get_instance(str, factory, "singleton")
 
     # Clear multiple times
-    scope.clear()
-    scope.clear()
-    scope.clear()
+    manager.clear_scope("singleton")
+    manager.clear_scope("singleton")
+    manager.clear_scope("singleton")
 
     # Should not error
     assert True
@@ -211,30 +187,33 @@ def test_container_scope_nesting() -> None:
 
 def test_singleton_scope_with_none_factory() -> None:
     """Test singleton scope with factory returning None."""
-    scope = SingletonScope()
+    manager = ScopeManager()
+    calls = 0
 
     def factory() -> None:
-        return None
+        nonlocal calls
+        calls += 1
 
-    result = scope.get(type(None), factory)
-    assert result is None
+    assert manager.get_instance(type(None), factory, "singleton") is None
+    assert manager.get_instance(type(None), factory, "singleton") is None
+    assert calls == 1
 
 
 def test_transient_scope_with_exception() -> None:
     """Test transient scope when factory raises exception."""
-    scope = TransientScope()
+    manager = ScopeManager()
 
     def factory() -> str:
         msg = "Factory error"
         raise ValueError(msg)
 
     with pytest.raises(ValueError, match="Factory error"):
-        scope.get(str, factory)
+        manager.get_instance(str, factory, "transient")
 
 
 def test_request_scope_with_different_keys() -> None:
     """Test request scope with multiple different keys."""
-    scope = RequestScope()
+    manager = ScopeManager()
 
     def factory_str() -> str:
         return "string"
@@ -242,8 +221,9 @@ def test_request_scope_with_different_keys() -> None:
     def factory_int() -> int:
         return 42
 
-    str_result = scope.get(str, factory_str)
-    int_result = scope.get(int, factory_int)
+    with manager.scope_context("request"):
+        str_result = manager.get_instance(str, factory_str, "request")
+        int_result = manager.get_instance(int, factory_int, "request")
 
     assert str_result == "string"
     assert int_result == 42
@@ -328,7 +308,7 @@ def test_container_validation_with_dependencies() -> None:
 
 def test_scope_get_with_same_key_twice() -> None:
     """Test scope get with same key called twice."""
-    scope = SingletonScope()
+    manager = ScopeManager()
 
     call_count = 0
 
@@ -338,11 +318,11 @@ def test_scope_get_with_same_key_twice() -> None:
         return "value"
 
     # First get
-    scope.get(str, factory)
+    manager.get_instance(str, factory, "singleton")
     assert call_count == 1
 
     # Second get - should not call factory again
-    scope.get(str, factory)
+    manager.get_instance(str, factory, "singleton")
     assert call_count == 1  # Factory only called once
 
 

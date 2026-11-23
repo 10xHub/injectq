@@ -78,6 +78,9 @@ path = "injectq/__init__.py"
 [tool.hatch.build.targets.wheel]
 packages = ["injectq"]
 
+[tool.hatch.build.targets.sdist]
+exclude = ["benchmarks", "plans", "reports", "htmlcov", "site"]
+
 [tool.black]
 line-length = 88
 target-version = ['py38']
