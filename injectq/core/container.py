@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import contextvars
-import inspect
-import logging
 import threading
+import warnings
 import weakref
 from contextlib import (
     AbstractAsyncContextManager,
@@ -15,7 +14,7 @@ from contextlib import (
     contextmanager,
 )
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, overload
 
 from injectq.utils import (
     BindingError,
@@ -28,12 +27,13 @@ from injectq.utils import (
 from .context import ContainerContext
 from .registry import _UNSET, ALL_KEYS, ServiceBinding, ServiceRegistry
 from .resolver import (
+    _EMPTY,
     _MISSING,
     DependencyResolver,
     OverrideLayer,
     is_async_callable,
 )
-from .scopes import ScopeManager, ScopeType, _AsyncFrame, _Frame
+from .scopes import ScopeManager, ScopeType, _AsyncFrame, _Frame, _logger
 
 
 if TYPE_CHECKING:
@@ -42,10 +42,20 @@ if TYPE_CHECKING:
     from injectq.diagnostics import DependencyVisualizer
 
 
-_logger = logging.getLogger("injectq.core")
+_T = TypeVar("_T")
+_D = TypeVar("_D")
 
 # Seen by @inject plans (``container._singletons``) while an override is
 # active, so they never take the shared singleton cache over an override.
+def _warn_deprecated_arg(name: str) -> None:
+    warnings.warn(
+        f"InjectQ({name}=...) is deprecated: accepted and ignored since 0.6, "
+        "will be removed in 0.7",
+        DeprecationWarning,
+        stacklevel=3,
+    )
+
+
 _NO_CACHE: Any = MappingProxyType({})
 
 # Profilers active as ``with DependencyProfiler() as p:`` report every live
@@ -135,8 +145,8 @@ class InjectQ:
     def __init__(
         self,
         modules: list[Any] | None = None,
-        use_async_scopes: bool = True,
-        thread_safe: bool = True,
+        use_async_scopes: bool = _UNSET,
+        thread_safe: bool = _UNSET,
         allow_override: bool = True,
         *,
         debug: bool = False,
@@ -145,10 +155,10 @@ class InjectQ:
 
         Args:
             modules: List of modules to register
-            use_async_scopes: Deprecated and ignored. There is one scope
+            use_async_scopes: Deprecated and ignored (warns when passed). There is one scope
                 manager (ContextVar-based) that serves both ``scope()`` and
                 ``async_scope()``.
-            thread_safe: Deprecated and ignored. Resolution never takes a
+            thread_safe: Deprecated and ignored (warns when passed). Resolution never takes a
                 lock; singleton and scoped creation is always serialised per
                 key, and the container lock is never held while factories run.
             allow_override: Whether to allow overriding existing registrations
@@ -156,8 +166,12 @@ class InjectQ:
             debug: Resolve with plain linked closures instead of generated
                 code (simpler tracebacks and stepping; a little slower).
         """
-        del use_async_scopes  # deprecated, ignored
-        self._thread_safe = thread_safe  # deprecated, ignored (kept for repr)
+        if use_async_scopes is not _UNSET:
+            _warn_deprecated_arg("use_async_scopes")
+        if thread_safe is not _UNSET:
+            _warn_deprecated_arg("thread_safe")
+        # deprecated, ignored (kept for repr)
+        self._thread_safe = True if thread_safe is _UNSET else thread_safe
         self._allow_override = allow_override
         self._registry = ServiceRegistry()
         self._scope_manager = ScopeManager()
@@ -361,9 +375,7 @@ class InjectQ:
         value = layer.values.get(service_type, _MISSING)
         if value is not _MISSING:
             return value
-        fn, is_coroutine = self._resolver.world(layer.keys).compile_async(
-            service_type
-        )
+        fn, is_coroutine = self._resolver.world(layer.keys).compile_async(service_type)
         if is_coroutine:
             return await fn()
         return fn()
@@ -494,6 +506,10 @@ class InjectQ:
         return self._factories
 
     # Resolution methods
+    @overload
+    def get(self, service_type: type[_T]) -> _T: ...
+    @overload
+    def get(self, service_type: str) -> Any: ...
     def get(self, service_type: ServiceKey) -> Any:
         """Get a service instance.
 
@@ -512,6 +528,10 @@ class InjectQ:
             fn = self._resolver.compile_sync(service_type)
         return fn()
 
+    @overload
+    async def aget(self, service_type: type[_T]) -> _T: ...
+    @overload
+    async def aget(self, service_type: str) -> Any: ...
     async def aget(self, service_type: ServiceKey) -> Any:
         """Get a service instance asynchronously.
 
@@ -529,6 +549,12 @@ class InjectQ:
             return await fn()
         return fn()
 
+    @overload
+    async def atry_get(self, service_type: type[_T]) -> _T | None: ...
+    @overload
+    async def atry_get(self, service_type: type[_T], default: _D) -> _T | _D: ...
+    @overload
+    async def atry_get(self, service_type: str, default: Any = None) -> Any: ...
     async def atry_get(self, service_type: ServiceKey, default: Any = None) -> Any:
         """Try to get a service instance, returning default if not found.
 
@@ -542,6 +568,12 @@ class InjectQ:
                 return default
             raise
 
+    @overload
+    def try_get(self, service_type: type[_T]) -> _T | None: ...
+    @overload
+    def try_get(self, service_type: type[_T], default: _D) -> _T | _D: ...
+    @overload
+    def try_get(self, service_type: str, default: Any = None) -> Any: ...
     def try_get(self, service_type: ServiceKey, default: Any = None) -> Any:
         """Try to get a service instance, returning default if not found.
 
@@ -581,7 +613,7 @@ class InjectQ:
         """
         factory = self._registry.get_factory(service_type)
         if factory is None:
-            raise DependencyNotFoundError(service_type)  # type: ignore  # noqa: PGH003
+            raise DependencyNotFoundError(service_type)
         return factory
 
     def call_factory(self, service_type: ServiceKey, *args: Any, **kwargs: Any) -> Any:
@@ -754,6 +786,8 @@ class InjectQ:
         name if bound, then the annotation if it is registered (primitive
         annotations such as ``str`` are never injected by type).
         """
+        import inspect  # noqa: PLC0415 - not needed at import time
+
         try:
             names = list(inspect.signature(factory).parameters)
         except (TypeError, ValueError):
@@ -769,7 +803,7 @@ class InjectQ:
             elif self.has(param.name):
                 key = param.name
             elif (
-                param.annotation is not inspect.Parameter.empty
+                param.annotation is not _EMPTY
                 and param.annotation not in _PRIMITIVES
                 and self.has(param.annotation)
             ):
@@ -778,9 +812,7 @@ class InjectQ:
                 plan.append((param.name, key))
             elif not param.has_default:
                 dependency: Any = (
-                    param.annotation
-                    if param.annotation is not inspect.Parameter.empty
-                    else param.name
+                    param.annotation if param.annotation is not _EMPTY else param.name
                 )
                 error = DependencyNotFoundError(dependency)
                 error.args = (
@@ -971,7 +1003,7 @@ class InjectQ:
             value = lifecycle.resource
             try:
                 lifecycle.shutdown(exc)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - logged and re-raised below
                 _logger.exception("Resource shutdown failed")
                 errors.append(e)
             finally:
@@ -993,7 +1025,7 @@ class InjectQ:
                     await lifecycle.shutdown_async(exc)
                 else:
                     lifecycle.shutdown(exc)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - logged and re-raised below
                 _logger.exception("Resource shutdown failed")
                 errors.append(e)
             finally:

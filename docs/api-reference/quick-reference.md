@@ -167,7 +167,7 @@ class RequestContext:
 ```python
 from injectq import resource
 
-@resource  # singleton: created once, closed by get_resource_manager().shutdown_all()
+@resource  # singleton: created once, closed by container.shutdown() / ashutdown()
 def database_connection() -> Iterator[DatabaseConnection]:
     conn = connect()
     try:
@@ -389,6 +389,31 @@ task/thread and to anything started from it afterwards (`asyncio.create_task`,
 `threading.Thread` and `loop.run_in_executor` do not inherit it.
 `clear_current()` sets it to `None` and cannot restore an outer value.
 
+## Overrides, Resources and Debugging
+
+```python
+# Replace one dependency inside a block (context-local, reaches dependents)
+with container.override(Database, FakeDatabase()):
+    service = container.get(UserService)
+
+# Push cleanup onto the active scope's exit stack
+with container.scope("request"):
+    container.current_exit_stack("request").callback(cleanup)
+
+# Close singleton resources (@resource), last created first
+container.shutdown()             # sync
+await container.ashutdown()      # sync and async
+
+# Fail fast at startup: builds every resolver, raises on any error
+container.compile()
+container.validate()             # raises InjectionError listing all problems
+
+# Plain closures and simple tracebacks while developing
+container = InjectQ(debug=True)
+```
+
+See [Overrides](../testing/overrides.md), [Resources and cleanup](../scopes/resources.md) and [Debugging generated code](../core-concepts/debugging-generated-code.md).
+
 ## Common Patterns
 
 ### Factory Pattern
@@ -582,7 +607,7 @@ async def connection_pool() -> AsyncIterator[ConnectionPool]:
         await pool.close()
 
 pool = await container.aget(ConnectionPool)   # created once
-await get_resource_manager().shutdown_all_async()  # teardown, last created first
+await container.ashutdown()  # teardown, last created first
 ```
 
 Teardown errors are raised together as an `ExceptionGroup` (Python 3.11+; on
@@ -649,4 +674,4 @@ with isolated_container() as test_cont:
     test_cont[Service] = MockService
 ```
 
-For more details, see the full documentation sections on [injection patterns](../injection-patterns/), [scopes](../scopes/), and [testing](../testing/).
+For more details, see the full documentation sections on [injection patterns](../injection-patterns/inject-decorator.md), [scopes](../scopes/understanding-scopes.md), and [testing](../testing/overview.md).

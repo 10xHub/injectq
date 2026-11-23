@@ -468,7 +468,7 @@ class DatabasePool:
 
 # Create a parameterized factory
 def create_db_pool(db_name: str, max_conn: int = 10) -> DatabasePool:
-    return DatabasePool(db_name, max_conn=max_conn)
+    return DatabasePool(db_name, max_connections=max_conn)
 
 # Bind the factory
 container.bind_factory("db_pool", create_db_pool)
@@ -1092,8 +1092,8 @@ class CommandHandler:  # New each time
 
 ```python
 # ✅ Proper cleanup
-@resource
-def database_connection():
+@resource   # the container binds Connection to this function
+def database_connection() -> Iterator[Connection]:
     conn = create_connection()
     try:
         yield conn
@@ -1107,7 +1107,7 @@ The Container Pattern provides:
 
 - **Automatic dependency resolution** - No manual wiring
 - **Centralized configuration** - All setup in one place
-- **Lifetime management** - Automatic creation/cleanup
+- **Lifetime management** - Instances per scope; cleanup through scopes and resources
 - **Testability** - Easy dependency replacement
 - **Performance** - Caching and optimization
 - **Maintainability** - Clear separation of concerns

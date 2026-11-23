@@ -35,8 +35,8 @@ These work in 0.6, emit a `DeprecationWarning` when used, and are removed in 0.7
 | `get_container_mcp` | `get_container_fastmcp` | `injectq.integrations.fastmcp` |
 | `injectq.components` (the whole module) | no replacement; use modules, providers and container bindings | |
 | `Component`, `ComponentBinding`, `ComponentContainer`, `ComponentError`, `ComponentInterface`, `ComponentRegistry`, `ComponentScope`, `ComponentState` (from `injectq`) | same as above | |
-| `InjectQ(thread_safe=...)` | remove the argument | accepted and ignored, no warning |
-| `InjectQ(use_async_scopes=...)` | remove the argument | accepted and ignored, no warning |
+| `InjectQ(thread_safe=...)` | remove the argument | deprecated: accepted, ignored, warns |
+| `InjectQ(use_async_scopes=...)` | remove the argument | deprecated: accepted, ignored, warns |
 
 Why the testing rename: pytest collects anything named `test_*` and `Test*` that you import into a test module. `from injectq.testing import test_container, TestModule` could make pytest try to run them.
 
@@ -62,7 +62,7 @@ def test_x():
 
 `container_fixture(name="container")` takes the fixture name, so `container_fixture(name="di")` gives a fixture called `di`.
 
-`thread_safe=` and `use_async_scopes=` do nothing now. Reads never take a lock, and creating a singleton or a scoped instance is always safe under threads and tasks.
+`thread_safe=` and `use_async_scopes=` do nothing now. They are deprecated: still accepted, but passing either emits a `DeprecationWarning` ("accepted and ignored since 0.6, will be removed in 0.7"). `InjectQ()` stays silent. Reads never take a lock, and creating a singleton or a scoped instance is always safe under threads and tasks.
 
 ```python
 # Before (0.5)
@@ -361,11 +361,11 @@ See [Scopes and resources](scopes/resources.md).
 A short list. Each item has its own page.
 
 - A new engine: each service gets one generated resolver function. See [Debugging generated code](core-concepts/debugging-generated-code.md) and [Benchmarks](benchmarks.md).
+- Typed resolution: `container.get`, `aget`, `try_get` and `atry_get` have `@overload`s, so `container.get(UserService)` is typed `UserService`, a string key gives `Any`, and `try_get` gives `T | None`. Caveat: an abstract class as the key trips mypy's `type-abstract` check; use `# type: ignore[type-abstract]` or a string/Protocol key.
 - `InjectQ(debug=True)` for plain closures and plain tracebacks.
 - Context-local overrides, transitive and safe under concurrency: [Overrides](testing/overrides.md).
 - Scopes with exit stacks: `container.current_exit_stack("request")`, `track_resource`, `shutdown()`, `ashutdown()`.
 - `bind_factory(..., scope=...)` and `@provider(scope=...)`.
-- Typed `get`, `aget` and `try_get`.
 - `ScopeError`, `AlreadyRegisteredError`, `ModuleBinder` and `ResourceError` are exported from `injectq`.
 - `InjectFastMCP`, `setup_fastmcp`, `get_container_fastmcp`, `get_container_taskiq`, `InjectQTaskiqMiddleware`.
 - `injectq.utils.graph`: `find_cycles`, `find_path`, `reachable`.

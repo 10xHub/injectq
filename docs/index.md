@@ -2,11 +2,14 @@
 
 [![PyPI version](https://badge.fury.io/py/injectq.svg)](https://pypi.org/project/injectq/)
 [![Python versions](https://img.shields.io/pypi/pyversions/injectq.svg)](https://pypi.org/project/injectq/)
-[![License](https://img.shields.io/github/license/Iamsdt/injectq.svg)](https://github.com/Iamsdt/injectq/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/10xhub/injectq.svg)](https://github.com/10xhub/injectq/blob/main/LICENSE)
 [![Coverage](https://img.shields.io/badge/coverage-73%25-yellow.svg)](#)
 
 
 InjectQ is a lightweight, type-friendly dependency injection library for Python focused on clarity, performance, and pragmatic integrations.
+
+!!! tip "Using an AI coding agent?"
+    Give your agent the injectq skill: [`SKILL.md` (raw)](https://raw.githubusercontent.com/10xhub/injectq/main/skills/injectq/SKILL.md) and its [folder](https://github.com/10xhub/injectq/tree/main/skills/injectq). In Claude Code, copy `skills/injectq` into `.claude/skills/`. For other agents, point them at the raw URL or paste it into their instructions. See [AI agents](ai-agents.md).
 
 ## Quick example (recommended)
 
@@ -14,6 +17,7 @@ InjectQ is a lightweight, type-friendly dependency injection library for Python 
 from injectq import InjectQ, inject, singleton
 
 container = InjectQ.get_instance()
+container[str] = "Hello from InjectQ"   # UserService needs a str
 
 @singleton
 class UserService:

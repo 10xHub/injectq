@@ -7,6 +7,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.0] - Unreleased
+
+**Focus:** a new resolution engine, correct context and scope handling, and cleanup of the public API.
+
+Upgrading from 0.5? Read the [0.6 migration guide](migration-0.6.md). Benchmark numbers: see the [Benchmark Report](benchmark-report.md).
+
+### Fixed
+
+Two bugs with the current container:
+
+- **The current container leaked across asyncio tasks.** It was stored in a place shared by every task on a thread, so one task could change the container another task saw. It is now a `ContextVar`: each task and thread has its own value.
+- **The FastAPI request container was invisible to `InjectQ.get_instance()`.** Code in a route that called `get_instance()` or used `@inject` got the global container. The middleware now makes the container current for the whole request. FastMCP and Taskiq work the same way.
+
+Resolution and scopes:
+
+- `aget()` ignored the binding scope. Singletons were created again on every call and differed from `get()`. `aget` now honours scopes.
+- Concurrent `aget` calls raised a false `CircularDependencyError`, and a singleton could be created several times under concurrency. Both are fixed: cycles are found when the plan is built, and a singleton is created once.
+- `aget(UnboundClass)` returned an un-awaited coroutine.
+- A request scope never cleared. Two `with container.scope("request")` blocks returned the same instance, and request-scoped keys also resolved outside any scope.
+- Leaving a nested scope of the same name wiped the outer scope.
+- `asyncio.to_thread` inside a request got a different instance, which then leaked into the next request.
+- Scope exit dropped instances without closing them.
+- `override()` had no effect on factory-bound keys, cleared every singleton, was visible to all threads, and raised with `allow_override=False`.
+- A factory silently shadowed a later `bind` of the same key.
+- Integrations resolved with `get()`, so async factories were never awaited.
+- Resource teardown errors were swallowed, and two resources with the same function name replaced each other.
+
+### Added
+
+- **Typed resolution.** `container.get`, `aget`, `try_get` and `atry_get` have `@overload`s: `type[T]` gives `T`, a `str` key gives `Any`, and `try_*` give `T | None` (or `T | D` with a default). Caveat: abstract classes as keys trigger mypy's `type-abstract` check.
+- **New engine.** Each service gets one compiled resolver, generated as Python code (or linked closures). Cycles, validation, `compile()` and the dependency graph all use the same plans. `InjectQ(debug=True)` switches to plain closures for simple tracebacks. Generated code is visible in tracebacks as `<injectq-generated:Name>`. See [Debugging generated code](core-concepts/debugging-generated-code.md).
+- **Scopes.** One request scope per `with container.scope(...)` or `async with container.async_scope(...)` block. `ScopeError` when a scoped key is resolved outside a scope. `register_scope(name)`, `current_exit_stack(scope)`. See [Scoped services](scopes/scoped-services.md) and [Resources and cleanup](scopes/resources.md).
+- **Context.** `ContainerContext.set_current()` and `InjectQ.activate()` return a token. `ContainerContext.reset_current(token)` restores the previous container. See [Context and concurrency](core-concepts/context-and-concurrency.md).
+- **Overrides.** `container.override(key, value)` is context-local, reaches dependents, works on factory keys and with `allow_override=False`, and only affects the overridden key. See [Overrides](testing/overrides.md).
+- **`@inject`.** Plans are built on first call (forward references work). Generators, async generators, `classmethod` and `staticmethod` in either order, partials and callable objects. Your own exceptions pass through unchanged. Error messages name the parameter.
+- **Integrations.** FastAPI, FastMCP and Taskiq enter a `"request"` scope per request, message or task and make the container current. New names: `InjectFastMCP`, `setup_fastmcp`, `get_container_fastmcp`, `get_container_taskiq`, `InjectQTaskiqMiddleware`. `get_container_fastapi` is exported and takes an optional connection. `injectq.integrations` is lazy.
+- **Decorators and resources.** `@singleton`, `@transient`, `@scoped`, `@register_as` and `@resource` work bare and with arguments. `@resource` binds the resource by its return annotation, with a scope. `bind_factory(..., scope=...)` and `@provider(scope=...)`. `container.shutdown()`, `await container.ashutdown()` and `container.track_resource()`. Teardown errors are raised (`ExceptionGroup` on Python 3.11+).
+- **Modules.** `ProviderModule` scans the class dictionary, keeps definition order, awaits async providers in `aget`, and no longer hides errors.
+- **Diagnostics.** The validator and visualizer use the compiled plans. `validate()` reports cycles. The profiler is connected to the resolver (zero cost when none is attached), uses a bounded buffer and keeps its data across `start()` and `stop()`. `attach_profiler()` and `detach_profiler()`. `injectq.utils.graph` with `find_cycles`, `find_path`, `reachable`.
+- **Testing.** `isolated_container`, `container_fixture(name=...)`, `MockModule`. `test_mode()` also sets the context container.
+- **Exports.** `AlreadyRegisteredError`, `ModuleBinder`, `ResourceError` and `ScopeError` from `injectq`. Diagnostics and testing load lazily.
+
+### Changed
+
+See the [migration guide](migration-0.6.md) for before and after code.
+
+- The current container is per task and per thread. `set_current()` and `activate()` apply to the current task or thread and to what it starts, not to sibling tasks. Plain threads and `run_in_executor` do not inherit it.
+- Inside FastAPI, FastMCP and Taskiq handlers, `get_instance()` and `@inject` use the container given to `setup_*`.
+- `get()` on a key that needs an async factory raises `InjectionError` ("use aget") instead of returning a coroutine.
+- A request-scoped key resolved outside a scope raises `ScopeError`.
+- `@inject` no longer wraps your function's exceptions in `InjectionError`.
+- `Inject[...]` is a plain marker: no caching, side-effect-free `repr`.
+- One provider map: when a class and a factory are bound to the same key, the later registration wins. Re-binding a key drops its cached singleton.
+- A required constructor parameter with no annotation, or an unresolvable forward reference, raises `InjectionError` at the first resolve.
+- Parameter defaults are used only when the parameter's own key is not bound.
+- `compile()` raises on errors.
+- `clear_scope()` drops instances but does not run the exit stack.
+- Resources are created once under concurrency, and shut down in reverse order of creation.
+- `InjectQMCPMiddleware` no longer subclasses the FastMCP `Middleware` class.
+- Errors in integrations are raised, not logged first.
+
+### Deprecated
+
+Removed in 0.7. They work now and emit `DeprecationWarning`.
+
+- `injectq.testing`: `test_container` (use `isolated_container`), `TestModule` (use `MockModule`), `pytest_container_fixture` (use `container_fixture`).
+- Integrations: `InjectAPI` (use `InjectFastAPI`), `InjectTask` (`InjectTaskiq`), `InjectMCP` (`InjectFastMCP`), `setup_mcp` (`setup_fastmcp`), `get_container_mcp` (`get_container_fastmcp`), `get_injector_instance_taskiq` (`get_container_taskiq`).
+- `injectq.components` and the `Component*` names exported from `injectq`.
+- `InjectQ(thread_safe=...)` and `InjectQ(use_async_scopes=...)`: deprecated; accepted and ignored, and emit a `DeprecationWarning` when passed (removed in 0.7).
+
+### Removed
+
+- `injectq.core.thread_safety` (`HybridLock`, `ThreadSafeDict`, `AsyncSafeCounter`, `ThreadSafetyMixin`, `thread_safe`) and `injectq.core.thread_safe_resolver`.
+- `injectq.core.async_scopes` (`AsyncScope`, `AsyncScopeManager`, `HybridScope`, `AsyncRequestScope`, `AsyncActionScope`, request and user id helpers) and `injectq.core.base_scope_manager`. The scope names `"async_request"` and `"async_action"`.
+- `SingletonScope`, `TransientScope`, `ThreadLocalScope`, `RequestScope`, `ActionScope`, `create_enhanced_scope_manager` and `ScopeManager.get_scope()`.
+- The old `DependencyResolver` methods (`resolve`, `resolve_async`, `validate_dependencies`, `get_dependency_graph`, `compile_resolution_plans`).
+- Unused helpers in `injectq.utils` (`resolve_forward_ref`, `Injected`, `is_concrete_type`, `get_type_name`, `safe_issubclass`, `is_injectable_function`, `ThreadLocalStorage`) and the protocols `Resolvable`, `InjectableFunction`, `InjectableAsyncFunction`, `AsyncInjectableCallable`.
+- `MissingDependencyError`, `InvalidBindingError`, `TypeMismatchError` from `injectq.diagnostics.validation`.
+- `injectq.integrations.fastapi._request_container`.
+
+### Known limitations
+
+- While an `override()` is active, that container resolves through slower guarded closures.
+- An override does not change objects that already hold the old singleton.
+- Free-threaded CPython is not tested.
+- On Python 3.15 the `fastmcp` extra cannot be installed yet (a dependency, `rpds-py`, does not build there).
+
+### Performance
+
+Benchmark numbers for 0.6.0 will be published with the release. See the [Benchmark Report](benchmark-report.md).
+
+---
+
 ## [0.5.0] - Released
 
 **🎯 Focus:** Python 3.15 support.
@@ -189,8 +282,8 @@ container.bind(Service, impl2)  # Raises AlreadyRegisteredError
 
 #### 📚 Documentation
 - Complete API reference at [docs.injectq.dev](https://iamsdt.github.io/injectq/)
-- [Factory Methods Guide](core-concepts/factory-pattern.md)
-- [Migration Guide](migration/from-kink.md)
+- [Factory Methods Guide](injection-patterns/factory-methods.md)
+- [Migration Guide](migration-0.6.md)
 - [Testing Guide](testing/overview.md)
 
 ---
@@ -224,13 +317,13 @@ container = InjectQ(allow_override=False)
 We welcome contributions! See [CONTRIBUTING.md](contributing.md) for details.
 
 ### Reporting Issues
-- **Bug Reports**: [GitHub Issues](https://github.com/Iamsdt/injectq/issues)
-- **Feature Requests**: [GitHub Discussions](https://github.com/Iamsdt/injectq/discussions)
+- **Bug Reports**: [GitHub Issues](https://github.com/10xhub/injectq/issues)
+- **Feature Requests**: [GitHub Discussions](https://github.com/10xhub/injectq/discussions)
 
 ### Development
 ```bash
 # Clone repository
-git clone https://github.com/Iamsdt/injectq.git
+git clone https://github.com/10xhub/injectq.git
 cd injectq
 
 # Install dependencies
@@ -248,9 +341,9 @@ mypy injectq
 ## Support
 
 - 📖 **Documentation**: [iamsdt.github.io/injectq](https://iamsdt.github.io/injectq/)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/Iamsdt/injectq/discussions)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/Iamsdt/injectq/issues)
-- 💡 **Examples**: [examples/](https://github.com/Iamsdt/injectq/tree/main/examples)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/10xhub/injectq/discussions)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/10xhub/injectq/issues)
+- 💡 **Examples**: [examples/](https://github.com/10xhub/injectq/tree/main/examples)
 
 ---
 

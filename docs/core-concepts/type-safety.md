@@ -97,7 +97,7 @@ InjectQ catches errors during startup, not at runtime:
 
 ```python
 from injectq import InjectQ, singleton, inject
-from injectq.utils import DependencyNotFoundError
+from injectq import InjectionError
 
 @singleton
 class Database:
@@ -115,7 +115,7 @@ container = InjectQ.get_instance()
 # This will raise an error during validation
 try:
     container.validate()
-except DependencyNotFoundError as e:
+except InjectionError as e:
     print(f"Missing dependency: {e}")
 ```
 

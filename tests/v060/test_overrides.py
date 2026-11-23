@@ -683,7 +683,9 @@ def test_layer_singleton_created_once_by_concurrent_threads() -> None:
     with c.override(Dep, "fake"):
         ctx = contextvars.copy_context()  # threads share the layer
         threads = [
-            threading.Thread(target=lambda: results.append(ctx.copy().run(c.get, Single)))
+            threading.Thread(
+                target=lambda: results.append(ctx.copy().run(c.get, Single))
+            )
             for _ in range(4)
         ]
         for t in threads:

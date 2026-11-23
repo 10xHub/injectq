@@ -95,6 +95,7 @@ print(f"Different instances? {proc1 is not proc2}")  # True
 **One instance** per scope (request, session, etc.).
 
 ```python
+import time
 from injectq import InjectQ, scoped
 
 @scoped("request")
@@ -541,8 +542,8 @@ container.bind(TaskProgress, scope="job")
 
 ```python
 # Use resource management for cleanup
-@resource
-def database_connection():
+@resource   # the container binds Connection to this function
+def database_connection() -> Iterator[Connection]:
     conn = create_connection()
     try:
         yield conn

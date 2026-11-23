@@ -227,7 +227,7 @@ absolute values.
 ## Reproduce
 
 ```bash
-git clone https://github.com/Iamsdt/injectq && cd injectq
+git clone https://github.com/10xhub/injectq && cd injectq
 
 # 1. micro-benchmarks, injectq only (uses your current environment)
 python benchmarks/run.py                      # prints a table, writes benchmarks/latest.json

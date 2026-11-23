@@ -3,18 +3,16 @@
 from __future__ import annotations
 
 import contextvars
-import logging
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING
+
+from .scopes import _logger
 
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
 
     from .container import InjectQ
-
-
-_logger = logging.getLogger("injectq.core")
 
 
 class ContainerContext:

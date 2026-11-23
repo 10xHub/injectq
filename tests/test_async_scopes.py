@@ -63,7 +63,8 @@ async def test_concurrent_aget_in_scope_creates_once():
 
 def test_use_async_scopes_flag_is_accepted_and_ignored():
     for flag in (True, False):
-        container = InjectQ(use_async_scopes=flag)
+        with pytest.warns(DeprecationWarning):
+            container = InjectQ(use_async_scopes=flag)
         container.bind(Service, Service, scope="request")
         with container.scope("request"):
             assert container.get(Service) is container.get(Service)

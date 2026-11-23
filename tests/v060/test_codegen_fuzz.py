@@ -8,7 +8,9 @@ constructors, missing keys) are resolved by two containers: one with the
 default code-generation backend and one with ``debug=True`` (linked
 closures). Every resolve must give a structurally identical object graph
 (same shape, same sharing of singleton / scoped instances, fresh transients)
-or an exception of the same type with the same message.
+or an exception of the same type with the same message. Between rounds the
+singletons are cleared / evicted and keys rebound, so generated code that
+baked in singletons must notice they are stale.
 """
 
 import abc
@@ -138,21 +140,46 @@ def _gen_graph(rng: random.Random, gi: int) -> tuple[dict[str, Any], list[dict]]
     return ns, specs
 
 
+def _bind(c: InjectQ, ns: dict[str, Any], spec: dict) -> None:
+    key = eval(spec["key_expr"], ns)
+    i = spec["i"]
+    if spec["kind"] == "instance":
+        c.bind_instance(key, ns[f"inst{i}"], allow_concrete=False)
+    elif spec["kind"] == "class":
+        c.bind(key, ns[f"N{i}"], scope=spec["scope"])
+    else:
+        c._registry.set_provider(
+            key,
+            ServiceBinding(key, ns[f"f{i}"], spec["scope"], is_factory=True),
+        )
+
+
 def _container(ns: dict[str, Any], specs: list[dict], *, debug: bool) -> InjectQ:
     c = InjectQ(debug=debug)
     for spec in specs:
-        key = eval(spec["key_expr"], ns)
-        i = spec["i"]
-        if spec["kind"] == "instance":
-            c.bind_instance(key, ns[f"inst{i}"], allow_concrete=False)
-        elif spec["kind"] == "class":
-            c.bind(key, ns[f"N{i}"], scope=spec["scope"])
-        else:
-            c._registry.set_provider(
-                key,
-                ServiceBinding(key, ns[f"f{i}"], spec["scope"], is_factory=True),
-            )
+        _bind(c, ns, spec)
     return c
+
+
+def _gen_ops(rng: random.Random, specs: list[dict]) -> list[tuple[str, int]]:
+    """What happens to the container before each extra round."""
+    ops = []
+    for _ in range(4):
+        op = rng.choice(["clear", "clear_all", "evict", "rebind", "none"])
+        ops.append((op, rng.randrange(len(specs))))
+    return ops
+
+
+def _apply(c: InjectQ, ns: dict[str, Any], specs: list[dict], op: tuple) -> None:
+    name, i = op
+    if name == "clear":
+        c.clear_scope("singleton")
+    elif name == "clear_all":
+        c.clear_all_scopes()
+    elif name == "evict":
+        c._scope_manager.evict_singleton(eval(specs[i]["key_expr"], ns))
+    elif name == "rebind":
+        _bind(c, ns, specs[i])
 
 
 class _Shape:
@@ -187,12 +214,23 @@ async def _aoutcome(shape: _Shape, coro_fn: Any) -> Any:
         return ("error", type(exc).__name__, str(exc))
 
 
-async def _run(c: InjectQ, keys: list[Any], order: list[int]) -> list[Any]:
+async def _run(
+    c: InjectQ, keys: list[Any], order: list[int], changes: Any
+) -> list[Any]:
     shape = _Shape()
     out: list[Any] = []
     with c.scope("request"):
         for _ in range(REPEATS):
             out.extend(_outcome(shape, lambda k=keys[i]: c.get(k)) for i in order)
+    for change in changes:
+        change()
+        with c.scope("request"):
+            for _ in range(REPEATS):
+                out.extend(_outcome(shape, lambda k=keys[i]: c.get(k)) for i in order)
+        async with c.async_scope("request"):
+            for _ in range(REPEATS):
+                for i in order:
+                    out.append(await _aoutcome(shape, lambda k=keys[i]: c.aget(k)))
     # Outside any scope: request-scoped keys raise ScopeError.
     out.extend(_outcome(shape, lambda k=keys[i]: c.get(k)) for i in order)
     async with c.async_scope("request"):
@@ -205,27 +243,36 @@ async def _run(c: InjectQ, keys: list[Any], order: list[int]) -> list[Any]:
 
 
 def _resolve_all(
-    ns: dict[str, Any], specs: list[dict], order: list[int], *, debug: bool
+    ns: dict[str, Any],
+    specs: list[dict],
+    order: list[int],
+    ops: list[tuple[str, int]],
+    *,
+    debug: bool,
 ) -> tuple[list[Any], InjectQ]:
     c = _container(ns, specs, debug=debug)
     keys = [eval(spec["key_expr"], ns) for spec in specs]
-    return asyncio.run(_run(c, keys, order)), c
+    changes = [lambda op=op: _apply(c, ns, specs, op) for op in ops]
+    return asyncio.run(_run(c, keys, order, changes)), c
 
 
 def test_codegen_matches_closure_engine() -> None:
     rng = random.Random(SEED)
     generated_keys = 0
     async_generated = 0
+    rebaked = 0
     errors: dict[str, int] = {}
     for gi in range(GRAPHS):
         ns, specs = _gen_graph(rng, gi)
         order = list(range(len(specs)))
         rng.shuffle(order)
-        fast, c_fast = _resolve_all(ns, specs, order, debug=False)
-        slow, c_slow = _resolve_all(ns, specs, order, debug=True)
+        ops = _gen_ops(rng, specs)
+        fast, c_fast = _resolve_all(ns, specs, order, ops, debug=False)
+        slow, c_slow = _resolve_all(ns, specs, order, ops, debug=True)
         assert fast == slow, f"graph {gi} differs"
         generated_keys += sum(1 for k in c_fast._resolver.sources if not k[1])
         async_generated += sum(1 for k in c_fast._resolver.sources if k[1])
+        rebaked += sum(c_fast._resolver._rebakes.values())
         assert not c_slow._resolver.sources
         for item in fast:
             if item[0] == "error":
@@ -233,6 +280,7 @@ def test_codegen_matches_closure_engine() -> None:
     # The fuzz must actually exercise generated code and every error path.
     assert generated_keys > GRAPHS
     assert async_generated > 10
+    assert rebaked > 10  # baked singletons went stale and were regenerated
     for name in (
         "InjectionError",
         "DependencyNotFoundError",

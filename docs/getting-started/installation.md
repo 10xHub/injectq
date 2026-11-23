@@ -59,7 +59,7 @@ print("InjectQ appears to be working")
 To work on the repository locally:
 
 ```bash
-git clone https://github.com/Iamsdt/injectq.git
+git clone https://github.com/10xhub/injectq.git
 cd injectq
 pip install -e .[dev]
 ```

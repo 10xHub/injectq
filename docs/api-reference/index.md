@@ -21,7 +21,7 @@ See the **[Quick Reference Guide](quick-reference.md)** for common API patterns 
 
 For implementation details beyond the quick reference, refer to:
 
-- [Injection Patterns](../injection-patterns/) - Different ways to inject dependencies
-- [Scopes](../scopes/) - Service lifetime management
-- [Modules](../modules/) - Organizing dependencies
-- [Testing](../testing/) - Testing your dependency-injected code
+- [Injection Patterns](../injection-patterns/inject-decorator.md) - Different ways to inject dependencies
+- [Scopes](../scopes/understanding-scopes.md) - Service lifetime management
+- [Modules](../modules/overview.md) - Organizing dependencies
+- [Testing](../testing/overview.md) - Testing your dependency-injected code

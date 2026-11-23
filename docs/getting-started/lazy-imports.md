@@ -2,7 +2,7 @@
 
 Python 3.15 adds explicit lazy imports ([PEP 810](https://peps.python.org/pep-0810/)). A lazy import doesn't load the module when the `import` line runs. It loads it the first time your code uses a name from it, which can make application startup much faster.
 
-This page explains what you need to know to use lazy imports with InjectQ. For a runnable version of everything below, see [`examples/python315_lazy_imports/`](https://github.com/Iamsdt/injectq/tree/main/examples/python315_lazy_imports).
+This page explains what you need to know to use lazy imports with InjectQ. For a runnable version of everything below, see [`examples/python315_lazy_imports/`](https://github.com/10xhub/injectq/tree/main/examples/python315_lazy_imports).
 
 ## Do I need to change anything?
 

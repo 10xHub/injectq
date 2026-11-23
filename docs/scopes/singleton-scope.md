@@ -116,7 +116,7 @@ service = container[UserService]
 
 ## Thread Safety
 
-Singletons must be thread-safe for concurrent access:
+InjectQ creates each singleton once, even when many threads or tasks ask for it at the same time (`get()` and `aget()` return the same object). The object itself is shared, so it must be safe for concurrent access:
 
 ```python
 @singleton

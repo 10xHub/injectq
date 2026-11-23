@@ -120,7 +120,7 @@ service = container[UserService]
 Control how many instances of a service are created:
 
 ```python
-from injectq import InjectQ, singleton, transient
+from injectq import InjectQ, inject, singleton, transient
 
 @singleton  # Same instance everywhere
 class Logger:
@@ -163,7 +163,7 @@ assert handler1.logger is handler2.logger  # True - same singleton logger
 For larger applications, use modules:
 
 ```python
-from injectq import Module, InjectQ, singleton
+from injectq import Module, InjectQ, inject, singleton
 
 @singleton
 class Database:

@@ -23,12 +23,12 @@ that is unwound LIFO when the scope exits.
 from __future__ import annotations
 
 import contextvars
-import inspect
-import logging
 import threading
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable
 from contextlib import AsyncExitStack, ExitStack
 from enum import Enum
+from types import CoroutineType, GeneratorType
 from typing import TYPE_CHECKING, Any
 
 from injectq.utils import ScopeError
@@ -40,9 +40,31 @@ if TYPE_CHECKING:
     from types import TracebackType
 
 
-_logger = logging.getLogger("injectq.core")
+class _LazyLogger:
+    """The ``injectq.core`` logger; ``logging`` is imported on first use."""
+
+    __slots__ = ()
+
+    def __getattr__(self, name: str) -> Any:
+        import logging  # noqa: PLC0415 - keeps it off the import path
+
+        return getattr(logging.getLogger("injectq.core"), name)
+
+
+_logger: Any = _LazyLogger()
 
 _MISSING: Any = object()
+
+_CO_ITERABLE_COROUTINE = 0x100  # inspect.CO_ITERABLE_COROUTINE
+
+
+def _isawaitable(obj: Any) -> bool:
+    """``inspect.isawaitable`` without importing inspect."""
+    return isinstance(obj, CoroutineType | Awaitable) or (
+        isinstance(obj, GeneratorType)
+        and bool(obj.gi_code.co_flags & _CO_ITERABLE_COROUTINE)
+    )
+
 
 SINGLETON = "singleton"
 TRANSIENT = "transient"
@@ -367,7 +389,7 @@ class ScopeManager:
         """
         if scope_name == TRANSIENT:
             result = factory()
-            if inspect.isawaitable(result):
+            if _isawaitable(result):
                 result = await result
             return result
         if scope_name == SINGLETON:
@@ -415,7 +437,7 @@ class ScopeManager:
         pending[key] = (loop, future)
         try:
             result = factory()
-            if inspect.isawaitable(result):
+            if _isawaitable(result):
                 result = await result
             result = self._store(key, result, store)
         except Exception as exc:

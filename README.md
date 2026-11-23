@@ -1,7 +1,7 @@
 # InjectQ
 [![PyPI version](https://badge.fury.io/py/injectq.svg)](https://pypi.org/project/injectq/)
 [![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15-blue.svg)](https://pypi.org/project/injectq/)
-[![License](https://img.shields.io/github/license/Iamsdt/injectq.svg)](https://github.com/Iamsdt/injectq/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/10xhub/injectq.svg)](https://github.com/10xhub/injectq/blob/main/LICENSE)
 [![Coverage](https://img.shields.io/badge/coverage-80%25-yellow.svg)](#)
 
 
@@ -12,14 +12,28 @@ Full documentation is hosted at [Documentation](https://10xhub.github.io/injectq
 
 ## Key features
 
-- Simplicity-first dict-like API for quick starts
-- Flexible decorator- and type-based injection (`@inject`, `Inject[T]`)
-- Type-friendly: designed to work with static type checkers
-- Built-in integrations for frameworks (FastAPI, Taskiq) as optional extras
-- Factory and async factory support
-- 🆕 Hybrid factory methods combining DI with manual arguments (`invoke()`, `ainvoke()`)
-- Scope management and testing utilities
+- Simple dict-like API for quick starts
+- Decorator- and type-based injection (`@inject`, `Inject[T]`), for sync, async and generator functions
+- Type-friendly: `get`, `aget`, `try_get` and `atry_get` are typed with overloads, so `container.get(Service)` is a `Service` (abstract classes as keys trigger mypy's `type-abstract` check)
+- One resolver compiled per service (generated code, or plain closures with `InjectQ(debug=True)`)
+- Scopes: `@singleton`, `@transient`, `@scoped("request")`. A request scope is one `with container.scope("request"):` block, sync or async, with exit stacks and `@resource` cleanup
+- Safe under threads and asyncio: the current container, scopes and overrides live in `ContextVar`s
+- Context-local overrides for tests: `container.override(Key, fake)` reaches every service that depends on `Key`
+- Integrations for FastAPI, FastMCP and Taskiq as optional extras: the right container and a request scope for every request, message or task
+- Factory and async factory support, and hybrid factory methods that mix DI with manual arguments (`invoke()`, `ainvoke()`)
+- Modules and providers, validation (`validate()`, `compile()`), a dependency graph and a profiler
 - Supports Python 3.10 through 3.15, including Python 3.15 lazy imports (PEP 810)
+
+## Upgrading from 0.5
+
+0.6 changes how the current container, scopes, overrides and `get()` on async factories behave, and it renames or removes some names. Read the [0.6 migration guide](docs/migration-0.6.md) ([online](https://10xhub.github.io/injectq/migration-0.6/)). It lists every change with before and after code. To find old names in your code, run your tests with `pytest -W error::DeprecationWarning`.
+
+## Using an AI coding agent?
+
+Give your agent [`skills/injectq/SKILL.md`](skills/injectq/SKILL.md) ([raw file](https://raw.githubusercontent.com/10xhub/injectq/main/skills/injectq/SKILL.md), [skill folder](https://github.com/10xhub/injectq/tree/main/skills/injectq)). It teaches the injectq 0.6 API, scopes, integrations, testing and the common traps, so the agent writes correct code the first time.
+
+- Claude Code: copy the `skills/injectq` folder into `.claude/skills/` (project) or `~/.claude/skills/` (all projects).
+- Other agents (Cursor, Copilot, ...): point them at the raw URL, or paste the file into your rules or instructions. See the [AI agents guide](https://10xhub.github.io/injectq/ai-agents/).
 
 ## Quick Start (recommended pattern)
 
@@ -52,6 +66,43 @@ if __name__ == "__main__":
 Notes:
 - Use `container[...]` for simple bindings and values.
 - Use `@inject` and `Inject[T]` for function/class injection.
+
+### Scopes and tests
+
+```python
+from injectq import InjectQ, ScopeError, scoped
+
+container = InjectQ()
+container.activate()          # decorators and @inject use this container
+
+
+@scoped("request")
+class Session: ...
+
+
+with container.scope("request"):
+    assert container[Session] is container[Session]   # one per block
+
+try:
+    container[Session]        # outside a block
+except ScopeError:
+    print("no active request scope")
+
+
+class Mailer:
+    def send(self) -> str:
+        return "sent"
+
+
+class FakeMailer(Mailer):
+    def send(self) -> str:
+        return "fake"
+
+
+container.bind(Mailer, Mailer)
+with container.override(Mailer, FakeMailer()):            # tests: swap one dependency
+    assert container[Mailer].send() == "fake"
+```
 
 ## Enhanced Features
 
@@ -167,6 +218,7 @@ Optional framework integrations (install only what you need):
 
 ```bash
 pip install injectq[fastapi]   # FastAPI integration (optional)
+pip install injectq[fastmcp]   # FastMCP integration (optional)
 pip install injectq[taskiq]    # Taskiq integration (optional)
 ```
 
@@ -209,7 +261,11 @@ See [Python 3.15 Lazy Imports](https://10xhub.github.io/injectq/getting-started/
 - `docs/injection-patterns/dict-interface.md` — dict-like API
 - `docs/injection-patterns/inject-decorator.md` — `@inject` usage
 - `docs/injection-patterns/factory-methods.md` — factory patterns (DI, parameterized, hybrid)
-- `docs/integrations/` — integration guides for FastAPI and Taskiq
+- `docs/migration-0.6.md` — upgrading from 0.5
+- `docs/core-concepts/context-and-concurrency.md` — tasks, threads and the current container
+- `docs/scopes/scoped-services.md` and `docs/scopes/resources.md` — request scopes and cleanup
+- `docs/testing/overrides.md` — overrides for tests
+- `docs/integrations/` — integration guides for FastAPI, FastMCP and Taskiq
 
 ## License
 

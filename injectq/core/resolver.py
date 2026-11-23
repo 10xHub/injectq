@@ -32,9 +32,12 @@ How a key is resolved:
    eagerly. Generated source is kept in ``sources`` and registered in
    ``linecache`` as ``<injectq-generated:Name>``, so tracebacks show it.
    Singleton keys (created once) and resolvers compiled while a profiler is
-   set or overrides are active stay on closures. Singletons are looked up,
-   not baked in as constants: ``clear_scope("singleton")`` empties the cache
-   without a registry change, so a baked instance could outlive it.
+   set or overrides are active stay on closures. Singleton dependencies
+   already created when a function is generated are baked in as constants,
+   guarded by one check of the scope manager's singleton generation (bumped
+   by ``clear_scope("singleton")``, ``clear_all_scopes`` and evictions); a
+   stale function falls back to closures and is regenerated (see
+   ``_stale_path``).
 
 5. Overrides (``container.override``): the override layer of the current
    context lives in a ``ContextVar`` owned by the container (see
@@ -62,10 +65,8 @@ from __future__ import annotations
 
 import enum
 import functools
-import inspect
 import keyword
 import linecache
-import re
 import sys
 import threading
 import types
@@ -93,12 +94,29 @@ if TYPE_CHECKING:
 
 
 _MISSING: Any = object()
-_EMPTY: Any = inspect.Parameter.empty
-_POSITIONAL = (
-    inspect.Parameter.POSITIONAL_ONLY,
-    inspect.Parameter.POSITIONAL_OR_KEYWORD,
-)
-_VARIADIC = (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
+
+
+class _Empty:
+    """No default / no annotation (``Param``); like ``inspect.Parameter.empty``."""
+
+    def __repr__(self) -> str:
+        return "<empty>"
+
+
+_EMPTY: Any = _Empty()
+
+# Parameter kinds: the values of ``inspect.Parameter.kind`` (an IntEnum), so
+# ``inspect`` is only imported for the targets the fast path cannot analyse.
+_POSITIONAL_ONLY = 0
+_POSITIONAL_OR_KEYWORD = 1
+_VAR_POSITIONAL = 2
+_KEYWORD_ONLY = 3
+_VAR_KEYWORD = 4
+_POSITIONAL = (_POSITIONAL_ONLY, _POSITIONAL_OR_KEYWORD)
+_VARIADIC = (_VAR_POSITIONAL, _VAR_KEYWORD)
+
+_CO_COROUTINE = 0x80  # inspect.CO_COROUTINE
+_TPFLAGS_IS_ABSTRACT = 1 << 20  # what inspect.isabstract checks
 
 # Node kinds
 INSTANCE = "instance"
@@ -119,9 +137,16 @@ def _marker_type() -> Any:
 
 def is_async_callable(obj: Any) -> bool:
     """True for coroutine functions, including partials and async ``__call__``."""
+    if isinstance(obj, type):
+        return False
+    if type(obj) is types.FunctionType and "_is_coroutine_marker" not in obj.__dict__:
+        # The common case, answered without importing inspect.
+        return bool(obj.__code__.co_flags & _CO_COROUTINE)
+    import inspect  # noqa: PLC0415 - not needed at import time
+
     if inspect.iscoroutinefunction(obj):
         return True
-    if inspect.isclass(obj) or inspect.isfunction(obj) or inspect.ismethod(obj):
+    if inspect.isfunction(obj) or inspect.ismethod(obj):
         return False
     return inspect.iscoroutinefunction(getattr(obj, "__call__", None))  # noqa: B004
 
@@ -131,7 +156,7 @@ def is_auto_resolvable(key: Any) -> bool:
     return (
         isinstance(key, type)
         and key.__module__ != "builtins"
-        and not inspect.isabstract(key)
+        and not key.__flags__ & _TPFLAGS_IS_ABSTRACT
         and not issubclass(key, enum.Enum)
     )
 
@@ -166,7 +191,7 @@ class Param:
     ) -> None:
         self.name = name
         self.is_positional = kind in _POSITIONAL
-        self.is_positional_only = kind is inspect.Parameter.POSITIONAL_ONLY
+        self.is_positional_only = kind == _POSITIONAL_ONLY
         self.annotation = annotation  # normalised type / key, or _EMPTY
         self.marker = marker  # key from an Inject[...] default, or _MISSING
         self.has_default = default is not _EMPTY and marker is _MISSING
@@ -180,8 +205,9 @@ class Param:
 
 def _signature_target(target: Any) -> tuple[Any, bool]:
     """Return (callable whose signature describes the call, skip first param)."""
-    if inspect.isclass(target):
-        init = target.__init__
+    if isinstance(target, type):
+        cls: Any = target
+        init = cls.__init__
         if init is object.__init__:
             return None, False
         return init, True
@@ -190,7 +216,9 @@ def _signature_target(target: Any) -> tuple[Any, bool]:
 
 def _hint_source(fn: Any) -> Any:
     """The function whose annotations describe ``fn``'s parameters."""
-    if inspect.isfunction(fn) or inspect.ismethod(fn) or inspect.isbuiltin(fn):
+    if isinstance(
+        fn, types.FunctionType | types.MethodType | types.BuiltinFunctionType
+    ):
         return fn
     if isinstance(fn, functools.partial):
         return _hint_source(fn.func)
@@ -208,6 +236,8 @@ def _hints(fn: Any) -> tuple[dict[str, Any], dict[str, Exception]]:
         return get_type_hints(src), {}
     except Exception:  # noqa: BLE001, S110 - fall back to the raw annotations
         pass
+    import inspect  # noqa: PLC0415 - slow path only
+
     try:
         raw = dict(getattr(src, "__annotations__", None) or {})
         globalns = getattr(inspect.unwrap(src), "__globals__", None)
@@ -270,14 +300,10 @@ def _fast_params(fn: Any, *, skip_first: bool) -> tuple[Param, ...] | None:
             continue
         kind: Any
         if i < n_pos:
-            kind = (
-                inspect.Parameter.POSITIONAL_ONLY
-                if i < n_posonly
-                else inspect.Parameter.POSITIONAL_OR_KEYWORD
-            )
+            kind = _POSITIONAL_ONLY if i < n_posonly else _POSITIONAL_OR_KEYWORD
             default = defaults[i - first_default] if i >= first_default else _EMPTY
         else:
-            kind = inspect.Parameter.KEYWORD_ONLY
+            kind = _KEYWORD_ONLY
             default = kwdefaults.get(name, _EMPTY)
         marker = _MISSING
         if default is not _EMPTY and isinstance(default, marker_cls):
@@ -300,6 +326,8 @@ def analyze(target: Any) -> tuple[tuple[Param, ...], bool]:
     fast = _fast_params(fn, skip_first=skip_first)
     if fast is not None:
         return fast, True
+    import inspect  # noqa: PLC0415 - slow path only
+
     try:
         sig = inspect.signature(fn)
     except (TypeError, ValueError):
@@ -314,6 +342,8 @@ def analyze(target: Any) -> tuple[tuple[Param, ...], bool]:
             continue
         marker = _MISSING
         default = p.default
+        if default is p.empty:
+            default = _EMPTY
         if default is not _EMPTY and isinstance(default, marker_cls):
             marker = default.service_type
         annotation = _EMPTY
@@ -327,7 +357,7 @@ def analyze(target: Any) -> tuple[tuple[Param, ...], bool]:
         params.append(
             Param(
                 p.name,
-                p.kind,
+                int(p.kind),
                 annotation,
                 default,
                 marker,
@@ -634,6 +664,13 @@ class DependencyResolver:
         self._aclosures: dict[Any, tuple[Callable[[], Any], bool]] = {}
         self._promoted: dict[Callable[[], Any], Callable[[], Any]] = {}
         self._reaches: dict[Any, frozenset[Any]] = {}
+        # Singleton baking (see ``_CodeGen``): generated code may hold
+        # created singletons as constants; per (key, is_async), the singleton
+        # generation the installed code was generated at, and per key how
+        # often its code went stale (past ``_MAX_REBAKES``: no more baking).
+        self.bake = True
+        self._baked_gen: dict[tuple[Any, bool], int] = {}
+        self._rebakes: dict[Any, int] = {}
 
     # ------------------------------------------------------------ invalidation
 
@@ -652,6 +689,7 @@ class DependencyResolver:
             self._aclosures = {}
             self._promoted = {}
             self._reaches = {}
+            self._baked_gen = {}
             self._worlds = {}
             self._raw = {}
             self._araw = {}
@@ -1043,10 +1081,7 @@ class DependencyResolver:
             with self._lock:
                 self._dirty = True
                 entry = self._compile_async(key)
-                if entry[1]:
-                    entry = self._araw[key]
-                else:
-                    entry = (self.raw_sync(key), False)
+                entry = self._araw[key] if entry[1] else (self.raw_sync(key), False)
         return entry
 
     # -------------------------------------------------------------- overrides
@@ -1278,12 +1313,63 @@ class DependencyResolver:
 
     def _generate(self, node: Node, *, is_async: bool) -> Callable[[], Any]:
         """Generated resolver for a class/factory node (see ``_CodeGen``)."""
-        fn, source = _CodeGen(self, node, is_async=is_async).build()
+        gen = _CodeGen(self, node, is_async=is_async)
+        fn, source = gen.build()
         self.sources[(node.key, is_async)] = source
+        if gen.baked:
+            self._baked_gen[(node.key, is_async)] = gen.generation
         if node.scope == TRANSIENT or (node.scope != SINGLETON and not is_async):
             return fn  # the generated function is the whole resolver
         # Singleton (lock) / async scoped (shared future) creation.
         return self._ascoped(node, fn) if is_async else self._scoped(node, fn)
+
+    def _stale_path(self, node: Node, *, is_async: bool) -> Callable[[], Any]:
+        """What generated code with baked singletons runs once they are stale.
+
+        Resolves with closures (the equivalent of the generated function) and
+        re-arms the key's warm-up, so it gets regenerated (baking the current
+        singletons) unless it went stale ``_MAX_REBAKES`` times already.
+        """
+        key = node.key
+        fallback: Callable[[], Any]
+        if not is_async:
+            fallback = self._closure(key)
+        elif node.scope == TRANSIENT:
+            fallback = self._aclosure(key)[0]
+        else:  # the generated function is the creation step only
+            fallback = self._acreate(node)
+        rearm = self._rearm
+
+        if is_async:
+
+            async def astale() -> Any:
+                rearm(key, is_async=True)
+                return await fallback()
+
+            return astale
+
+        def stale() -> Any:
+            rearm(key, is_async=False)
+            return fallback()
+
+        return stale
+
+    def _rearm(self, key: Any, *, is_async: bool) -> None:
+        """Put ``key``'s stale generated code back on a warm-up stub."""
+        generation = self.scope_manager.singleton_generation[0]
+        with self._lock:
+            baked = self._baked_gen.get((key, is_async))
+            if baked is None or baked == generation:
+                return  # not the installed code, or already regenerated
+            del self._baked_gen[(key, is_async)]
+            self._rebakes[key] = self._rebakes.get(key, 0) + 1
+            node = self._nodes.get(key)
+            if node is None:  # pragma: no cover - dropped with _baked_gen
+                return
+            if is_async:
+                self.async_[key] = (self._atiered(node, self._aclosure(key)[0]), True)
+            else:
+                self.sync[key] = self._tiered(node, self._closure(key))
 
     def source(self, key: Any, *, is_async: bool = False) -> str | None:
         """Generated source of ``key``'s resolver, once compiled (else None).
@@ -1385,8 +1471,8 @@ class _OverrideWorld(DependencyResolver):
         self.keys = keys
         self.var = var
         self.profiler = base.profiler
-        self._lock = base._lock
-        self._analysis = base._analysis
+        self._lock = base._lock  # noqa: SLF001
+        self._analysis = base._analysis  # noqa: SLF001
 
     def provider(self, key: Any) -> Any:
         """The registered provider, else a marker for an overridden key."""
@@ -1487,6 +1573,8 @@ class _OverrideWorld(DependencyResolver):
         async def alayered() -> Any:
             layer = var.get()
             assert layer is not None
+            cache_key: Any
+            pending: dict[Any, Any] | None
             if scope == SINGLETON:
                 cache, cache_key, pending = layer.cache, key, layer.pending
             else:
@@ -1512,8 +1600,17 @@ _MAX_INLINE = 64
 # Calls served by a key's closure resolver before it gets generated code.
 _PROMOTE_AFTER = 2
 
-_NON_IDENT = re.compile(r"\W", re.ASCII)
-_RESERVED = frozenset({"_M", "_Exc", "_KeyError", "_fail_at", "_lines", "_root", "_e"})
+# Times a key's generated code may go stale (cleared / evicted singletons)
+# and be regenerated with the current singletons baked in; after that it is
+# generated with cache lookups instead.
+_MAX_REBAKES = 2
+
+_IDENT_CHARS = frozenset(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+)
+_RESERVED = frozenset(
+    {"_M", "_Exc", "_KeyError", "_fail_at", "_lines", "_root", "_e", "_gen", "_stale"}
+)
 
 # Generated source -> linecache filename, and the next suffix per label.
 _files: dict[str, str] = {}
@@ -1523,7 +1620,7 @@ _files_lock = threading.Lock()
 
 def _ident(text: str) -> str:
     """A readable Python identifier made from ``text``."""
-    name = _NON_IDENT.sub("_", text)[:48] or "_"
+    name = "".join(c if c in _IDENT_CHARS else "_" for c in text)[:48] or "_"
     if name[0].isdigit():
         name = "_" + name
     if keyword.iskeyword(name):
@@ -1596,9 +1693,12 @@ class _CodeGen:
     - transient class/factory dependencies are inlined as constructor /
       factory calls (``await``-ed only for async factories, in the async
       variant);
-    - singleton dependencies are a dict lookup in the singleton cache,
-      falling back to that key's own resolver (which takes the per-key
-      creation lock);
+    - singleton dependencies already created are constants ("baked"); the
+      function then starts with one check of the scope manager's singleton
+      generation, and once a singleton was cleared / evicted it runs the
+      closure resolver instead (``_stale_path``). Singletons not created
+      yet are a dict lookup in the singleton cache, falling back to that
+      key's own resolver (which takes the per-key creation lock);
     - context-scoped dependencies are a lookup in the active scope frame,
       falling back to that key's resolver (which creates the instance or
       raises ``ScopeError``);
@@ -1628,6 +1728,11 @@ class _CodeGen:
         self.body: list[tuple[str, Node | None]] = []
         self.inlined = 0
         sm = resolver.scope_manager
+        # Read before any singleton is: one cleared after this is detected.
+        self.generation_cell = sm.singleton_generation
+        self.generation = self.generation_cell[0]
+        self.bake = resolver.bake and resolver._rebakes.get(root.key, 0) < _MAX_REBAKES  # noqa: SLF001
+        self.baked = False
         # Bound methods are created per attribute access: fetch them once.
         self.singletons = sm._singletons  # noqa: SLF001
         self.frame_of = sm._frame  # noqa: SLF001
@@ -1701,6 +1806,11 @@ class _CodeGen:
                 self.emit(f"{var} = {self.call(node)}", node)
             return var
         sm = self.resolver.scope_manager
+        if scope == SINGLETON and self.bake:
+            value = self.singletons.get(node.key, _MISSING)
+            if value is not _MISSING:
+                self.baked = True
+                return self.const(value, hint)
         key = self.const(node.key, f"key_{_short_name(node.key)}")
         resolve = self.resolve_call(node)
         var = self.fresh(hint)
@@ -1762,6 +1872,15 @@ class _CodeGen:
         else:
             self.emit(f"return {call}", root)
             tail = []
+        if self.baked:
+            self.ns["_gen"] = self.generation_cell
+            self.ns["_stale"] = self.resolver._stale_path(  # noqa: SLF001
+                root, is_async=self.is_async
+            )
+            out += [
+                f"    if _gen[0] != {self.generation}:  # a baked singleton is stale",
+                f"        return {'await ' if self.is_async else ''}_stale()",
+            ]
         out.append("    try:")
         for text, node in self.body:
             out.append(f"        {text}")

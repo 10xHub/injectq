@@ -139,7 +139,7 @@ Sync Taskiq tasks are the one exception. Taskiq runs them with `run_in_executor`
 
 Reading a bound singleton takes no lock. Creating a singleton takes a per-key lock, so the factory runs once even if many threads or tasks ask at the same time. Async factories share one future between all awaiters.
 
-You do not need `thread_safe=True`. The argument is accepted and ignored.
+You do not need `thread_safe=True`. The argument is deprecated: it is accepted and ignored, and emits a `DeprecationWarning`.
 
 ## Testing
 

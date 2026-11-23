@@ -234,7 +234,9 @@ def process_data(service: UserService) -> None:
 # If UserService is not registered
 try:
     process_data()
-except DependencyNotFoundError as e:
+except InjectionError as e:
+    # "Cannot inject parameter 'service' of process_data: No binding found ..."
+    # e.__cause__ is the DependencyNotFoundError
     print(f"Missing dependency: {e}")
 ```
 
@@ -258,6 +260,41 @@ def use_a(a: A) -> None:
 
 # Will raise CircularDependencyError
 use_a()
+```
+
+### Errors from your own code
+
+Exceptions raised inside your function are **not** wrapped. They reach the caller unchanged:
+
+```python
+@inject
+def handler(repo: UserRepository) -> None:
+    raise ValueError("bad input")
+
+try:
+    handler()
+except ValueError:
+    ...  # your ValueError, not InjectionError
+```
+
+Only a failure to build a parameter raises `InjectionError`, and its message names the parameter.
+
+## How `@inject` behaves
+
+- The plan is built on the **first call**, so forward references and `from __future__ import annotations` work.
+- Arguments you pass win. Only missing parameters are injected.
+- Works on sync and async functions, generators and async generators (resolved on the first `next()`), and on `@classmethod` and `@staticmethod` in either order.
+- `Inject[T]` as a default marks a parameter explicitly. It beats a bound key with the same parameter name. It is a plain marker: no caching, and `repr()` has no side effects.
+- A parameter default is used only when the parameter's own key is not bound.
+- Inside FastAPI, FastMCP and Taskiq handlers, `@inject` uses the container given to `setup_*`. See [Context and concurrency](../core-concepts/context-and-concurrency.md).
+
+```python
+from typing import Annotated
+from injectq import Inject, inject
+
+@inject
+def connect(url: Annotated[str, Inject("db_url")]) -> None:
+    ...
 ```
 
 ## 🏆 Best Practices
@@ -404,4 +441,4 @@ The `@inject` decorator provides:
 - Works seamlessly with all InjectQ features
 - Provides excellent IDE support and autocomplete
 
-Ready to explore the [Inject() function](inject-function.md)?
+Ready for more? See [Factory Methods](factory-methods.md) and [Testing](../testing/overview.md).

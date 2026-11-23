@@ -21,6 +21,7 @@ def main():
     # === 1. Basic Container Usage ===
     print("\n📦 1. Basic Container Interface:")
     container = injectq.InjectQ()
+    container.activate()  # @inject and the decorators use the current container
 
     # Dict-like interface for simple values
     container[str] = "postgresql://localhost:5432/myapp"

@@ -119,6 +119,30 @@ container.install_module(ServiceModule())
 logger = container[Logger]
 ```
 
+### Provider scope and async providers
+
+A bare `@provider` is **transient**: the method runs on every resolve. Pass `scope=` to change that. Providers can be `async def`. Resolve those with `aget()`.
+
+```python
+class AppModule(ProviderModule):
+    @provider(scope="singleton")      # runs once
+    def provide_database(self, url: str) -> Database:
+        return Database(url)
+
+    @provider                         # runs every time
+    def provide_cache(self) -> Cache:
+        return Cache()
+
+    @provider(scope="singleton")
+    async def provide_client(self) -> Client:
+        return await Client.connect()
+
+container.install_module(AppModule())
+client = await container.aget(Client)
+```
+
+`ProviderModule` finds providers by scanning the class, in definition order. It does not read properties, and an error inside a provider is raised, not hidden.
+
 ### Provider with Dependencies
 
 ```python

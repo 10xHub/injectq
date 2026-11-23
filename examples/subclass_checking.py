@@ -45,6 +45,7 @@ async def main():
 if __name__ == "__main__":
     instance = Derived()
     injectq = InjectQ()
+    injectq.activate()  # @inject uses the current container
     injectq[Base] = instance
     print(type(instance))
     import asyncio

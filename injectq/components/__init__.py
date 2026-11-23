@@ -34,7 +34,7 @@ from injectq.utils.exceptions import InjectQError
 _DEPRECATION_MESSAGE = (
     "injectq.components is deprecated since 0.6 and will be removed in 0.7. "
     "Use plain modules/providers (injectq.Module, container.bind) and the "
-    "container lifecycle (scopes, resources, container.close()) instead."
+    "container lifecycle (scopes, @resource, container.shutdown()) instead."
 )
 
 # stacklevel=2 points at the importer (importlib frames are skipped by warnings).

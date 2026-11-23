@@ -66,9 +66,12 @@ class ServiceBinding:
         )
 
     def __eq__(self, other: object) -> bool:
-        if other.__class__ is not self.__class__:
+        if (
+            not isinstance(other, ServiceBinding)
+            or other.__class__ is not self.__class__
+        ):
             return NotImplemented
-        return self._fields() == other._fields()  # type: ignore[attr-defined]
+        return self._fields() == other._fields()
 
     __hash__ = None  # type: ignore[assignment]  # mutable, compared by value
 
