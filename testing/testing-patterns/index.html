@@ -18,7 +18,7 @@
         <link rel="prev" href="../overview/">
       
       
-        <link rel="next" href="../../benchmark-report/">
+        <link rel="next" href="../overrides/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -313,6 +313,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -422,6 +426,52 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/lazy-imports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Python 3.15 Lazy Imports
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skill/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AI Agent Skill
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -437,6 +487,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -568,6 +622,52 @@
   
   <span class="md-ellipsis">
     Type Safety
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core-concepts/context-and-concurrency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Context and Concurrency
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core-concepts/debugging-generated-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Debugging Generated Code
     
   </span>
   
@@ -733,6 +833,8 @@
       
         
       
+        
+      
     
     
     
@@ -855,6 +957,29 @@
   
   <span class="md-ellipsis">
     Scoped Services
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../scopes/resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Resources and Cleanup
     
   </span>
   
@@ -1099,6 +1224,8 @@
       
         
       
+        
+      
     
     
     
@@ -1217,213 +1344,63 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#core-testing-utilities" class="md-nav__link">
+  <a href="#unit-test-with-mocks" class="md-nav__link">
     <span class="md-ellipsis">
-      Core Testing Utilities
+      Unit test with mocks
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#basic-testing-pattern" class="md-nav__link">
+  <a href="#mock-modules" class="md-nav__link">
     <span class="md-ellipsis">
-      Basic Testing Pattern
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Basic Testing Pattern">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#using-test_container" class="md-nav__link">
-    <span class="md-ellipsis">
-      Using test_container()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#using-override_dependency" class="md-nav__link">
-    <span class="md-ellipsis">
-      Using override_dependency()
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#unit-testing" class="md-nav__link">
-    <span class="md-ellipsis">
-      Unit Testing
+      Mock modules
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#mock-implementation-example" class="md-nav__link">
+  <a href="#factories" class="md-nav__link">
     <span class="md-ellipsis">
-      Mock Implementation Example
+      Factories
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#mock-factory-pattern" class="md-nav__link">
+  <a href="#scopes" class="md-nav__link">
     <span class="md-ellipsis">
-      Mock Factory Pattern
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Mock Factory Pattern">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#testing-parameterized-factories" class="md-nav__link">
-    <span class="md-ellipsis">
-      Testing Parameterized Factories
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pytest-integration" class="md-nav__link">
-    <span class="md-ellipsis">
-      Pytest Integration
+      Scopes
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#testing-scopes" class="md-nav__link">
+  <a href="#overrides-in-tests" class="md-nav__link">
     <span class="md-ellipsis">
-      Testing Scopes
+      Overrides in tests
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#testing-with-real-vs-mock-dependencies" class="md-nav__link">
+  <a href="#framework-tests" class="md-nav__link">
     <span class="md-ellipsis">
-      Testing with Real vs Mock Dependencies
+      Framework tests
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#error-testing" class="md-nav__link">
+  <a href="#avoiding-shared-state" class="md-nav__link">
     <span class="md-ellipsis">
-      Error Testing
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#best-practices" class="md-nav__link">
-    <span class="md-ellipsis">
-      Best Practices
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Best Practices">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#do" class="md-nav__link">
-    <span class="md-ellipsis">
-      ✅ DO
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dont" class="md-nav__link">
-    <span class="md-ellipsis">
-      ❌ DON'T
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#common-testing-patterns" class="md-nav__link">
-    <span class="md-ellipsis">
-      Common Testing Patterns
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Common Testing Patterns">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pattern-1-verify-method-calls" class="md-nav__link">
-    <span class="md-ellipsis">
-      Pattern 1: Verify Method Calls
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pattern-2-control-return-values" class="md-nav__link">
-    <span class="md-ellipsis">
-      Pattern 2: Control Return Values
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pattern-3-temporary-override" class="md-nav__link">
-    <span class="md-ellipsis">
-      Pattern 3: Temporary Override
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-tests-with-pytest" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running Tests with Pytest
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      Summary
+      Avoiding shared state
     </span>
   </a>
   
@@ -1433,6 +1410,29 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overrides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overrides
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1453,8 +1453,6 @@
   
     
     
-      
-        
       
         
       
@@ -1505,35 +1503,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../benchmark-report/" class="md-nav__link">
+      <a href="../../benchmarks/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Benchmark Report
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../benchmark-guide/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Quick Guide
+    Benchmarks
     
   </span>
   
@@ -1652,6 +1627,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../../migration-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Upgrading to 0.6
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../contributing/" class="md-nav__link">
         
   
@@ -1731,393 +1728,91 @@
 
 
 <h1 id="testing-patterns">Testing Patterns<a class="headerlink" href="#testing-patterns" title="Anchor link to this section for reference">&para;</a></h1>
-<p>Testing is critical for dependency-injected code. InjectQ provides utilities to isolate dependencies, mock services, and verify behavior.</p>
-<h2 id="core-testing-utilities">Core Testing Utilities<a class="headerlink" href="#core-testing-utilities" title="Anchor link to this section for reference">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.testing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">test_container</span><span class="p">,</span>           <span class="c1"># Create isolated test containers</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">override_dependency</span><span class="p">,</span>      <span class="c1"># Temporarily override a binding</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">mock_factory</span><span class="p">,</span>            <span class="c1"># Create mock factory functions</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">pytest_container_fixture</span><span class="p">,</span> <span class="c1"># Pytest fixture for test containers</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span>
+<h2 id="unit-test-with-mocks">Unit test with mocks<a class="headerlink" href="#unit-test-with-mocks" title="Anchor link to this section for reference">&para;</a></h2>
+<p>Bind the doubles, let the container build the real service.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">isolated_container</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">MockUserRepository</span><span class="p">:</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">users</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">save_called</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">save_called</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        <span class="k">return</span> <span class="n">user</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_create_user</span><span class="p">():</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="k">with</span> <span class="n">isolated_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        <span class="n">repo</span> <span class="o">=</span> <span class="n">MockUserRepository</span><span class="p">()</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        <span class="n">container</span><span class="p">[</span><span class="n">UserRepository</span><span class="p">]</span> <span class="o">=</span> <span class="n">repo</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span> <span class="o">=</span> <span class="n">UserService</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        <span class="n">user</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span><span class="o">.</span><span class="n">create_user</span><span class="p">(</span><span class="s2">&quot;john@example.com&quot;</span><span class="p">)</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        <span class="k">assert</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="s2">&quot;john@example.com&quot;</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>        <span class="k">assert</span> <span class="n">repo</span><span class="o">.</span><span class="n">save_called</span>
 </span></code></pre></div>
-<h2 id="basic-testing-pattern">Basic Testing Pattern<a class="headerlink" href="#basic-testing-pattern" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="using-test_container">Using test_container()<a class="headerlink" href="#using-test_container" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">InjectQ</span><span class="p">,</span> <span class="n">inject</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">test_container</span>
+<p>Mock the edges (APIs, databases, email) and use real internal services.</p>
+<h2 id="mock-modules">Mock modules<a class="headerlink" href="#mock-modules" title="Anchor link to this section for reference">&para;</a></h2>
+<p><code>MockModule</code> binds mocks and fixed values as instances:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">InjectQ</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">MockModule</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Create an isolated container for each test</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_user_service</span><span class="p">():</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        <span class="c1"># Bind dependencies</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        <span class="n">container</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;test-database-url&quot;</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span> <span class="o">=</span> <span class="n">UserService</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        <span class="c1"># Get service - automatically resolves dependencies</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        <span class="c1"># Test the service</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        <span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">module</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">MockModule</span><span class="p">()</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="n">EmailService</span><span class="p">,</span> <span class="n">sent</span><span class="o">=</span><span class="p">[])</span>          <span class="c1"># attributes become fields on the mock</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="o">.</span><span class="n">bind_value</span><span class="p">(</span><span class="s2">&quot;db_url&quot;</span><span class="p">,</span> <span class="s2">&quot;sqlite://&quot;</span><span class="p">)</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">)</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">container</span> <span class="o">=</span> <span class="n">InjectQ</span><span class="p">(</span><span class="n">modules</span><span class="o">=</span><span class="p">[</span><span class="n">module</span><span class="p">])</span>
 </span></code></pre></div>
-<h3 id="using-override_dependency">Using override_dependency()<a class="headerlink" href="#using-override_dependency" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">InjectQ</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">override_dependency</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_with_mocked_dependency</span><span class="p">():</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">container</span> <span class="o">=</span> <span class="n">InjectQ</span><span class="o">.</span><span class="n">get_instance</span><span class="p">()</span>
+<p>The mock returned by <code>.mock(...)</code> answers any other method call with <code>"mock_&lt;name&gt;_result"</code>. For checks on arguments, write your own double or use <code>unittest.mock</code>.</p>
+<h2 id="factories">Factories<a class="headerlink" href="#factories" title="Anchor link to this section for reference">&para;</a></h2>
+<p>Factories bound with <code>bind_factory</code> can be called with your own arguments through <code>call_factory</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_parameterized_factory</span><span class="p">():</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="k">with</span> <span class="n">isolated_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        <span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;pool&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">db</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">10</span><span class="p">:</span> <span class="n">Pool</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">max_conn</span><span class="p">))</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="n">pool</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">call_factory</span><span class="p">(</span><span class="s2">&quot;pool&quot;</span><span class="p">,</span> <span class="s2">&quot;users_db&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="c1"># Temporarily replace a service with a mock</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">mock_db</span> <span class="o">=</span> <span class="n">MockDatabase</span><span class="p">()</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="k">with</span> <span class="n">override_dependency</span><span class="p">(</span><span class="n">Database</span><span class="p">,</span> <span class="n">mock_db</span><span class="p">):</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>        <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>        <span class="c1"># Verify mock was used</span>
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>        <span class="k">assert</span> <span class="n">mock_db</span><span class="o">.</span><span class="n">query_called</span> <span class="ow">is</span> <span class="kc">True</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="k">assert</span> <span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">pool</span><span class="o">.</span><span class="n">max_conn</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="s2">&quot;users_db&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
 </span></code></pre></div>
-<h2 id="unit-testing">Unit Testing<a class="headerlink" href="#unit-testing" title="Anchor link to this section for reference">&para;</a></h2>
-<p>Test services in isolation by mocking their dependencies:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">test_container</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_user_service_create_user</span><span class="p">():</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Test UserService.create_user() with mock database.&quot;&quot;&quot;</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        <span class="c1"># Create mock repository</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        <span class="n">mock_repo</span> <span class="o">=</span> <span class="n">MockUserRepository</span><span class="p">()</span>
+<p>To replace a factory-bound key in a test, use <code>container.override("pool", fake_pool)</code>.</p>
+<h2 id="scopes">Scopes<a class="headerlink" href="#scopes" title="Anchor link to this section for reference">&para;</a></h2>
+<p>A request scope is one <code>with</code> block. Resolving outside it raises <code>ScopeError</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScopeError</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_request_scope</span><span class="p">():</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="k">with</span> <span class="n">isolated_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        <span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">RequestData</span><span class="p">,</span> <span class="n">RequestData</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s2">&quot;request&quot;</span><span class="p">)</span>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>        <span class="c1"># Bind mock into container</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>        <span class="n">container</span><span class="p">[</span><span class="n">UserRepository</span><span class="p">]</span> <span class="o">=</span> <span class="n">mock_repo</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>        <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span> <span class="o">=</span> <span class="n">UserService</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>        <span class="c1"># Get service and test</span>
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>        <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span>
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>        <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">create_user</span><span class="p">(</span><span class="s2">&quot;john@example.com&quot;</span><span class="p">)</span>
-</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
-</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>        <span class="c1"># Verify behavior</span>
-</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>        <span class="k">assert</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="s2">&quot;john@example.com&quot;</span>
-</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>        <span class="k">assert</span> <span class="n">mock_repo</span><span class="o">.</span><span class="n">save_called</span> <span class="ow">is</span> <span class="kc">True</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>        <span class="k">with</span> <span class="n">container</span><span class="o">.</span><span class="n">scope</span><span class="p">(</span><span class="s2">&quot;request&quot;</span><span class="p">):</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>            <span class="k">assert</span> <span class="n">container</span><span class="p">[</span><span class="n">RequestData</span><span class="p">]</span> <span class="ow">is</span> <span class="n">container</span><span class="p">[</span><span class="n">RequestData</span><span class="p">]</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>        <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">ScopeError</span><span class="p">):</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>            <span class="n">container</span><span class="p">[</span><span class="n">RequestData</span><span class="p">]</span>
 </span></code></pre></div>
-<h2 id="mock-implementation-example">Mock Implementation Example<a class="headerlink" href="#mock-implementation-example" title="Anchor link to this section for reference">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MockUserRepository</span><span class="p">:</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Mock repository for testing.&quot;&quot;&quot;</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">users</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">save_called</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">get_called</span> <span class="o">=</span> <span class="kc">False</span>
+<p>For async code use <code>async with container.async_scope("request"):</code>.</p>
+<h2 id="overrides-in-tests">Overrides in tests<a class="headerlink" href="#overrides-in-tests" title="Anchor link to this section for reference">&para;</a></h2>
+<p>Override one dependency and everything that depends on it sees the fake:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_notifier_uses_fake</span><span class="p">(</span><span class="n">container</span><span class="p">):</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Mailer</span><span class="p">,</span> <span class="n">Mailer</span><span class="p">)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Notifier</span><span class="p">,</span> <span class="n">Notifier</span><span class="p">)</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">fake</span> <span class="o">=</span> <span class="n">FakeMailer</span><span class="p">()</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="k">with</span> <span class="n">container</span><span class="o">.</span><span class="n">override</span><span class="p">(</span><span class="n">Mailer</span><span class="p">,</span> <span class="n">fake</span><span class="p">):</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        <span class="n">container</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Notifier</span><span class="p">)</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span><span class="s2">&quot;a@example.com&quot;</span><span class="p">)</span>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">save_called</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>        <span class="k">return</span> <span class="n">user</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">get_called</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
-</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
-</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_by_email</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">email</span><span class="p">):</span>
-</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>        <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>            <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">email</span><span class="p">:</span>
-</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>                <span class="k">return</span> <span class="n">user</span>
-</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>        <span class="k">return</span> <span class="kc">None</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="k">assert</span> <span class="n">fake</span><span class="o">.</span><span class="n">sent</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;a@example.com&quot;</span><span class="p">]</span>
 </span></code></pre></div>
-<h2 id="mock-factory-pattern">Mock Factory Pattern<a class="headerlink" href="#mock-factory-pattern" title="Anchor link to this section for reference">&para;</a></h2>
-<p>Use <code>mock_factory</code> for factory-based dependencies:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">mock_factory</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_with_factory</span><span class="p">():</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Test using mock factories.&quot;&quot;&quot;</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        <span class="c1"># Bind a mock factory</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>        <span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>            <span class="s2">&quot;connection_id&quot;</span><span class="p">,</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>            <span class="n">mock_factory</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="s2">&quot;mock-connection-123&quot;</span><span class="p">)</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>        <span class="p">)</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>        <span class="c1"># Service gets mocked value</span>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>        <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">ServiceUsingConnectionId</span><span class="p">]</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">do_work</span><span class="p">()</span>
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>        <span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span></code></pre></div>
-<h3 id="testing-parameterized-factories">Testing Parameterized Factories<a class="headerlink" href="#testing-parameterized-factories" title="Anchor link to this section for reference">&para;</a></h3>
-<p>Test factories that accept arguments:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">test_container</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_parameterized_factory</span><span class="p">():</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Test parameterized factory with different arguments.&quot;&quot;&quot;</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        <span class="c1"># Bind a parameterized factory</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>        <span class="k">def</span><span class="w"> </span><span class="nf">create_pool</span><span class="p">(</span><span class="n">db_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_conn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>            <span class="k">return</span> <span class="n">ConnectionPool</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="n">max_conn</span><span class="p">)</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>        <span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;pool&quot;</span><span class="p">,</span> <span class="n">create_pool</span><span class="p">)</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>        <span class="c1"># Test with different parameters</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>        <span class="n">users_pool</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">call_factory</span><span class="p">(</span><span class="s2">&quot;pool&quot;</span><span class="p">,</span> <span class="s2">&quot;users_db&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>        <span class="n">orders_pool</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">call_factory</span><span class="p">(</span><span class="s2">&quot;pool&quot;</span><span class="p">,</span> <span class="s2">&quot;orders_db&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>
-</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>        <span class="c1"># Verify each has correct parameters</span>
-</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>        <span class="k">assert</span> <span class="n">users_pool</span><span class="o">.</span><span class="n">db_name</span> <span class="o">==</span> <span class="s2">&quot;users_db&quot;</span>
-</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>        <span class="k">assert</span> <span class="n">users_pool</span><span class="o">.</span><span class="n">max_connections</span> <span class="o">==</span> <span class="mi">20</span>
-</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>
-</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>        <span class="k">assert</span> <span class="n">orders_pool</span><span class="o">.</span><span class="n">db_name</span> <span class="o">==</span> <span class="s2">&quot;orders_db&quot;</span>
-</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>        <span class="k">assert</span> <span class="n">orders_pool</span><span class="o">.</span><span class="n">max_connections</span> <span class="o">==</span> <span class="mi">15</span>
-</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>
-</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>        <span class="c1"># Verify they are different instances</span>
-</span><span id="__span-6-24"><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>        <span class="k">assert</span> <span class="n">users_pool</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">orders_pool</span>
-</span><span id="__span-6-25"><a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>
-</span><span id="__span-6-26"><a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_factory_with_mock_dependencies</span><span class="p">():</span>
-</span><span id="__span-6-27"><a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Test parameterized factory that uses DI.&quot;&quot;&quot;</span>
-</span><span id="__span-6-28"><a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-6-29"><a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a>        <span class="c1"># Mock a dependency</span>
-</span><span id="__span-6-30"><a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a>        <span class="n">mock_db</span> <span class="o">=</span> <span class="n">MockDatabase</span><span class="p">()</span>
-</span><span id="__span-6-31"><a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a>        <span class="n">container</span><span class="p">[</span><span class="n">Database</span><span class="p">]</span> <span class="o">=</span> <span class="n">mock_db</span>
-</span><span id="__span-6-32"><a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a>
-</span><span id="__span-6-33"><a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a>        <span class="c1"># Parameterized factory that uses DI</span>
-</span><span id="__span-6-34"><a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a>        <span class="k">def</span><span class="w"> </span><span class="nf">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-</span><span id="__span-6-35"><a id="__codelineno-6-35" name="__codelineno-6-35" href="#__codelineno-6-35"></a>            <span class="n">db</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">Database</span><span class="p">]</span>
-</span><span id="__span-6-36"><a id="__codelineno-6-36" name="__codelineno-6-36" href="#__codelineno-6-36"></a>            <span class="k">return</span> <span class="n">db</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
-</span><span id="__span-6-37"><a id="__codelineno-6-37" name="__codelineno-6-37" href="#__codelineno-6-37"></a>
-</span><span id="__span-6-38"><a id="__codelineno-6-38" name="__codelineno-6-38" href="#__codelineno-6-38"></a>        <span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;get_user&quot;</span><span class="p">,</span> <span class="n">get_user</span><span class="p">)</span>
-</span><span id="__span-6-39"><a id="__codelineno-6-39" name="__codelineno-6-39" href="#__codelineno-6-39"></a>
-</span><span id="__span-6-40"><a id="__codelineno-6-40" name="__codelineno-6-40" href="#__codelineno-6-40"></a>        <span class="c1"># Mock the database response</span>
-</span><span id="__span-6-41"><a id="__codelineno-6-41" name="__codelineno-6-41" href="#__codelineno-6-41"></a>        <span class="n">mock_db</span><span class="o">.</span><span class="n">users</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">}}</span>
-</span><span id="__span-6-42"><a id="__codelineno-6-42" name="__codelineno-6-42" href="#__codelineno-6-42"></a>
-</span><span id="__span-6-43"><a id="__codelineno-6-43" name="__codelineno-6-43" href="#__codelineno-6-43"></a>        <span class="c1"># Test with parameter</span>
-</span><span id="__span-6-44"><a id="__codelineno-6-44" name="__codelineno-6-44" href="#__codelineno-6-44"></a>        <span class="n">user</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">call_factory</span><span class="p">(</span><span class="s2">&quot;get_user&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-6-45"><a id="__codelineno-6-45" name="__codelineno-6-45" href="#__codelineno-6-45"></a>        <span class="k">assert</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Alice&quot;</span>
-</span></code></pre></div>
-<h2 id="pytest-integration">Pytest Integration<a class="headerlink" href="#pytest-integration" title="Anchor link to this section for reference">&para;</a></h2>
-<p>Use pytest fixtures for convenient test setup:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">pytest_container_fixture</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Create a pytest fixture</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">container</span> <span class="o">=</span> <span class="n">pytest_container_fixture</span><span class="p">()</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_with_fixture</span><span class="p">(</span><span class="n">container</span><span class="p">):</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Test using pytest fixture.&quot;&quot;&quot;</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="c1"># container is a fresh InjectQ instance for each test</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>    <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span> <span class="o">=</span> <span class="n">UserService</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>    <span class="n">container</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;test-config&quot;</span>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>    <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span>
-</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>    <span class="k">assert</span> <span class="n">service</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>
-</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>
-</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="c1"># Or create a custom fixture</span>
-</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
-</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_app_container</span><span class="p">():</span>
-</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">injectq.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">test_container</span>
-</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>        <span class="c1"># Setup common test bindings</span>
-</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>        <span class="n">container</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;test-database-url&quot;</span>
-</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>        <span class="k">yield</span> <span class="n">container</span>
-</span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a>
-</span><span id="__span-7-26"><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_with_custom_fixture</span><span class="p">(</span><span class="n">test_app_container</span><span class="p">):</span>
-</span><span id="__span-7-27"><a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a>    <span class="n">test_app_container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span> <span class="o">=</span> <span class="n">UserService</span>
-</span><span id="__span-7-28"><a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a>    <span class="n">service</span> <span class="o">=</span> <span class="n">test_app_container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span>
-</span><span id="__span-7-29"><a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a>    <span class="k">assert</span> <span class="n">service</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span></code></pre></div>
-<h2 id="testing-scopes">Testing Scopes<a class="headerlink" href="#testing-scopes" title="Anchor link to this section for reference">&para;</a></h2>
-<p>Test scoped services:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">singleton</span><span class="p">,</span> <span class="n">scoped</span><span class="p">,</span> <span class="n">transient</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_singleton_scope</span><span class="p">():</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify singleton scope creates one instance.&quot;&quot;&quot;</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>        <span class="nd">@singleton</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>        <span class="k">class</span><span class="w"> </span><span class="nc">SingletonService</span><span class="p">:</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>            <span class="k">pass</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>        <span class="n">container</span><span class="p">[</span><span class="n">SingletonService</span><span class="p">]</span> <span class="o">=</span> <span class="n">SingletonService</span>
-</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
-</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>        <span class="c1"># Same instance every time</span>
-</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>        <span class="n">instance1</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">SingletonService</span><span class="p">]</span>
-</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>        <span class="n">instance2</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">SingletonService</span><span class="p">]</span>
-</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>
-</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>        <span class="k">assert</span> <span class="n">instance1</span> <span class="ow">is</span> <span class="n">instance2</span>
-</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>
-</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_transient_scope</span><span class="p">():</span>
-</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify transient scope creates new instances.&quot;&quot;&quot;</span>
-</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>        <span class="nd">@transient</span>
-</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>        <span class="k">class</span><span class="w"> </span><span class="nc">TransientService</span><span class="p">:</span>
-</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>            <span class="k">pass</span>
-</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>
-</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>        <span class="n">container</span><span class="p">[</span><span class="n">TransientService</span><span class="p">]</span> <span class="o">=</span> <span class="n">TransientService</span>
-</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>
-</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>        <span class="c1"># Different instance every time</span>
-</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a>        <span class="n">instance1</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">TransientService</span><span class="p">]</span>
-</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>        <span class="n">instance2</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">TransientService</span><span class="p">]</span>
-</span><span id="__span-8-30"><a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a>
-</span><span id="__span-8-31"><a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a>        <span class="k">assert</span> <span class="n">instance1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">instance2</span>
-</span></code></pre></div>
-<h2 id="testing-with-real-vs-mock-dependencies">Testing with Real vs Mock Dependencies<a class="headerlink" href="#testing-with-real-vs-mock-dependencies" title="Anchor link to this section for reference">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_mixed_real_and_mocked</span><span class="p">():</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Use real services where possible, mock only external dependencies.&quot;&quot;&quot;</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>        <span class="c1"># Real internal services</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>        <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span> <span class="o">=</span> <span class="n">UserService</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>        <span class="n">container</span><span class="p">[</span><span class="n">UserValidator</span><span class="p">]</span> <span class="o">=</span> <span class="n">UserValidator</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>        <span class="c1"># Mock external services</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>        <span class="n">container</span><span class="p">[</span><span class="n">EmailService</span><span class="p">]</span> <span class="o">=</span> <span class="n">MockEmailService</span><span class="p">()</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>        <span class="n">container</span><span class="p">[</span><span class="n">PaymentService</span><span class="p">]</span> <span class="o">=</span> <span class="n">MockPaymentService</span><span class="p">()</span>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>        <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span>
-</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">register_user</span><span class="p">(</span><span class="s2">&quot;john@example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">)</span>
-</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>
-</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>        <span class="c1"># Verify result</span>
-</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a>        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="s2">&quot;john@example.com&quot;</span>
-</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a>
-</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>        <span class="c1"># Verify external services were called correctly</span>
-</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>        <span class="n">email_service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">EmailService</span><span class="p">]</span>
-</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a>        <span class="k">assert</span> <span class="n">email_service</span><span class="o">.</span><span class="n">confirmation_email_sent</span>
-</span></code></pre></div>
-<h2 id="error-testing">Error Testing<a class="headerlink" href="#error-testing" title="Anchor link to this section for reference">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_error_handling</span><span class="p">():</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Test service error handling.&quot;&quot;&quot;</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>        <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span> <span class="o">=</span> <span class="n">UserService</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>        <span class="n">container</span><span class="p">[</span><span class="n">UserRepository</span><span class="p">]</span> <span class="o">=</span> <span class="n">MockUserRepository</span><span class="p">()</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>        <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>        <span class="c1"># Test that errors are raised correctly</span>
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>        <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">UserNotFoundError</span><span class="p">):</span>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>            <span class="n">service</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="mi">999</span><span class="p">)</span>
-</span></code></pre></div>
-<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="do">✅ DO<a class="headerlink" href="#do" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li><strong>Use test_container()</strong> for isolated test environments</li>
-<li><strong>Mock external dependencies</strong> (APIs, databases, email services)</li>
-<li><strong>Keep tests focused</strong> on one behavior per test</li>
-<li><strong>Use fixtures</strong> for common setup</li>
-<li><strong>Name mocks clearly</strong> to distinguish from real services</li>
-</ul>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># ✅ Good</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_user_creation</span><span class="p">():</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>        <span class="n">mock_repo</span> <span class="o">=</span> <span class="n">MockUserRepository</span><span class="p">()</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>        <span class="n">container</span><span class="p">[</span><span class="n">UserRepository</span><span class="p">]</span> <span class="o">=</span> <span class="n">mock_repo</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>        <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span> <span class="o">=</span> <span class="n">UserService</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>        <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>        <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">create_user</span><span class="p">(</span><span class="s2">&quot;test@example.com&quot;</span><span class="p">)</span>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>        <span class="k">assert</span> <span class="n">mock_repo</span><span class="o">.</span><span class="n">save_called</span>
-</span></code></pre></div>
-<h3 id="dont">❌ DON'T<a class="headerlink" href="#dont" title="Anchor link to this section for reference">&para;</a></h3>
-<ul>
-<li><strong>Don't use the global container</strong> in tests without override_dependency</li>
-<li><strong>Don't over-mock</strong> - only mock external dependencies</li>
-<li><strong>Don't test private methods</strong> - test public interfaces</li>
-<li><strong>Don't share state</strong> between tests</li>
-</ul>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># ❌ Bad</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_user_creation</span><span class="p">():</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="c1"># Uses global container - tests interfere with each other</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="n">container</span> <span class="o">=</span> <span class="n">InjectQ</span><span class="o">.</span><span class="n">get_instance</span><span class="p">()</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="c1"># ...</span>
-</span></code></pre></div>
-<h2 id="common-testing-patterns">Common Testing Patterns<a class="headerlink" href="#common-testing-patterns" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="pattern-1-verify-method-calls">Pattern 1: Verify Method Calls<a class="headerlink" href="#pattern-1-verify-method-calls" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">TrackingMockService</span><span class="p">:</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">call_log</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">some_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">call_log</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;some_method&quot;</span><span class="p">,</span> <span class="n">arg</span><span class="p">))</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;result_</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_service_calls_dependency</span><span class="p">():</span>
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>        <span class="n">tracking_mock</span> <span class="o">=</span> <span class="n">TrackingMockService</span><span class="p">()</span>
-</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>        <span class="n">container</span><span class="p">[</span><span class="n">DependentService</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_mock</span>
-</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>
-</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>        <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">MainService</span><span class="p">]</span>
-</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>        <span class="n">service</span><span class="o">.</span><span class="n">do_work</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
-</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>
-</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>        <span class="c1"># Verify the dependency was called</span>
-</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>        <span class="k">assert</span> <span class="p">(</span><span class="s2">&quot;some_method&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">tracking_mock</span><span class="o">.</span><span class="n">call_log</span>
-</span></code></pre></div>
-<h3 id="pattern-2-control-return-values">Pattern 2: Control Return Values<a class="headerlink" href="#pattern-2-control-return-values" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">ConfigurableMockService</span><span class="p">:</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">return_values</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">set_return_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">return_values</span><span class="p">[</span><span class="n">method</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;get_data&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>
-</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_with_specific_return_values</span><span class="p">():</span>
-</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>    <span class="k">with</span> <span class="n">test_container</span><span class="p">()</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
-</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>        <span class="n">mock_service</span> <span class="o">=</span> <span class="n">ConfigurableMockService</span><span class="p">()</span>
-</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>        <span class="n">mock_service</span><span class="o">.</span><span class="n">set_return_value</span><span class="p">(</span><span class="s2">&quot;get_data&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Test&quot;</span><span class="p">})</span>
-</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>
-</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>        <span class="n">container</span><span class="p">[</span><span class="n">DataService</span><span class="p">]</span> <span class="o">=</span> <span class="n">mock_service</span>
-</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>        <span class="n">container</span><span class="p">[</span><span class="n">ConsumerService</span><span class="p">]</span> <span class="o">=</span> <span class="n">ConsumerService</span>
-</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>
-</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a>        <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">ConsumerService</span><span class="p">]</span>
-</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
-</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a>
-</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a>        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
-</span></code></pre></div>
-<h3 id="pattern-3-temporary-override">Pattern 3: Temporary Override<a class="headerlink" href="#pattern-3-temporary-override" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_with_temporary_override</span><span class="p">():</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Override a dependency for a specific test.&quot;&quot;&quot;</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">container</span> <span class="o">=</span> <span class="n">InjectQ</span><span class="o">.</span><span class="n">get_instance</span><span class="p">()</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>    <span class="c1"># Original binding</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>    <span class="n">container</span><span class="p">[</span><span class="n">ConfigService</span><span class="p">]</span> <span class="o">=</span> <span class="n">RealConfigService</span><span class="p">()</span>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>    <span class="n">real_service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">ConfigService</span><span class="p">]</span>
-</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">real_service</span><span class="p">,</span> <span class="n">RealConfigService</span><span class="p">)</span>
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>
-</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>    <span class="c1"># Temporarily override</span>
-</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>    <span class="n">mock_config</span> <span class="o">=</span> <span class="n">MockConfigService</span><span class="p">()</span>
-</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>    <span class="k">with</span> <span class="n">override_dependency</span><span class="p">(</span><span class="n">ConfigService</span><span class="p">,</span> <span class="n">mock_config</span><span class="p">):</span>
-</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>        <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">ConfigService</span><span class="p">]</span>
-</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">MockConfigService</span><span class="p">)</span>
-</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>
-</span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>        <span class="c1"># Do test assertions here</span>
-</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>
-</span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>    <span class="c1"># Override ends - back to real service</span>
-</span><span id="__span-15-20"><a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>    <span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">ConfigService</span><span class="p">]</span>
-</span><span id="__span-15-21"><a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a>    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">RealConfigService</span><span class="p">)</span>
-</span></code></pre></div>
-<h2 id="running-tests-with-pytest">Running Tests with Pytest<a class="headerlink" href="#running-tests-with-pytest" title="Anchor link to this section for reference">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Run all tests</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>pytest
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Run specific test file</span>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>pytest<span class="w"> </span>tests/test_services.py
-</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
-</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="c1"># Run with coverage</span>
-</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>pytest<span class="w"> </span>--cov<span class="o">=</span>src
-</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>
-</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="c1"># Show coverage report</span>
-</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>pytest<span class="w"> </span>--cov<span class="o">=</span>src<span class="w"> </span>--cov-report<span class="o">=</span>html
-</span></code></pre></div>
-<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Anchor link to this section for reference">&para;</a></h2>
-<p>Key testing practices with InjectQ:</p>
-<ul>
-<li>Use <code>test_container()</code> for isolated test environments</li>
-<li>Use <code>override_dependency()</code> for temporary service replacement</li>
-<li>Mock external dependencies, use real internal services</li>
-<li>Test behavior, not implementation details</li>
-<li>Keep tests fast and independent</li>
-<li>Use pytest fixtures for common setup</li>
-</ul>
+<h2 id="framework-tests">Framework tests<a class="headerlink" href="#framework-tests" title="Anchor link to this section for reference">&para;</a></h2>
+<p>Integration tests are covered on the integration pages: <a href="../../integrations/fastapi/#testing">FastAPI</a>, <a href="../../integrations/fastmcp/#testing">FastMCP</a>, <a href="../../integrations/taskiq/#testing">Taskiq</a>.</p>
+<h2 id="avoiding-shared-state">Avoiding shared state<a class="headerlink" href="#avoiding-shared-state" title="Anchor link to this section for reference">&para;</a></h2>
+<p>Tests that call <code>InjectQ.get_instance()</code> and bind into it leak bindings into other tests. Use <code>isolated_container()</code> or the <code>container_fixture()</code> fixture instead, or <code>override</code> for a single swap.</p>
 
 
 
@@ -2172,13 +1867,13 @@
         
         
           
-          <a href="../../benchmark-report/" class="md-footer__link md-footer__link--next" aria-label="Next: Benchmark Report">
+          <a href="../overrides/" class="md-footer__link md-footer__link--next" aria-label="Next: Overrides">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Benchmark Report
+                Overrides
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -2211,7 +1906,7 @@
       
       
     
-    <a href="https://github.com/Iamsdt/injectq" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+    <a href="https://github.com/10xhub/injectq" target="_blank" rel="noopener" title="github.com" class="md-social__link">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
     </a>
   

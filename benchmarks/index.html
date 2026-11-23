@@ -1,0 +1,2617 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Modern Python dependency injection library">
+      
+      
+        <meta name="author" content="InjectQ Contributors">
+      
+      
+        <link rel="canonical" href="https://10xhub.github.io/injectq/benchmarks/">
+      
+      
+        <link rel="prev" href="../testing/overrides/">
+      
+      
+        <link rel="next" href="../api-reference/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
+    
+    
+      
+        <title>Benchmarks - InjectQ Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#benchmarks" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="InjectQ Documentation" class="md-header__button md-logo" aria-label="InjectQ Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            InjectQ Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Benchmarks
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/10xhub/injectq" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    10xhub/injectq
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="InjectQ Documentation" class="md-nav__button md-logo" aria-label="InjectQ Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    InjectQ Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/10xhub/injectq" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    10xhub/injectq
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/first-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Your First App
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/lazy-imports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Python 3.15 Lazy Imports
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skill/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AI Agent Skill
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Core Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Core Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-concepts/what-is-di/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    What is Dependency Injection?
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-concepts/container-pattern/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    The Container Pattern
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-concepts/service-lifetimes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Service Lifetimes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-concepts/type-safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Type Safety
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-concepts/context-and-concurrency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Context and Concurrency
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-concepts/debugging-generated-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Debugging Generated Code
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Injection Patterns
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Injection Patterns
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../injection-patterns/dict-interface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dict-like Interface
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../injection-patterns/inject-decorator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    @inject Decorator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../injection-patterns/factory-methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Factory Methods
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Scopes
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Scopes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scopes/understanding-scopes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Understanding Scopes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scopes/singleton-scope/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Singleton Scope
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scopes/transient-scope/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transient Scope
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scopes/scoped-services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Scoped Services
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scopes/resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Resources and Cleanup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Modules & Providers
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Modules & Providers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Module Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Framework Integrations
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Framework Integrations
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrations/fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FastAPI Integration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrations/fastmcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FastMCP Integration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrations/taskiq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Taskiq Integration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Testing
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Testing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/testing-patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing Patterns
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/overrides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overrides
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Performance
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Performance
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Benchmarks
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Benchmarks
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-measured-and-why" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is measured, and why
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      The scenarios
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The scenarios">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#s1-cached-singleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      S1: cached singleton
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#s2-transient-chain" class="md-nav__link">
+    <span class="md-ellipsis">
+      S2: transient chain
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#s3-wide-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      S3: wide graph
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#s4-request-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      S4: request scope
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#s5-injected-function-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      S5: injected function call
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#s6-async-transient-chain" class="md-nav__link">
+    <span class="md-ellipsis">
+      S6: async transient chain
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#s7-build-a-container" class="md-nav__link">
+    <span class="md-ellipsis">
+      S7: build a container
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#method" class="md-nav__link">
+    <span class="md-ellipsis">
+      Method
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Method">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#machine-and-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Machine and versions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#equivalence-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Equivalence notes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Results
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#headline-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      Headline table
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chart" class="md-nav__link">
+    <span class="md-ellipsis">
+      Chart
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      Full table
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-injectq-is-not-the-fastest" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where injectq is not the fastest
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http-benchmark" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTTP benchmark
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Limitations
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reproduce
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api-reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_10" id="__nav_10_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/quick-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Upgrading to 0.6
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Logger Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="benchmarks">Benchmarks<a class="headerlink" href="#benchmarks" title="Anchor link to this section for reference">&para;</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The tables, chart and machine details are generated by <code>benchmarks/compare/report.py</code> between
+the <code>&lt;!-- BENCH:... --&gt;</code> markers. Do not edit between the markers; re-run the benchmarks
+instead (see <a href="#reproduce">Reproduce</a>).</p>
+</div>
+<h2 id="what-is-measured-and-why">What is measured, and why<a class="headerlink" href="#what-is-measured-and-why" title="Anchor link to this section for reference">&para;</a></h2>
+<p>A container costs time in a few places. Each scenario isolates one of them.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Cost</th>
+<th>Scenario</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Fetching something already built</td>
+<td>S1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Building an object graph on demand</td>
+<td>S2, S3, S6</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Opening and closing a request scope</td>
+<td>S4</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Injecting dependencies into a function call</td>
+<td>S5</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Setting the container up</td>
+<td>S7</td>
+</tr>
+</tbody>
+</table>
+<p>All numbers are microseconds per operation (lower is better). Every library resolves the same
+objects, and is compared with a <strong>hand-written</strong> baseline: plain constructor calls with no
+container. The baseline is the floor; the multiplier in the full table is the cost on top of it.</p>
+<p>A container does not make your application faster. A web request usually spends tens or hundreds
+of microseconds in the framework, so 1 µs per request is rarely what you feel. See the
+<a href="#http-benchmark">HTTP benchmark</a> for the end-to-end view.</p>
+<h2 id="the-scenarios">The scenarios<a class="headerlink" href="#the-scenarios" title="Anchor link to this section for reference">&para;</a></h2>
+<p>The classes are tiny: constructors only store their arguments, so the measurement is the
+container.</p>
+<h3 id="s1-cached-singleton">S1: cached singleton<a class="headerlink" href="#s1-cached-singleton" title="Anchor link to this section for reference">&para;</a></h3>
+<p><code>Config</code> is registered as a singleton. Measure <code>container.get(Config)</code> after it was created.
+Hand-written:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">config</span>            <span class="c1"># &quot;resolving&quot; it</span>
+</span></code></pre></div>
+<h3 id="s2-transient-chain">S2: transient chain<a class="headerlink" href="#s2-transient-chain" title="Anchor link to this section for reference">&para;</a></h3>
+<p><code>C</code> needs <code>B</code>, <code>B</code> needs <code>A</code>; all three are transient, so every resolve builds a fresh <code>C</code>, <code>B</code>
+and <code>A</code>. Hand-written:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">C</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="n">A</span><span class="p">()))</span>
+</span></code></pre></div>
+<h3 id="s3-wide-graph">S3: wide graph<a class="headerlink" href="#s3-wide-graph" title="Anchor link to this section for reference">&para;</a></h3>
+<p><code>Wide</code> takes five transient services <code>D1..D5</code>, and each <code>Di</code> takes its own singleton <code>Si</code>.
+Every resolve builds <code>Wide</code> and five <code>D</code>s and reuses the five singletons. Hand-written:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">Wide</span><span class="p">(</span><span class="n">D1</span><span class="p">(</span><span class="n">s1</span><span class="p">),</span> <span class="n">D2</span><span class="p">(</span><span class="n">s2</span><span class="p">),</span> <span class="n">D3</span><span class="p">(</span><span class="n">s3</span><span class="p">),</span> <span class="n">D4</span><span class="p">(</span><span class="n">s4</span><span class="p">),</span> <span class="n">D5</span><span class="p">(</span><span class="n">s5</span><span class="p">))</span>
+</span></code></pre></div>
+<h3 id="s4-request-scope">S4: request scope<a class="headerlink" href="#s4-request-scope" title="Anchor link to this section for reference">&para;</a></h3>
+<p>Enter a request scope, resolve <code>Req</code> (which needs the singleton <code>Config</code>), leave the scope. Inside
+one scope <code>Req</code> is the same object on repeat; a new scope gets a new one. Hand-written (a
+per-request cache, the smallest thing that meets this contract):</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">RequestScope</span><span class="p">:</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">req</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">exc</span><span class="p">):</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">req</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Req</span><span class="p">)</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>        <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">Req</span><span class="p">]</span> <span class="o">=</span> <span class="n">Req</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>        <span class="k">return</span> <span class="n">r</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="k">with</span> <span class="n">RequestScope</span><span class="p">()</span> <span class="k">as</span> <span class="n">req</span><span class="p">:</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="n">req</span><span class="p">()</span>
+</span></code></pre></div>
+<h3 id="s5-injected-function-call">S5: injected function call<a class="headerlink" href="#s5-injected-function-call" title="Anchor link to this section for reference">&para;</a></h3>
+<p><code>f(x1: X1, x2: X2, x3: X3)</code> where all three are singletons. Measure calling <code>f()</code> with no
+arguments and letting the library inject them. Hand-written:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">f</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">x3</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="s6-async-transient-chain">S6: async transient chain<a class="headerlink" href="#s6-async-transient-chain" title="Anchor link to this section for reference">&para;</a></h3>
+<p>The S2 graph, resolved from an async context (<code>await container.aget(C)</code> or the library's
+equivalent). Hand-written:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">make_c</span><span class="p">():</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="k">return</span> <span class="n">C</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="n">A</span><span class="p">()))</span>
+</span></code></pre></div>
+<h3 id="s7-build-a-container">S7: build a container<a class="headerlink" href="#s7-build-a-container" title="Anchor link to this section for reference">&para;</a></h3>
+<p>Register 50 services in a chain (<code>K0</code>, <code>K1(K0)</code>, ..., <code>K49(K48)</code>) in a fresh container. <strong>S7r</strong>
+additionally resolves <code>K49</code> once, because some libraries do their graph analysis or code
+generation lazily on the first resolve, and building without resolving would hide that cost.
+Hand-written:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">registry</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">K</span><span class="p">}</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">obj</span> <span class="o">=</span> <span class="n">registry</span><span class="p">[</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">]]()</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">K</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">obj</span> <span class="o">=</span> <span class="n">registry</span><span class="p">[</span><span class="n">k</span><span class="p">](</span><span class="n">obj</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="method">Method<a class="headerlink" href="#method" title="Anchor link to this section for reference">&para;</a></h2>
+<ul>
+<li><strong>Same graph, verified.</strong> Every library script resolves its graph through a shared set of checks
+  before timing anything (<code>benchmarks/common.py</code>, class <code>Verifier</code>): types and nesting are right,
+  singletons are the same object across resolves, transients are fresh, request scope gives one
+  instance per scope and different instances across scopes, the injected function receives the
+  right singletons. A failed check aborts the run with a non-zero exit code. A library that
+  cannot do something (for example no request scope) is reported as <code>n/a</code>, not approximated.</li>
+<li><strong>Process isolation.</strong> Each library runs in its own Python process, so imports, monkey-patching
+  and caches of one library cannot affect another. Classes are created fresh per library.</li>
+<li><strong>Warm-up and calibration.</strong> One untimed call, then the loop count is calibrated so each repeat
+  takes about 20 ms.</li>
+<li><strong>Repeats and statistic.</strong> The loop is timed <code>BENCH_REPEATS</code> times (25 by default); the
+  <strong>median</strong> per-operation time is reported. Medians resist the occasional slow repeat caused by
+  other processes.</li>
+<li><strong>Pinned versions.</strong> Library versions are pinned in <code>benchmarks/compare/requirements.txt</code> and
+  recorded, with the CPU, OS and Python build, in the raw JSON under <code>benchmarks/results/</code>.</li>
+<li><strong>Equivalences that are not 1:1.</strong> Where a library has no direct equivalent, the closest
+  idiomatic form is used and listed below.</li>
+</ul>
+<h3 id="machine-and-versions">Machine and versions<a class="headerlink" href="#machine-and-versions" title="Anchor link to this section for reference">&para;</a></h3>
+<!-- BENCH:META -->
+<ul>
+<li><strong>Date</strong>: 2026-11-23T11:11:36Z</li>
+<li><strong>CPU</strong>: AMD Ryzen 5 5600G with Radeon Graphics (12 logical CPUs)</li>
+<li><strong>OS</strong>: Linux-7.3.4-1-cachyos-x86_64-with-glibc2.44</li>
+<li><strong>Python</strong>: CPython 3.13.13 (main Jun  2 2026 22:27:49, Clang 22.1.3 ; optimized build: True, LTO: True, GIL enabled: True)</li>
+<li><strong>Libraries</strong>: aioinject 1.11.0, dependency-injector 4.49.1, dishka 1.10.1, diwire 1.5.0, inject 5.5.0, injector 0.24.0, injectq 0.6.0, kink 0.9.0, lagom 2.7.7, punq 0.9.0, rodi 2.1.0, svcs 26.2.0, that-depends 4.3.0, wireup 2.13.1</li>
+<li><strong>Repeats</strong>: 25 per scenario, 0.02 s per repeat; median of repeats, microseconds per operation</li>
+</ul>
+<!-- /BENCH:META -->
+
+<h3 id="equivalence-notes">Equivalence notes<a class="headerlink" href="#equivalence-notes" title="Anchor link to this section for reference">&para;</a></h3>
+<!-- BENCH:NOTES -->
+<ul>
+<li><strong>hand-written</strong> is plain constructor calls with module-level singletons (S4 uses a minimal dict-backed per-request cache). It is the floor: no container, no resolution.</li>
+<li><strong>wireup</strong>: transients and request-scoped services can only be resolved from a scope. S2, S3 and S6 resolve from one long-lived scope; S4 enters and exits a scope per operation; S5 enters a scope per call (what <code>inject_from_container</code> does).</li>
+<li><strong>dishka</strong> has no transient lifetime: <code>cache=False</code> is its documented equivalent. All services except the request-scoped one are registered in <code>Scope.APP</code>.</li>
+<li><strong>svcs</strong> caches every service per <code>Container</code>, so "transient" is a fresh <code>Container</code> per operation (the container construction is part of the measured cost).</li>
+<li><strong>that-depends</strong>: S5 uses <code>@inject(scope=None)</code> (skips entering an inject scope on every call; the cheapest idiomatic form). S4 uses a <code>ContextResource</code> in <code>ContextScopes.REQUEST</code>.</li>
+<li><strong>injector</strong>: request scope is a custom <code>Scope</code> (the documented extension point), not a built-in. <strong>punq</strong>, <strong>kink</strong> and <strong>inject</strong> have no request scope (n/a). <strong>kink</strong> and <strong>inject</strong> wire classes by mutating <code>__init__</code> / a global injector.</li>
+<li><strong>rodi</strong>: S7 includes <code>build_provider()</code> (eager validation and wiring), so S7 and S7r are the same cost. <strong>aioinject</strong>: <code>SyncContainer</code> for S1-S5/S7, async <code>Container</code> for S6. <strong>diwire</strong>: S5 passes <code>diwire_resolver=</code> explicitly because creating any other <code>Container</code> clears its global fallback.</li>
+<li><strong>lagom</strong> autowires unregistered classes as transients; the singletons and the 50-class chain are registered explicitly.</li>
+<li><strong>dependency-injector</strong>: S6 uses providers in async mode; Factory/Singleton providers are declared once, as in its docs.</li>
+<li>S7 measures building the container; S7r additionally resolves the 50<sup>th</sup> service (a 50-deep chain), because some libraries defer work (graph analysis, code generation) to the first resolve.</li>
+</ul>
+<!-- /BENCH:NOTES -->
+
+<h2 id="results">Results<a class="headerlink" href="#results" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="headline-table">Headline table<a class="headerlink" href="#headline-table" title="Anchor link to this section for reference">&para;</a></h3>
+<p>Fastest DI library per row in bold; the hand-written column is the floor, not a competitor.</p>
+<!-- BENCH:README_TABLE -->
+<table>
+<thead>
+<tr>
+<th>µs/op (median, lower is better)</th>
+<th style="text-align: right;">S1 singleton</th>
+<th style="text-align: right;">S2 transient chain</th>
+<th style="text-align: right;">S3 wide graph</th>
+<th style="text-align: right;">S4 request scope</th>
+<th style="text-align: right;">S5 injected call</th>
+<th style="text-align: right;">S6 async chain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>injectq</strong></td>
+<td style="text-align: right;">0.083</td>
+<td style="text-align: right;"><strong>0.302</strong></td>
+<td style="text-align: right;"><strong>0.550</strong></td>
+<td style="text-align: right;">0.968</td>
+<td style="text-align: right;"><strong>0.143</strong></td>
+<td style="text-align: right;"><strong>0.427</strong></td>
+</tr>
+<tr>
+<td>aioinject [1]</td>
+<td style="text-align: right;">0.295</td>
+<td style="text-align: right;">0.787</td>
+<td style="text-align: right;">1.768</td>
+<td style="text-align: right;">2.278</td>
+<td style="text-align: right;">n/a</td>
+<td style="text-align: right;">0.992</td>
+</tr>
+<tr>
+<td>dependency-injector [2]</td>
+<td style="text-align: right;"><strong>0.057</strong></td>
+<td style="text-align: right;">1.203</td>
+<td style="text-align: right;">3.038</td>
+<td style="text-align: right;">n/a</td>
+<td style="text-align: right;">1.127</td>
+<td style="text-align: right;">37.8</td>
+</tr>
+<tr>
+<td>dishka [3]</td>
+<td style="text-align: right;">0.307</td>
+<td style="text-align: right;">0.516</td>
+<td style="text-align: right;">1.069</td>
+<td style="text-align: right;">1.526</td>
+<td style="text-align: right;">1.165</td>
+<td style="text-align: right;">1.068</td>
+</tr>
+<tr>
+<td>diwire [4]</td>
+<td style="text-align: right;">0.424</td>
+<td style="text-align: right;">0.609</td>
+<td style="text-align: right;">0.884</td>
+<td style="text-align: right;">4.609</td>
+<td style="text-align: right;">6.820</td>
+<td style="text-align: right;">0.874</td>
+</tr>
+<tr>
+<td>inject [5]</td>
+<td style="text-align: right;">0.158</td>
+<td style="text-align: right;">4.785</td>
+<td style="text-align: right;">12.2</td>
+<td style="text-align: right;">n/a</td>
+<td style="text-align: right;">2.462</td>
+<td style="text-align: right;">n/a</td>
+</tr>
+<tr>
+<td>injector [6]</td>
+<td style="text-align: right;">1.331</td>
+<td style="text-align: right;">42.7</td>
+<td style="text-align: right;">90.6</td>
+<td style="text-align: right;">14.4</td>
+<td style="text-align: right;">16.8</td>
+<td style="text-align: right;">n/a</td>
+</tr>
+<tr>
+<td>kink [7]</td>
+<td style="text-align: right;">0.168</td>
+<td style="text-align: right;">3.688</td>
+<td style="text-align: right;">12.6</td>
+<td style="text-align: right;">n/a</td>
+<td style="text-align: right;">2.366</td>
+<td style="text-align: right;">n/a</td>
+</tr>
+<tr>
+<td>lagom [8]</td>
+<td style="text-align: right;">0.155</td>
+<td style="text-align: right;">5.624</td>
+<td style="text-align: right;">12.0</td>
+<td style="text-align: right;">n/a</td>
+<td style="text-align: right;">1.474</td>
+<td style="text-align: right;">n/a</td>
+</tr>
+<tr>
+<td>punq [9]</td>
+<td style="text-align: right;">1.097</td>
+<td style="text-align: right;">36.5</td>
+<td style="text-align: right;">90.6</td>
+<td style="text-align: right;">n/a</td>
+<td style="text-align: right;">n/a</td>
+<td style="text-align: right;">n/a</td>
+</tr>
+<tr>
+<td>rodi [10]</td>
+<td style="text-align: right;">0.290</td>
+<td style="text-align: right;">0.758</td>
+<td style="text-align: right;">1.852</td>
+<td style="text-align: right;"><strong>0.836</strong></td>
+<td style="text-align: right;">1.056</td>
+<td style="text-align: right;">n/a</td>
+</tr>
+<tr>
+<td>svcs [11]</td>
+<td style="text-align: right;">0.189</td>
+<td style="text-align: right;">2.590</td>
+<td style="text-align: right;">8.087</td>
+<td style="text-align: right;">1.940</td>
+<td style="text-align: right;">n/a</td>
+<td style="text-align: right;">3.068</td>
+</tr>
+<tr>
+<td>that-depends [12]</td>
+<td style="text-align: right;">0.077</td>
+<td style="text-align: right;">0.938</td>
+<td style="text-align: right;">3.479</td>
+<td style="text-align: right;">24.7</td>
+<td style="text-align: right;">3.163</td>
+<td style="text-align: right;">1.569</td>
+</tr>
+<tr>
+<td>wireup [13]</td>
+<td style="text-align: right;">0.092</td>
+<td style="text-align: right;">0.512</td>
+<td style="text-align: right;">1.434</td>
+<td style="text-align: right;">1.130</td>
+<td style="text-align: right;">0.269</td>
+<td style="text-align: right;">0.676</td>
+</tr>
+<tr>
+<td><em>hand-written (floor)</em></td>
+<td style="text-align: right;"><em>0.019</em></td>
+<td style="text-align: right;"><em>0.166</em></td>
+<td style="text-align: right;"><em>0.355</em></td>
+<td style="text-align: right;"><em>0.345</em></td>
+<td style="text-align: right;"><em>0.041</em></td>
+<td style="text-align: right;"><em>0.229</em></td>
+</tr>
+<tr>
+<td><strong>injectq rank</strong></td>
+<td style="text-align: right;"><strong>3 of 14</strong></td>
+<td style="text-align: right;"><strong>1 of 14</strong></td>
+<td style="text-align: right;"><strong>1 of 14</strong></td>
+<td style="text-align: right;"><strong>2 of 9</strong></td>
+<td style="text-align: right;"><strong>1 of 11</strong></td>
+<td style="text-align: right;"><strong>1 of 8</strong></td>
+</tr>
+<tr>
+<td>fastest DI library</td>
+<td style="text-align: right;">dependency-injector</td>
+<td style="text-align: right;">injectq</td>
+<td style="text-align: right;">injectq</td>
+<td style="text-align: right;">rodi</td>
+<td style="text-align: right;">injectq</td>
+<td style="text-align: right;">injectq</td>
+</tr>
+</tbody>
+</table>
+<p>Bold: fastest DI library in the column (hand-written excluded). n/a: the library has no such feature.</p>
+<details>
+<summary>Setup notes per library ([1]-[13])</summary>
+
+
+[1] **aioinject**: sync `SyncContainer` for S1-S5/S7, async `Container` for S6; transients registered in the lifetime scope to resolve from the root context. n/a: S5 no generic injection decorator (per-framework `inject` only).
+
+[2] **dependency-injector**: S6 uses providers in async mode. n/a: S4 no enter/exit request scope (only context-local singletons, a different mechanism).
+
+[3] **dishka**: no transient lifetime; `cache=False` is its equivalent.
+
+[4] **diwire**: default `SCOPED` lifetime at the root scope = singleton; transient via `Lifetime.TRANSIENT`; S5 passes `diwire_resolver=` explicitly.
+
+[5] **inject**: one global injector; singletons via `bind_to_constructor`, transients via `bind_to_provider`, constructors wired with `autoparams`. n/a: S4 no request scope; S6 no async resolution.
+
+[6] **injector**: request scope is a custom `Scope` subclass (cache swapped on enter/exit); constructors need `@inject` (applied to the benchmark classes). n/a: S6 no async API.
+
+[7] **kink**: `@inject` on a class registers it (singleton; `use_factory=True` = transient) and mutates `__init__`; S7 restores `__init__` before re-decorating. n/a: S4 no request scope; S6 no async resolution.
+
+[8] **lagom**: unregistered classes are autowired as transient. n/a: S4 no request scope; S6 no async resolution.
+
+[9] **punq**: transient is the default scope. n/a: S4 no request scope (only transient and singleton); S5 no injection decorator; S6 no async API.
+
+[10] **rodi**: resolved with `provider.get` / `provider.exec` (each call creates an activation scope); S7 includes `build_provider()`, which validates and wires eagerly. n/a: S6 no async resolution (sync only).
+
+[11] **svcs**: caches per `Container`, so transient = a new `Container` per operation (its construction is timed). n/a: S5 no generic injection decorator (framework integrations only).
+
+[12] **that-depends**: S5 with `@inject(scope=None)`; S4 via a `ContextResource` in `ContextScopes.REQUEST`.
+
+[13] **wireup**: transients and scoped services resolve from a scope: S2, S3, S6 use one long-lived scope, S4/S5 enter one per operation.
+
+</details>
+<!-- /BENCH:README_TABLE -->
+
+<h3 id="chart">Chart<a class="headerlink" href="#chart" title="Anchor link to this section for reference">&para;</a></h3>
+<!-- BENCH:CHART -->
+<p><img alt="Resolution cost per scenario, log scale" src="../assets/benchmarks.svg" /></p>
+<!-- /BENCH:CHART -->
+
+<h3 id="full-table">Full table<a class="headerlink" href="#full-table" title="Anchor link to this section for reference">&para;</a></h3>
+<!-- BENCH:FULL_TABLE -->
+<table>
+<thead>
+<tr>
+<th>Scenario (µs/op, median; × = relative to hand-written)</th>
+<th>injectq</th>
+<th>aioinject</th>
+<th>dependency-injector</th>
+<th>dishka</th>
+<th>diwire</th>
+<th>inject</th>
+<th>injector</th>
+<th>kink</th>
+<th>lagom</th>
+<th>punq</th>
+<th>rodi</th>
+<th>svcs</th>
+<th>that-depends</th>
+<th>wireup</th>
+<th>hand-written</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1 cached singleton</td>
+<td>0.083 (4.3x)</td>
+<td>0.295 (15x)</td>
+<td><strong>0.057</strong> (2.9x)</td>
+<td>0.307 (16x)</td>
+<td>0.424 (22x)</td>
+<td>0.158 (8.2x)</td>
+<td>1.331 (69x)</td>
+<td>0.168 (8.7x)</td>
+<td>0.155 (8.0x)</td>
+<td>1.097 (57x)</td>
+<td>0.290 (15x)</td>
+<td>0.189 (9.8x)</td>
+<td>0.077 (4.0x)</td>
+<td>0.092 (4.8x)</td>
+<td>0.019</td>
+</tr>
+<tr>
+<td>S2 transient chain (3 deep)</td>
+<td><strong>0.302</strong> (1.8x)</td>
+<td>0.787 (4.7x)</td>
+<td>1.203 (7.3x)</td>
+<td>0.516 (3.1x)</td>
+<td>0.609 (3.7x)</td>
+<td>4.785 (29x)</td>
+<td>42.7 (258x)</td>
+<td>3.688 (22x)</td>
+<td>5.624 (34x)</td>
+<td>36.5 (220x)</td>
+<td>0.758 (4.6x)</td>
+<td>2.590 (16x)</td>
+<td>0.938 (5.7x)</td>
+<td>0.512 (3.1x)</td>
+<td>0.166</td>
+</tr>
+<tr>
+<td>S3 wide graph (5 transients, 5 singletons)</td>
+<td><strong>0.550</strong> (1.5x)</td>
+<td>1.768 (5.0x)</td>
+<td>3.038 (8.6x)</td>
+<td>1.069 (3.0x)</td>
+<td>0.884 (2.5x)</td>
+<td>12.2 (34x)</td>
+<td>90.6 (255x)</td>
+<td>12.6 (35x)</td>
+<td>12.0 (34x)</td>
+<td>90.6 (255x)</td>
+<td>1.852 (5.2x)</td>
+<td>8.087 (23x)</td>
+<td>3.479 (9.8x)</td>
+<td>1.434 (4.0x)</td>
+<td>0.355</td>
+</tr>
+<tr>
+<td>S4 request scope: enter, resolve, exit</td>
+<td>0.968 (2.8x)</td>
+<td>2.278 (6.6x)</td>
+<td>n/a [1]</td>
+<td>1.526 (4.4x)</td>
+<td>4.609 (13x)</td>
+<td>n/a [2]</td>
+<td>14.4 (42x)</td>
+<td>n/a [2]</td>
+<td>n/a [2]</td>
+<td>n/a [3]</td>
+<td><strong>0.836</strong> (2.4x)</td>
+<td>1.940 (5.6x)</td>
+<td>24.7 (72x)</td>
+<td>1.130 (3.3x)</td>
+<td>0.345</td>
+</tr>
+<tr>
+<td>S5 injected function call (3 deps)</td>
+<td><strong>0.143</strong> (3.5x)</td>
+<td>n/a [4]</td>
+<td>1.127 (27x)</td>
+<td>1.165 (28x)</td>
+<td>6.820 (166x)</td>
+<td>2.462 (60x)</td>
+<td>16.8 (409x)</td>
+<td>2.366 (58x)</td>
+<td>1.474 (36x)</td>
+<td>n/a [5]</td>
+<td>1.056 (26x)</td>
+<td>n/a [6]</td>
+<td>3.163 (77x)</td>
+<td>0.269 (6.5x)</td>
+<td>0.041</td>
+</tr>
+<tr>
+<td>S6 async transient chain</td>
+<td><strong>0.427</strong> (1.9x)</td>
+<td>0.992 (4.3x)</td>
+<td>37.8 (165x)</td>
+<td>1.068 (4.7x)</td>
+<td>0.874 (3.8x)</td>
+<td>n/a [7]</td>
+<td>n/a [8]</td>
+<td>n/a [7]</td>
+<td>n/a [7]</td>
+<td>n/a [8]</td>
+<td>n/a [9]</td>
+<td>3.068 (13x)</td>
+<td>1.569 (6.8x)</td>
+<td>0.676 (2.9x)</td>
+<td>0.229</td>
+</tr>
+<tr>
+<td>S7 build container (50 services)</td>
+<td>27.4 (21x)</td>
+<td>623 (482x)</td>
+<td>295 (228x)</td>
+<td>4,151 (3,212x)</td>
+<td>2,612 (2,021x)</td>
+<td><strong>13.9</strong> (11x)</td>
+<td>72.5 (56x)</td>
+<td>784 (606x)</td>
+<td>54.0 (42x)</td>
+<td>121 (93x)</td>
+<td>585 (452x)</td>
+<td>369 (286x)</td>
+<td>194 (150x)</td>
+<td>9,768 (7,557x)</td>
+<td>1.292</td>
+</tr>
+<tr>
+<td>S7r build container + resolve 50-deep chain</td>
+<td>251 (37x)</td>
+<td>1,924 (280x)</td>
+<td>432 (63x)</td>
+<td>8,858 (1,291x)</td>
+<td>45,764 (6,668x)</td>
+<td><strong>98.3</strong> (14x)</td>
+<td>800 (116x)</td>
+<td>897 (131x)</td>
+<td>888 (129x)</td>
+<td>767 (112x)</td>
+<td>589 (86x)</td>
+<td>451 (66x)</td>
+<td>216 (31x)</td>
+<td>9,642 (1,405x)</td>
+<td>6.863</td>
+</tr>
+</tbody>
+</table>
+<p>Bold: fastest DI library in the row (hand-written excluded).</p>
+<p>[1] n/a: no enter/exit request scope (only context-local singletons, a different mechanism).</p>
+<p>[2] n/a: no request scope.</p>
+<p>[3] n/a: no request scope (only transient and singleton).</p>
+<p>[4] n/a: no generic injection decorator (per-framework <code>inject</code> only).</p>
+<p>[5] n/a: no injection decorator.</p>
+<p>[6] n/a: no generic injection decorator (framework integrations only).</p>
+<p>[7] n/a: no async resolution.</p>
+<p>[8] n/a: no async API.</p>
+<p>[9] n/a: no async resolution (sync only).</p>
+<!-- /BENCH:FULL_TABLE -->
+
+<h2 id="where-injectq-is-not-the-fastest">Where injectq is not the fastest<a class="headerlink" href="#where-injectq-is-not-the-fastest" title="Anchor link to this section for reference">&para;</a></h2>
+<p>Generated from the same run, so it cannot drift from the tables:</p>
+<!-- BENCH:NOT_FASTEST -->
+<ul>
+<li><strong>S1 cached singleton</strong>: injectq is not fastest. dependency-injector takes 0.057 µs, injectq 0.083 µs (1.5x slower); injectq ranks 3 of 14.</li>
+<li><strong>S4 request scope: enter, resolve, exit</strong>: injectq is not fastest. rodi takes 0.836 µs, injectq 0.968 µs (1.2x slower); injectq ranks 2 of 9.</li>
+<li><strong>S7 build container (50 services)</strong>: injectq is not fastest. inject takes 13.9 µs, injectq 27.4 µs (2.0x slower); injectq ranks 2 of 14.</li>
+<li><strong>S7r build container + resolve 50-deep chain</strong>: injectq is not fastest. inject takes 98.3 µs, injectq 251 µs (2.6x slower); injectq ranks 3 of 14.</li>
+</ul>
+<!-- /BENCH:NOT_FASTEST -->
+
+<p>Context to read these rows with:</p>
+<ul>
+<li>S1 is a dictionary-style lookup of an already built object. <code>dependency-injector</code> is compiled
+  (Cython), so on a pure lookup it can beat any pure-Python container. The absolute difference
+  is small; see the table.</li>
+<li>Libraries that make a scope the unit of work (for example wireup and dishka) can be faster than injectq at
+  entering and leaving that scope or at injecting into a function; the table says by how much.</li>
+</ul>
+<h2 id="http-benchmark">HTTP benchmark<a class="headerlink" href="#http-benchmark" title="Anchor link to this section for reference">&para;</a></h2>
+<p>The micro-benchmarks measure the container alone. <code>benchmarks/http/</code> measures it inside a real
+request: the same small FastAPI app for each library, served by one Uvicorn worker, hit by a
+load generator.</p>
+<ul>
+<li><strong>singleton</strong> endpoint: injects two long-lived services (<code>A</code>, <code>B</code>).</li>
+<li><strong>scoped</strong> endpoint: a request-scoped graph of seven services (<code>C</code> to <code>I</code>), some requested
+  several times in one handler, with a generator resource (sync) and an async-generator resource
+  that are torn down at the end of the request.</li>
+<li>Before measuring, each app is started in a counting mode and checked: singletons built once,
+  request-scoped services built once per request and torn down, 50 concurrent requests do not
+  share request state. A library that fails is not measured.</li>
+<li>Plain FastAPI <code>Depends</code> and a hand-wired app without DI are included as reference points.</li>
+</ul>
+<!-- BENCH:HTTP_TABLE -->
+<p><em>(HTTP results not generated yet: run <code>python benchmarks/http/run_http.py</code>.)</em></p>
+<!-- /BENCH:HTTP_TABLE -->
+
+<p>Requests per second are for one worker on one machine; compare the ratios between rows, not the
+absolute values.</p>
+<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Anchor link to this section for reference">&para;</a></h2>
+<ul>
+<li><strong>Micro-benchmarks.</strong> They measure the container, not your application. I/O and your own code
+  usually dominate.</li>
+<li><strong>Author-written.</strong> The injectq authors wrote the script for each library from its documentation,
+  using it idiomatically; deviations are listed above. A maintainer may know a faster way, and
+  pull requests are welcome.</li>
+<li><strong>One CPython build, one machine.</strong> Other interpreters, free-threaded builds and CPUs can reorder
+  the results. Ratios travel better than microseconds.</li>
+<li><strong>Features differ.</strong> Libraries trade off validation, async support, teardown and scopes. Faster is
+  not the same as better for your needs.</li>
+</ul>
+<h2 id="reproduce">Reproduce<a class="headerlink" href="#reproduce" title="Anchor link to this section for reference">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/10xhub/injectq<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>injectq
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># 1. micro-benchmarks, injectq only (uses your current environment)</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>python<span class="w"> </span>benchmarks/run.py<span class="w">                      </span><span class="c1"># prints a table, writes benchmarks/latest.json</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>python<span class="w"> </span>benchmarks/check.py<span class="w">                    </span><span class="c1"># fails if S1-S6 are &gt;20% slower than the baseline</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># 2. cross-library comparison in an isolated venv with pinned versions</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>make<span class="w"> </span>bench-compare<span class="w">                            </span><span class="c1"># installs benchmarks/compare/requirements.txt</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>make<span class="w"> </span>bench-publish<span class="w">                            </span><span class="c1"># same, plus this page&#39;s tables and chart (PUBLISH=1)</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="c1"># 3. HTTP benchmark (needs `oha` or `hey` on PATH for publishable numbers)</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>benchmarks/http/requirements.txt<span class="w"> </span>-e<span class="w"> </span>.
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>python<span class="w"> </span>benchmarks/http/run_http.py
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>python<span class="w"> </span>benchmarks/compare/report.py<span class="w"> </span>--update-docs<span class="w"> </span>docs/benchmarks.md
+</span></code></pre></div>
+<p>Smoke test without waiting (numbers are meaningless, it only checks that everything runs):
+<code>BENCH_REPEATS=3 BENCH_TARGET=0.001 python benchmarks/run.py</code>.</p>
+<p>See <code>benchmarks/README.md</code> for every option.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../testing/overrides/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Overrides">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Overrides
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../api-reference/" class="md-footer__link md-footer__link--next" aria-label="Next: Overview">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Overview
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 10xHub
+    </div>
+  
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/10xhub/injectq" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/injectq/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.footnote.tooltips", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow", "toc.integrate"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.92b07e13.min.js"></script>
+      
+    
+  </body>
+</html>

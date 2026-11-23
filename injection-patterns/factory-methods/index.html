@@ -313,6 +313,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -422,6 +426,52 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/lazy-imports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Python 3.15 Lazy Imports
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skill/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AI Agent Skill
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -437,6 +487,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -568,6 +622,52 @@
   
   <span class="md-ellipsis">
     Type Safety
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core-concepts/context-and-concurrency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Context and Concurrency
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core-concepts/debugging-generated-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Debugging Generated Code
     
   </span>
   
@@ -743,46 +843,37 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#factories-with-injection" class="md-nav__link">
     <span class="md-ellipsis">
-      Overview
+      Factories with injection
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#di-factories" class="md-nav__link">
-    <span class="md-ellipsis">
-      DI Factories
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="DI Factories">
+    <nav class="md-nav" aria-label="Factories with injection">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-usage" class="md-nav__link">
+  <a href="#scope" class="md-nav__link">
     <span class="md-ellipsis">
-      Basic Usage
+      Scope
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#with-multiple-dependencies" class="md-nav__link">
+  <a href="#async-factories" class="md-nav__link">
     <span class="md-ellipsis">
-      With Multiple Dependencies
+      Async factories
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#async-di-factories" class="md-nav__link">
+  <a href="#registration-order" class="md-nav__link">
     <span class="md-ellipsis">
-      Async DI Factories
+      Registration order
     </span>
   </a>
   
@@ -794,232 +885,28 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#parameterized-factories" class="md-nav__link">
+  <a href="#factories-with-caller-arguments" class="md-nav__link">
     <span class="md-ellipsis">
-      Parameterized Factories
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Parameterized Factories">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic-usage_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic Usage
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#calling-parameterized-factories" class="md-nav__link">
-    <span class="md-ellipsis">
-      Calling Parameterized Factories
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Calling Parameterized Factories">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#method-1-get_factory-manual-call" class="md-nav__link">
-    <span class="md-ellipsis">
-      Method 1: get_factory() + manual call
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#method-2-call_factory-recommended" class="md-nav__link">
-    <span class="md-ellipsis">
-      Method 2: call_factory() - Recommended
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#method-3-chain-calls" class="md-nav__link">
-    <span class="md-ellipsis">
-      Method 3: Chain calls
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#async-parameterized-factories" class="md-nav__link">
-    <span class="md-ellipsis">
-      Async Parameterized Factories
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#use-cases-for-parameterized-factories" class="md-nav__link">
-    <span class="md-ellipsis">
-      Use Cases for Parameterized Factories
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#hybrid-factories-invoke" class="md-nav__link">
-    <span class="md-ellipsis">
-      🆕 Hybrid Factories (invoke)
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="🆕 Hybrid Factories (invoke)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#introduction" class="md-nav__link">
-    <span class="md-ellipsis">
-      Introduction
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#basic-usage_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic Usage
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#how-invoke-resolves-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      How invoke() Resolves Parameters
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#invoke-with-all-defaults" class="md-nav__link">
-    <span class="md-ellipsis">
-      invoke() with All Defaults
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#primitive-types-and-invoke" class="md-nav__link">
-    <span class="md-ellipsis">
-      Primitive Types and invoke()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#async-invoke" class="md-nav__link">
-    <span class="md-ellipsis">
-      Async invoke()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#real-world-example-connection-pools" class="md-nav__link">
-    <span class="md-ellipsis">
-      Real-World Example: Connection Pools
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#best-practices-for-invoke" class="md-nav__link">
-    <span class="md-ellipsis">
-      Best Practices for invoke()
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Best Practices for invoke()">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#do" class="md-nav__link">
-    <span class="md-ellipsis">
-      ✅ Do
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dont" class="md-nav__link">
-    <span class="md-ellipsis">
-      ❌ Don't
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#comparison-table" class="md-nav__link">
-    <span class="md-ellipsis">
-      Comparison Table
+      Factories with caller arguments
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#summary" class="md-nav__link">
+  <a href="#both-invoke" class="md-nav__link">
     <span class="md-ellipsis">
-      Summary
+      Both: invoke()
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Summary">
+    <nav class="md-nav" aria-label="Both: invoke()">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#when-to-use-each-method" class="md-nav__link">
+  <a href="#example-pools-that-share-settings" class="md-nav__link">
     <span class="md-ellipsis">
-      When to Use Each Method
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#code-examples-summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      Code Examples Summary
+      Example: pools that share settings
     </span>
   </a>
   
@@ -1033,7 +920,7 @@
         <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
-      See Also
+      See also
     </span>
   </a>
   
@@ -1063,6 +950,8 @@
   
     
     
+      
+        
       
         
       
@@ -1194,6 +1083,29 @@
   
   <span class="md-ellipsis">
     Scoped Services
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../scopes/resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Resources and Cleanup
     
   </span>
   
@@ -1436,6 +1348,8 @@
       
         
       
+        
+      
     
     
     
@@ -1522,6 +1436,29 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/overrides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overrides
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1537,8 +1474,6 @@
   
     
     
-      
-        
       
         
       
@@ -1589,35 +1524,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../benchmark-report/" class="md-nav__link">
+      <a href="../../benchmarks/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Benchmark Report
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../benchmark-guide/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Quick Guide
+    Benchmarks
     
   </span>
   
@@ -1736,6 +1648,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../../migration-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Upgrading to 0.6
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../contributing/" class="md-nav__link">
         
   
@@ -1815,362 +1749,134 @@
 
 
 <h1 id="factory-methods">Factory Methods<a class="headerlink" href="#factory-methods" title="Anchor link to this section for reference">&para;</a></h1>
-<p>InjectQ provides powerful factory methods for creating services with different patterns. This guide covers all factory-related APIs.</p>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Anchor link to this section for reference">&para;</a></h2>
-<p>InjectQ supports three factory patterns:</p>
-<ol>
-<li><strong>DI Factories</strong> - Factory with dependency injection (no manual args)</li>
-<li><strong>Parameterized Factories</strong> - Factory with manual arguments (no DI)</li>
-<li><strong>Hybrid Factories</strong> - Factory with both DI and manual arguments (🆕)</li>
-</ol>
-<h2 id="di-factories">DI Factories<a class="headerlink" href="#di-factories" title="Anchor link to this section for reference">&para;</a></h2>
-<p>Regular factories where all dependencies are automatically injected.</p>
-<h3 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">InjectQ</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">container</span> <span class="o">=</span> <span class="n">InjectQ</span><span class="p">()</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;db_url&quot;</span><span class="p">,</span> <span class="s2">&quot;postgresql://localhost/mydb&quot;</span><span class="p">)</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># Factory with DI - parameter is injected</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_database</span><span class="p">(</span><span class="n">db_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">return</span> <span class="n">Database</span><span class="p">(</span><span class="n">db_url</span><span class="p">)</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="n">Database</span><span class="p">,</span> <span class="n">create_database</span><span class="p">)</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># Get instance - factory called automatically with injected deps</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">db</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">Database</span><span class="p">]</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="c1"># or</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="n">db</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Database</span><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="with-multiple-dependencies">With Multiple Dependencies<a class="headerlink" href="#with-multiple-dependencies" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Database</span><span class="p">,</span> <span class="n">Database</span><span class="p">)</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Cache</span><span class="p">,</span> <span class="n">Cache</span><span class="p">)</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_user_service</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Database</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="n">Cache</span><span class="p">):</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;All dependencies auto-injected.&quot;&quot;&quot;</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="k">return</span> <span class="n">UserService</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">cache</span><span class="p">)</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="n">UserService</span><span class="p">,</span> <span class="n">create_user_service</span><span class="p">)</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1"># All dependencies resolved automatically</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span>
-</span></code></pre></div>
-<h3 id="async-di-factories">Async DI Factories<a class="headerlink" href="#async-di-factories" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_async_database</span><span class="p">(</span><span class="n">db_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Async factory with DI.&quot;&quot;&quot;</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>  <span class="c1"># async initialization</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="k">return</span> <span class="k">await</span> <span class="n">Database</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">db_url</span><span class="p">)</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;async_db&quot;</span><span class="p">,</span> <span class="n">create_async_database</span><span class="p">)</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="c1"># Use async get</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">db</span> <span class="o">=</span> <span class="k">await</span> <span class="n">container</span><span class="o">.</span><span class="n">aget</span><span class="p">(</span><span class="s2">&quot;async_db&quot;</span><span class="p">)</span>
-</span></code></pre></div>
-<h2 id="parameterized-factories">Parameterized Factories<a class="headerlink" href="#parameterized-factories" title="Anchor link to this section for reference">&para;</a></h2>
-<p>Factories that accept custom arguments at call time.</p>
-<h3 id="basic-usage_1">Basic Usage<a class="headerlink" href="#basic-usage_1" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Factory with parameters</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_connection_pool</span><span class="p">(</span><span class="n">db_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_conn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Factory accepts runtime arguments.&quot;&quot;&quot;</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="k">return</span> <span class="n">ConnectionPool</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">max_conn</span><span class="p">)</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">,</span> <span class="n">create_connection_pool</span><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="calling-parameterized-factories">Calling Parameterized Factories<a class="headerlink" href="#calling-parameterized-factories" title="Anchor link to this section for reference">&para;</a></h3>
-<p>There are three ways to call parameterized factories:</p>
-<h4 id="method-1-get_factory-manual-call">Method 1: get_factory() + manual call<a class="headerlink" href="#method-1-get_factory-manual-call" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">factory</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">get_factory</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">)</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">pool</span> <span class="o">=</span> <span class="n">factory</span><span class="p">(</span><span class="s2">&quot;users_db&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-</span></code></pre></div>
-<h4 id="method-2-call_factory-recommended">Method 2: call_factory() - Recommended<a class="headerlink" href="#method-2-call_factory-recommended" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Shorthand: get and call in one step</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">pool</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">call_factory</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">,</span> <span class="s2">&quot;users_db&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-</span></code></pre></div>
-<h4 id="method-3-chain-calls">Method 3: Chain calls<a class="headerlink" href="#method-3-chain-calls" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Inline chaining</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">pool</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">get_factory</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">)(</span><span class="s2">&quot;users_db&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="async-parameterized-factories">Async Parameterized Factories<a class="headerlink" href="#async-parameterized-factories" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_async_pool</span><span class="p">(</span><span class="n">db_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_conn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Async factory with parameters.&quot;&quot;&quot;</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="k">return</span> <span class="k">await</span> <span class="n">AsyncPool</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">max_conn</span><span class="p">)</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;async_pool&quot;</span><span class="p">,</span> <span class="n">create_async_pool</span><span class="p">)</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1"># Method 1: aget_factory()</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="n">factory</span> <span class="o">=</span> <span class="k">await</span> <span class="n">container</span><span class="o">.</span><span class="n">aget_factory</span><span class="p">(</span><span class="s2">&quot;async_pool&quot;</span><span class="p">)</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">pool</span> <span class="o">=</span> <span class="k">await</span> <span class="n">factory</span><span class="p">(</span><span class="s2">&quot;users_db&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="c1"># Method 2: acall_factory() - Recommended</span>
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="n">pool</span> <span class="o">=</span> <span class="k">await</span> <span class="n">container</span><span class="o">.</span><span class="n">acall_factory</span><span class="p">(</span><span class="s2">&quot;async_pool&quot;</span><span class="p">,</span> <span class="s2">&quot;users_db&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="use-cases-for-parameterized-factories">Use Cases for Parameterized Factories<a class="headerlink" href="#use-cases-for-parameterized-factories" title="Anchor link to this section for reference">&para;</a></h3>
-<p>Perfect for:
-- Creating multiple instances with different configurations
-- Runtime-dependent object creation
-- Factory functions that don't need DI</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Example: Creating multiple caches</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_cache</span><span class="p">(</span><span class="n">namespace</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ttl</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3600</span><span class="p">):</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="k">return</span> <span class="n">RedisCache</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="n">namespace</span><span class="p">,</span> <span class="n">ttl</span><span class="o">=</span><span class="n">ttl</span><span class="p">)</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;cache&quot;</span><span class="p">,</span> <span class="n">create_cache</span><span class="p">)</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># Create different caches</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="n">user_cache</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">call_factory</span><span class="p">(</span><span class="s2">&quot;cache&quot;</span><span class="p">,</span> <span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="n">ttl</span><span class="o">=</span><span class="mi">7200</span><span class="p">)</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="n">session_cache</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">call_factory</span><span class="p">(</span><span class="s2">&quot;cache&quot;</span><span class="p">,</span> <span class="s2">&quot;sessions&quot;</span><span class="p">,</span> <span class="n">ttl</span><span class="o">=</span><span class="mi">1800</span><span class="p">)</span>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="n">product_cache</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">call_factory</span><span class="p">(</span><span class="s2">&quot;cache&quot;</span><span class="p">,</span> <span class="s2">&quot;products&quot;</span><span class="p">)</span>  <span class="c1"># default ttl</span>
-</span></code></pre></div>
-<h2 id="hybrid-factories-invoke">🆕 Hybrid Factories (invoke)<a class="headerlink" href="#hybrid-factories-invoke" title="Anchor link to this section for reference">&para;</a></h2>
-<p>The most powerful pattern - combines DI with manual arguments.</p>
-<h3 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Anchor link to this section for reference">&para;</a></h3>
-<p>The <code>invoke()</code> method is perfect when you need:
-- Some dependencies from the container (config, services)
-- Some arguments provided at runtime (user input, dynamic values)</p>
-<h3 id="basic-usage_2">Basic Usage<a class="headerlink" href="#basic-usage_2" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Database</span><span class="p">,</span> <span class="n">Database</span><span class="p">)</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Cache</span><span class="p">,</span> <span class="n">Cache</span><span class="p">)</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># Factory with BOTH injected deps and manual args</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_user_service</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Database</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="n">Cache</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="sd">    db and cache will be injected</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="sd">    user_id must be provided at call time</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>    <span class="k">return</span> <span class="n">UserService</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;user_service&quot;</span><span class="p">,</span> <span class="n">create_user_service</span><span class="p">)</span>
-</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>
-</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="c1"># ❌ Old way - verbose</span>
-</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="n">db</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">Database</span><span class="p">]</span>
-</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="n">cache</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">Cache</span><span class="p">]</span>
-</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="n">factory</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">get_factory</span><span class="p">(</span><span class="s2">&quot;user_service&quot;</span><span class="p">)</span>
-</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="n">service</span> <span class="o">=</span> <span class="n">factory</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="s2">&quot;user123&quot;</span><span class="p">)</span>
-</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>
-</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="c1"># ✅ New way - clean and automatic</span>
-</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a><span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;user_service&quot;</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="s2">&quot;user123&quot;</span><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="how-invoke-resolves-parameters">How invoke() Resolves Parameters<a class="headerlink" href="#how-invoke-resolves-parameters" title="Anchor link to this section for reference">&para;</a></h3>
-<p>The resolution strategy follows this order:</p>
-<ol>
-<li><strong>Provided Arguments</strong> - Use args/kwargs you provide</li>
-<li><strong>String Key Injection</strong> - Inject by parameter name (if registered)</li>
-<li><strong>Type Annotation Injection</strong> - Inject by type (non-primitives only)</li>
-<li><strong>Default Values</strong> - Use parameter defaults</li>
-<li><strong>Error</strong> - Raise DependencyNotFoundError if required param unresolved</li>
-</ol>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;api_key&quot;</span><span class="p">,</span> <span class="s2">&quot;secret-123&quot;</span><span class="p">)</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;api_url&quot;</span><span class="p">,</span> <span class="s2">&quot;https://api.example.com&quot;</span><span class="p">)</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">RateLimiter</span><span class="p">,</span> <span class="n">RateLimiter</span><span class="p">)</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_api_client</span><span class="p">(</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>           <span class="c1"># Injected by name (step 2)</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="n">api_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>           <span class="c1"># Injected by name (step 2)</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="n">rate_limiter</span><span class="p">:</span> <span class="n">RateLimiter</span><span class="p">,</span>  <span class="c1"># Injected by type (step 3)</span>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>      <span class="c1"># Uses default (step 4)</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>    <span class="n">retry_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>    <span class="c1"># Uses default (step 4)</span>
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="p">):</span>
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>    <span class="k">return</span> <span class="n">APIClient</span><span class="p">(</span><span class="n">api_key</span><span class="p">,</span> <span class="n">api_url</span><span class="p">,</span> <span class="n">rate_limiter</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">retry_count</span><span class="p">)</span>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>
-</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;client&quot;</span><span class="p">,</span> <span class="n">create_api_client</span><span class="p">)</span>
-</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>
-</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="c1"># Only provide values that need to be dynamic</span>
-</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="n">client</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;client&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
-</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="c1"># api_key, api_url, rate_limiter auto-injected</span>
-</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a><span class="c1"># retry_count uses default (3)</span>
-</span></code></pre></div>
-<h3 id="invoke-with-all-defaults">invoke() with All Defaults<a class="headerlink" href="#invoke-with-all-defaults" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_config</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dev&quot;</span><span class="p">,</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8000</span><span class="p">):</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="k">return</span> <span class="n">Config</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">debug</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="n">create_config</span><span class="p">)</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="c1"># Use all defaults</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">config</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">)</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="c1"># Result: Config(env=&quot;dev&quot;, debug=False, port=8000)</span>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="c1"># Override some</span>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="n">config</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">&quot;prod&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>
-</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="c1"># Result: Config(env=&quot;prod&quot;, debug=False, port=80)</span>
-</span></code></pre></div>
-<h3 id="primitive-types-and-invoke">Primitive Types and invoke()<a class="headerlink" href="#primitive-types-and-invoke" title="Anchor link to this section for reference">&para;</a></h3>
-<p>To avoid ambiguous injections, <code>invoke()</code> doesn't auto-inject primitive types (<code>str</code>, <code>int</code>, <code>float</code>, <code>bool</code>) by type annotation. It only injects them by parameter name.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;db_host&quot;</span><span class="p">,</span> <span class="s2">&quot;localhost&quot;</span><span class="p">)</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;db_port&quot;</span><span class="p">,</span> <span class="mi">5432</span><span class="p">)</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_pool</span><span class="p">(</span><span class="n">db_host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">db_port</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">db_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_conn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="k">return</span> <span class="n">ConnectionPool</span><span class="p">(</span><span class="n">db_host</span><span class="p">,</span> <span class="n">db_port</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">max_conn</span><span class="p">)</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;pool&quot;</span><span class="p">,</span> <span class="n">create_pool</span><span class="p">)</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="c1"># db_host and db_port injected by NAME</span>
-</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="c1"># db_name provided manually</span>
-</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="c1"># max_conn uses default</span>
-</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="n">pool</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;pool&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="s2">&quot;users_db&quot;</span><span class="p">)</span>
-</span></code></pre></div>
-<p><strong>Why this design?</strong></p>
-<p>Without this restriction, if you have multiple <code>int</code> or <code>str</code> bindings, InjectQ wouldn't know which one to inject. By requiring name-based injection for primitives, the behavior is explicit and predictable.</p>
-<h3 id="async-invoke">Async invoke()<a class="headerlink" href="#async-invoke" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Database</span><span class="p">,</span> <span class="n">Database</span><span class="p">)</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Logger</span><span class="p">,</span> <span class="n">Logger</span><span class="p">)</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_processor</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Database</span><span class="p">,</span> <span class="n">logger</span><span class="p">:</span> <span class="n">Logger</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Async factory with mixed dependencies.&quot;&quot;&quot;</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating processor with batch_size=</span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>    <span class="k">return</span> <span class="n">AsyncProcessor</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;processor&quot;</span><span class="p">,</span> <span class="n">create_processor</span><span class="p">)</span>
-</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>
-</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="c1"># Use ainvoke</span>
-</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="n">processor</span> <span class="o">=</span> <span class="k">await</span> <span class="n">container</span><span class="o">.</span><span class="n">ainvoke</span><span class="p">(</span><span class="s2">&quot;processor&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="real-world-example-connection-pools">Real-World Example: Connection Pools<a class="headerlink" href="#real-world-example-connection-pools" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Register shared config</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;db_host&quot;</span><span class="p">,</span> <span class="s2">&quot;localhost&quot;</span><span class="p">)</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;db_port&quot;</span><span class="p">,</span> <span class="mi">5432</span><span class="p">)</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;max_connections&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;timeout&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="c1"># Factory that uses config + custom args</span>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_connection_pool</span><span class="p">(</span>
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>    <span class="n">db_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>                    <span class="c1"># Must provide</span>
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>    <span class="n">db_host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>                    <span class="c1"># Injected by name</span>
-</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>    <span class="n">db_port</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>                    <span class="c1"># Injected by name</span>
-</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>    <span class="n">max_connections</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>            <span class="c1"># Injected by name</span>
-</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span>                     <span class="c1"># Injected by name</span>
-</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="p">):</span>
-</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>    <span class="k">return</span> <span class="n">ConnectionPool</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">db_host</span><span class="p">,</span> <span class="n">db_port</span><span class="p">,</span> <span class="n">max_connections</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
-</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>
-</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">,</span> <span class="n">create_connection_pool</span><span class="p">)</span>
-</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>
-</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a><span class="c1"># Create different pools - only specify what changes</span>
-</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a><span class="n">users_pool</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="s2">&quot;users_db&quot;</span><span class="p">)</span>
-</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a><span class="n">orders_pool</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="s2">&quot;orders_db&quot;</span><span class="p">,</span> <span class="n">max_connections</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a><span class="n">logs_pool</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="s2">&quot;logs_db&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>
-</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a><span class="c1"># Each pool inherits shared config but can override</span>
-</span></code></pre></div>
-<h3 id="best-practices-for-invoke">Best Practices for invoke()<a class="headerlink" href="#best-practices-for-invoke" title="Anchor link to this section for reference">&para;</a></h3>
-<h4 id="do">✅ Do<a class="headerlink" href="#do" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Use keyword arguments for clarity</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;service&quot;</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="s2">&quot;123&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;create&quot;</span><span class="p">)</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1"># Mix config from container with runtime values</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;processor&quot;</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="n">user_uploaded_file</span><span class="p">)</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="c1"># Leverage defaults for optional parameters</span>
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="n">client</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;client&quot;</span><span class="p">)</span>  <span class="c1"># uses all defaults</span>
-</span></code></pre></div>
-<h4 id="dont">❌ Don't<a class="headerlink" href="#dont" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Avoid positional args - can be ambiguous</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;service&quot;</span><span class="p">,</span> <span class="s2">&quot;123&quot;</span><span class="p">,</span> <span class="s2">&quot;create&quot;</span><span class="p">)</span>  <span class="c1"># unclear</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Don&#39;t use invoke() when all params are in container</span>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;service&quot;</span><span class="p">)</span>  <span class="c1"># use get() instead</span>
-</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
-</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="c1"># Don&#39;t use invoke() when no params are injected</span>
-</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="n">result</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;factory&quot;</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">)</span>  <span class="c1"># use call_factory()</span>
-</span></code></pre></div>
-<h2 id="comparison-table">Comparison Table<a class="headerlink" href="#comparison-table" title="Anchor link to this section for reference">&para;</a></h2>
+<p>A factory is a function that builds a service. Bind it with <code>bind_factory</code>. There are three ways to use one, depending on where its arguments come from.</p>
 <table>
 <thead>
 <tr>
-<th>Method</th>
-<th>DI</th>
-<th>Manual Args</th>
-<th>Use Case</th>
+<th>Arguments come from</th>
+<th>Use</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>get()</code></td>
-<td>✅</td>
-<td>❌</td>
-<td>All params in container</td>
+<td>The container</td>
+<td><code>get()</code> / <code>aget()</code></td>
 </tr>
 <tr>
-<td><code>call_factory()</code></td>
-<td>❌</td>
-<td>✅</td>
-<td>All params manual</td>
+<td>The caller</td>
+<td><code>call_factory()</code> / <code>acall_factory()</code></td>
 </tr>
 <tr>
-<td><code>get_factory()</code></td>
-<td>❌</td>
-<td>✅</td>
-<td>Advanced control</td>
-</tr>
-<tr>
-<td><strong><code>invoke()</code></strong> 🆕</td>
-<td><strong>✅</strong></td>
-<td><strong>✅</strong></td>
-<td><strong>Mix both</strong></td>
-</tr>
-<tr>
-<td><code>aget()</code></td>
-<td>✅</td>
-<td>❌</td>
-<td>Async all params in container</td>
-</tr>
-<tr>
-<td><code>acall_factory()</code> 🆕</td>
-<td>❌</td>
-<td>✅</td>
-<td>Async all params manual</td>
-</tr>
-<tr>
-<td><code>aget_factory()</code> 🆕</td>
-<td>❌</td>
-<td>✅</td>
-<td>Async advanced control</td>
-</tr>
-<tr>
-<td><strong><code>ainvoke()</code></strong> 🆕</td>
-<td><strong>✅</strong></td>
-<td><strong>✅</strong></td>
-<td><strong>Async mix both</strong></td>
+<td>Both</td>
+<td><code>invoke()</code> / <code>ainvoke()</code></td>
 </tr>
 </tbody>
 </table>
-<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="when-to-use-each-method">When to Use Each Method<a class="headerlink" href="#when-to-use-each-method" title="Anchor link to this section for reference">&para;</a></h3>
-<p><strong>Use <code>get()</code> or <code>aget()</code> when:</strong>
-- All dependencies are registered in the container
-- You want full dependency injection
-- Factory has no runtime arguments</p>
-<p><strong>Use <code>call_factory()</code> or <code>acall_factory()</code> when:</strong>
-- All arguments are provided at call time
-- No dependency injection needed
-- Creating multiple instances with different args</p>
-<p><strong>Use <code>invoke()</code> or <code>ainvoke()</code> when:</strong> 🆕
-- You need BOTH injected dependencies AND manual arguments
-- Some params come from config/container
-- Some params come from user input/runtime
-- You want cleaner code than manual resolution</p>
-<h3 id="code-examples-summary">Code Examples Summary<a class="headerlink" href="#code-examples-summary" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># DI Factory</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="n">Service</span><span class="p">,</span> <span class="n">create_service</span><span class="p">)</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Service</span><span class="p">)</span>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="c1"># Parameterized Factory</span>
-</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;pool&quot;</span><span class="p">,</span> <span class="n">create_pool</span><span class="p">)</span>
-</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="n">pool</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">call_factory</span><span class="p">(</span><span class="s2">&quot;pool&quot;</span><span class="p">,</span> <span class="s2">&quot;db_name&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>
-</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="c1"># Hybrid Factory (🆕)</span>
-</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;user_service&quot;</span><span class="p">,</span> <span class="n">create_user_service</span><span class="p">)</span>
-</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;user_service&quot;</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="s2">&quot;123&quot;</span><span class="p">)</span>
-</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>
-</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="c1"># Async versions</span>
-</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a><span class="n">service</span> <span class="o">=</span> <span class="k">await</span> <span class="n">container</span><span class="o">.</span><span class="n">aget</span><span class="p">(</span><span class="n">Service</span><span class="p">)</span>
-</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="n">pool</span> <span class="o">=</span> <span class="k">await</span> <span class="n">container</span><span class="o">.</span><span class="n">acall_factory</span><span class="p">(</span><span class="s2">&quot;pool&quot;</span><span class="p">,</span> <span class="s2">&quot;db_name&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="n">service</span> <span class="o">=</span> <span class="k">await</span> <span class="n">container</span><span class="o">.</span><span class="n">ainvoke</span><span class="p">(</span><span class="s2">&quot;user_service&quot;</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="s2">&quot;123&quot;</span><span class="p">)</span>
+<h2 id="factories-with-injection">Factories with injection<a class="headerlink" href="#factories-with-injection" title="Anchor link to this section for reference">&para;</a></h2>
+<p>The factory's parameters are injected like a constructor's. <code>get()</code> calls the factory.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">InjectQ</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">container</span> <span class="o">=</span> <span class="n">InjectQ</span><span class="p">()</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;db_url&quot;</span><span class="p">,</span> <span class="s2">&quot;postgresql://localhost/mydb&quot;</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Cache</span><span class="p">,</span> <span class="n">Cache</span><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_user_service</span><span class="p">(</span><span class="n">db_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="n">Cache</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UserService</span><span class="p">:</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">return</span> <span class="n">UserService</span><span class="p">(</span><span class="n">db_url</span><span class="p">,</span> <span class="n">cache</span><span class="p">)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="n">UserService</span><span class="p">,</span> <span class="n">create_user_service</span><span class="p">)</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">service</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">UserService</span><span class="p">]</span>
 </span></code></pre></div>
-<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Anchor link to this section for reference">&para;</a></h2>
+<h3 id="scope">Scope<a class="headerlink" href="#scope" title="Anchor link to this section for reference">&para;</a></h3>
+<p>By default the factory runs on every <code>get()</code> (transient). Pass <code>scope</code> to cache the result:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="n">Database</span><span class="p">,</span> <span class="n">create_database</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s2">&quot;singleton&quot;</span><span class="p">)</span>      <span class="c1"># built once</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="n">Session</span><span class="p">,</span> <span class="n">create_session</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s2">&quot;request&quot;</span><span class="p">)</span>          <span class="c1"># once per request scope</span>
+</span></code></pre></div>
+<h3 id="async-factories">Async factories<a class="headerlink" href="#async-factories" title="Anchor link to this section for reference">&para;</a></h3>
+<p>An <code>async def</code> factory can only be resolved with <code>aget()</code>. Calling <code>get()</code> on it raises <code>InjectionError</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_database</span><span class="p">(</span><span class="n">db_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Database</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="k">return</span> <span class="k">await</span> <span class="n">Database</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">db_url</span><span class="p">)</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="n">Database</span><span class="p">,</span> <span class="n">create_database</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s2">&quot;singleton&quot;</span><span class="p">)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">db</span> <span class="o">=</span> <span class="k">await</span> <span class="n">container</span><span class="o">.</span><span class="n">aget</span><span class="p">(</span><span class="n">Database</span><span class="p">)</span>
+</span></code></pre></div>
+<p>If the result is already cached (singleton, or scoped in the active scope), <code>get()</code> returns it.</p>
+<h3 id="registration-order">Registration order<a class="headerlink" href="#registration-order" title="Anchor link to this section for reference">&para;</a></h3>
+<p>The last registration of a key wins, whether it came from <code>bind</code>, <code>bind_instance</code> or <code>bind_factory</code>. With <code>InjectQ(allow_override=False)</code> the second registration raises <code>AlreadyRegisteredError</code>.</p>
+<h2 id="factories-with-caller-arguments">Factories with caller arguments<a class="headerlink" href="#factories-with-caller-arguments" title="Anchor link to this section for reference">&para;</a></h2>
+<p>When the arguments come from the caller, do not use <code>get()</code>. It would try to inject them and fail. Fetch the raw function instead:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_pool</span><span class="p">(</span><span class="n">db_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_conn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConnectionPool</span><span class="p">:</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="k">return</span> <span class="n">ConnectionPool</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">max_conn</span><span class="p">)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">,</span> <span class="n">create_pool</span><span class="p">)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">pool</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">call_factory</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">,</span> <span class="s2">&quot;users_db&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1"># or in two steps</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">factory</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">get_factory</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">)</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="n">pool</span> <span class="o">=</span> <span class="n">factory</span><span class="p">(</span><span class="s2">&quot;users_db&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</span></code></pre></div>
+<p><code>call_factory</code> calls the function directly. Nothing is cached, whatever scope the binding has. <code>get_factory</code> and <code>call_factory</code> raise <code>DependencyNotFoundError</code> if no factory is bound under the key.</p>
+<p>Async versions:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">pool</span> <span class="o">=</span> <span class="k">await</span> <span class="n">container</span><span class="o">.</span><span class="n">acall_factory</span><span class="p">(</span><span class="s2">&quot;async_pool&quot;</span><span class="p">,</span> <span class="s2">&quot;users_db&quot;</span><span class="p">,</span> <span class="n">max_conn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">factory</span> <span class="o">=</span> <span class="k">await</span> <span class="n">container</span><span class="o">.</span><span class="n">aget_factory</span><span class="p">(</span><span class="s2">&quot;async_pool&quot;</span><span class="p">)</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">pool</span> <span class="o">=</span> <span class="k">await</span> <span class="n">factory</span><span class="p">(</span><span class="s2">&quot;users_db&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p><code>acall_factory</code> awaits the result if the factory is <code>async def</code>. <code>aget_factory</code> only looks the function up, so you must <code>await</code> its result yourself.</p>
+<p>This pattern suits several instances with different settings:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;cache&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">namespace</span><span class="p">,</span> <span class="n">ttl</span><span class="o">=</span><span class="mi">3600</span><span class="p">:</span> <span class="n">RedisCache</span><span class="p">(</span><span class="n">namespace</span><span class="p">,</span> <span class="n">ttl</span><span class="p">))</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">users</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">call_factory</span><span class="p">(</span><span class="s2">&quot;cache&quot;</span><span class="p">,</span> <span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="n">ttl</span><span class="o">=</span><span class="mi">7200</span><span class="p">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">sessions</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">call_factory</span><span class="p">(</span><span class="s2">&quot;cache&quot;</span><span class="p">,</span> <span class="s2">&quot;sessions&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="both-invoke">Both: <code>invoke()</code><a class="headerlink" href="#both-invoke" title="Anchor link to this section for reference">&para;</a></h2>
+<p><code>invoke()</code> calls the factory with the arguments you pass and injects the rest.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;api_key&quot;</span><span class="p">,</span> <span class="s2">&quot;secret-123&quot;</span><span class="p">)</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">RateLimiter</span><span class="p">,</span> <span class="n">RateLimiter</span><span class="p">)</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_api_client</span><span class="p">(</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">rate_limiter</span><span class="p">:</span> <span class="n">RateLimiter</span><span class="p">,</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">APIClient</span><span class="p">:</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="k">return</span> <span class="n">APIClient</span><span class="p">(</span><span class="n">api_key</span><span class="p">,</span> <span class="n">rate_limiter</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;client&quot;</span><span class="p">,</span> <span class="n">create_api_client</span><span class="p">)</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="n">client</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;client&quot;</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="s2">&quot;u1&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+</span></code></pre></div>
+<p>For each parameter that you did not pass:</p>
+<ol>
+<li>An <code>Inject[...]</code> default is resolved.</li>
+<li>If a key with the parameter's name is bound, it is injected.</li>
+<li>Otherwise, if the annotation is a bound type, it is injected. Primitive annotations (<code>str</code>, <code>int</code>, <code>float</code>, <code>bool</code>) are never matched by type, so several <code>int</code> bindings stay unambiguous. They are injected by name only.</li>
+<li>Otherwise the parameter's default is used.</li>
+<li>A required parameter that cannot be filled raises <code>DependencyNotFoundError</code>.</li>
+</ol>
+<p>Pass your own arguments by keyword. Positional arguments are matched in order and skip injection for those parameters.</p>
+<p>Async factories work the same way with <code>await container.ainvoke(...)</code>.</p>
+<h3 id="example-pools-that-share-settings">Example: pools that share settings<a class="headerlink" href="#example-pools-that-share-settings" title="Anchor link to this section for reference">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;db_host&quot;</span><span class="p">,</span> <span class="s2">&quot;localhost&quot;</span><span class="p">)</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;max_connections&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_pool</span><span class="p">(</span><span class="n">db_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">db_host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_connections</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConnectionPool</span><span class="p">:</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="k">return</span> <span class="n">ConnectionPool</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">db_host</span><span class="p">,</span> <span class="n">max_connections</span><span class="p">)</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">container</span><span class="o">.</span><span class="n">bind_factory</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">,</span> <span class="n">create_pool</span><span class="p">)</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="n">users</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="s2">&quot;users_db&quot;</span><span class="p">)</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">orders</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;db_pool&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="s2">&quot;orders_db&quot;</span><span class="p">,</span> <span class="n">max_connections</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</span></code></pre></div>
+<p>If every parameter comes from the container, use <code>get()</code>. If none do, use <code>call_factory()</code>.</p>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Anchor link to this section for reference">&para;</a></h2>
 <ul>
-<li><a href="../inject-decorator/">Inject Decorator</a> - Automatic function parameter injection</li>
-<li><a href="../dict-interface/">Dict Interface</a> - Container dict-like interface</li>
-<li><a href="../../testing/testing-patterns/">Testing Patterns</a> - Testing with factories</li>
+<li><a href="../inject-decorator/">Inject decorator</a></li>
+<li><a href="../dict-interface/">Dict interface</a></li>
+<li><a href="../../scopes/understanding-scopes/">Scopes</a></li>
+<li><a href="../../testing/testing-patterns/">Testing patterns</a></li>
 </ul>
 
 
@@ -2265,7 +1971,7 @@
       
       
     
-    <a href="https://github.com/Iamsdt/injectq" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+    <a href="https://github.com/10xhub/injectq" target="_blank" rel="noopener" title="github.com" class="md-social__link">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
     </a>
   

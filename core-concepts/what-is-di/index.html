@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://10xhub.github.io/injectq/core-concepts/what-is-di/">
       
       
-        <link rel="prev" href="../../getting-started/first-app/">
+        <link rel="prev" href="../../skill/">
       
       
         <link rel="next" href="../container-pattern/">
@@ -313,6 +313,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -422,6 +426,52 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/lazy-imports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Python 3.15 Lazy Imports
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skill/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AI Agent Skill
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -439,6 +489,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -543,303 +597,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-dependency-injection_1" class="md-nav__link">
+  <a href="#without-and-with-di" class="md-nav__link">
     <span class="md-ellipsis">
-      🎯 What is Dependency Injection?
+      Without and with DI
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="🎯 What is Dependency Injection?">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#without-dependency-injection" class="md-nav__link">
-    <span class="md-ellipsis">
-      Without Dependency Injection
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#with-dependency-injection" class="md-nav__link">
-    <span class="md-ellipsis">
-      With Dependency Injection
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-dependency-injection-container" class="md-nav__link">
+  <a href="#what-a-container-adds" class="md-nav__link">
     <span class="md-ellipsis">
-      🏗️ The Dependency Injection Container
+      What a container adds
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="🏗️ The Dependency Injection Container">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#manual-dependency-resolution" class="md-nav__link">
-    <span class="md-ellipsis">
-      Manual Dependency Resolution
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#with-a-di-container" class="md-nav__link">
-    <span class="md-ellipsis">
-      With a DI Container
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#types-of-dependency-injection" class="md-nav__link">
+  <a href="#kinds-of-injection" class="md-nav__link">
     <span class="md-ellipsis">
-      🎭 Types of Dependency Injection
+      Kinds of injection
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="🎭 Types of Dependency Injection">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-constructor-injection-recommended" class="md-nav__link">
-    <span class="md-ellipsis">
-      1. Constructor Injection (Recommended)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-property-injection" class="md-nav__link">
-    <span class="md-ellipsis">
-      2. Property Injection
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-method-injection" class="md-nav__link">
-    <span class="md-ellipsis">
-      3. Method Injection
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#inversion-of-control-ioc" class="md-nav__link">
+  <a href="#things-to-avoid" class="md-nav__link">
     <span class="md-ellipsis">
-      🔄 Inversion of Control (IoC)
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="🔄 Inversion of Control (IoC)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#traditional-control-flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      Traditional Control Flow
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#inverted-control-flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      Inverted Control Flow
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#benefits-of-dependency-injection" class="md-nav__link">
-    <span class="md-ellipsis">
-      🎯 Benefits of Dependency Injection
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="🎯 Benefits of Dependency Injection">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-testability" class="md-nav__link">
-    <span class="md-ellipsis">
-      1. Testability
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-flexibility" class="md-nav__link">
-    <span class="md-ellipsis">
-      2. Flexibility
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-maintainability" class="md-nav__link">
-    <span class="md-ellipsis">
-      3. Maintainability
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-separation-of-concerns" class="md-nav__link">
-    <span class="md-ellipsis">
-      4. Separation of Concerns
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-reusability" class="md-nav__link">
-    <span class="md-ellipsis">
-      5. Reusability
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#common-anti-patterns" class="md-nav__link">
-    <span class="md-ellipsis">
-      🚨 Common Anti-Patterns
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="🚨 Common Anti-Patterns">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-service-locator" class="md-nav__link">
-    <span class="md-ellipsis">
-      1. Service Locator
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-factory-overload" class="md-nav__link">
-    <span class="md-ellipsis">
-      2. Factory Overload
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-circular-dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      3. Circular Dependencies
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#best-practices" class="md-nav__link">
-    <span class="md-ellipsis">
-      🏆 Best Practices
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="🏆 Best Practices">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-use-constructor-injection" class="md-nav__link">
-    <span class="md-ellipsis">
-      1. Use Constructor Injection
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-depend-on-abstractions" class="md-nav__link">
-    <span class="md-ellipsis">
-      2. Depend on Abstractions
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-single-responsibility" class="md-nav__link">
-    <span class="md-ellipsis">
-      3. Single Responsibility
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-explicit-dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      4. Explicit Dependencies
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      🎉 Summary
+      Things to avoid
     </span>
   </a>
   
@@ -913,6 +700,52 @@
   
   <span class="md-ellipsis">
     Type Safety
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../context-and-concurrency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Context and Concurrency
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging-generated-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Debugging Generated Code
     
   </span>
   
@@ -1078,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1200,6 +1035,29 @@
   
   <span class="md-ellipsis">
     Scoped Services
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../scopes/resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Resources and Cleanup
     
   </span>
   
@@ -1442,6 +1300,8 @@
       
         
       
+        
+      
     
     
     
@@ -1528,6 +1388,29 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/overrides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overrides
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1543,8 +1426,6 @@
   
     
     
-      
-        
       
         
       
@@ -1595,35 +1476,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../benchmark-report/" class="md-nav__link">
+      <a href="../../benchmarks/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Benchmark Report
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../benchmark-guide/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Quick Guide
+    Benchmarks
     
   </span>
   
@@ -1742,6 +1600,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../../migration-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Upgrading to 0.6
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../contributing/" class="md-nav__link">
         
   
@@ -1821,261 +1701,49 @@
 
 
 <h1 id="what-is-dependency-injection">What is Dependency Injection?<a class="headerlink" href="#what-is-dependency-injection" title="Anchor link to this section for reference">&para;</a></h1>
-<p>Dependency Injection (DI) is a design pattern that helps you write more maintainable, testable, and flexible code. This guide explains what DI is, why it's useful, and how InjectQ implements it.</p>
-<h2 id="what-is-dependency-injection_1">🎯 What is Dependency Injection?<a class="headerlink" href="#what-is-dependency-injection_1" title="Anchor link to this section for reference">&para;</a></h2>
-<p><strong>Dependency Injection</strong> is a technique where objects receive their dependencies from an external source rather than creating them internally.</p>
-<h3 id="without-dependency-injection">Without Dependency Injection<a class="headerlink" href="#without-dependency-injection" title="Anchor link to this section for reference">&para;</a></h3>
+<p>Dependency injection (DI) means an object receives the things it depends on instead of creating them itself.</p>
+<h2 id="without-and-with-di">Without and with DI<a class="headerlink" href="#without-and-with-di" title="Anchor link to this section for reference">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        <span class="c1"># Service creates its own dependencies</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">Database</span><span class="p">()</span>  <span class="c1"># ❌ Tight coupling</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">Cache</span><span class="p">()</span>  <span class="c1"># ❌ Hard to test</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SELECT * FROM users WHERE id = </span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">Database</span><span class="p">()</span>      <span class="c1"># hard-wired: cannot swap or fake it in a test</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">Cache</span><span class="p">()</span>
 </span></code></pre></div>
-<p><strong>Problems:</strong>
-- Hard to test (can't mock dependencies)
-- Hard to change implementations
-- Tight coupling between classes
-- Difficult to reuse in different contexts</p>
-<h3 id="with-dependency-injection">With Dependency Injection<a class="headerlink" href="#with-dependency-injection" title="Anchor link to this section for reference">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">:</span> <span class="n">Database</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="n">Cache</span><span class="p">):</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        <span class="c1"># Dependencies are injected</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">cache</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># Somewhere else (composition root)</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">db</span> <span class="o">=</span> <span class="n">Database</span><span class="p">()</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">cache</span> <span class="o">=</span> <span class="n">Cache</span><span class="p">()</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">user_service</span> <span class="o">=</span> <span class="n">UserService</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">cache</span><span class="p">)</span>  <span class="c1"># ✅ Loose coupling</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">cache</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">service</span> <span class="o">=</span> <span class="n">UserService</span><span class="p">(</span><span class="n">Database</span><span class="p">(),</span> <span class="n">Cache</span><span class="p">())</span>    <span class="c1"># wired in one place</span>
 </span></code></pre></div>
-<p><strong>Benefits:</strong>
-- Easy to test (can inject mocks)
-- Easy to change implementations
-- Loose coupling between classes
-- Highly reusable components</p>
-<h2 id="the-dependency-injection-container">🏗️ The Dependency Injection Container<a class="headerlink" href="#the-dependency-injection-container" title="Anchor link to this section for reference">&para;</a></h2>
-<p>A <strong>DI Container</strong> is a framework that automatically manages dependency resolution and injection.</p>
-<h3 id="manual-dependency-resolution">Manual Dependency Resolution<a class="headerlink" href="#manual-dependency-resolution" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Without a container - manual wiring</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_user_service</span><span class="p">():</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">config</span> <span class="o">=</span> <span class="n">DatabaseConfig</span><span class="p">(</span><span class="s2">&quot;postgresql://...&quot;</span><span class="p">)</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">db</span> <span class="o">=</span> <span class="n">Database</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">cache</span> <span class="o">=</span> <span class="n">RedisCache</span><span class="p">(</span><span class="s2">&quot;redis://...&quot;</span><span class="p">)</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span><span class="p">(</span><span class="s2">&quot;user_service&quot;</span><span class="p">)</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="k">return</span> <span class="n">UserService</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1"># Usage</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">service</span> <span class="o">=</span> <span class="n">create_user_service</span><span class="p">()</span>
+<p>The second form is easy to test (pass fakes), and you can change an implementation without touching <code>UserService</code>. The place where objects are created and connected is called the composition root.</p>
+<h2 id="what-a-container-adds">What a container adds<a class="headerlink" href="#what-a-container-adds" title="Anchor link to this section for reference">&para;</a></h2>
+<p>Wiring by hand gets repetitive as the graph grows: <code>UserService</code> needs <code>Database</code> and <code>Cache</code>, <code>Database</code> needs a config, and so on. A DI container reads the type hints of each constructor and builds the whole graph for you.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">InjectQ</span><span class="p">,</span> <span class="n">inject</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">container</span> <span class="o">=</span> <span class="n">InjectQ</span><span class="p">()</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Cache</span><span class="p">,</span> <span class="n">RedisCache</span><span class="p">)</span>      <span class="c1"># map an abstraction to an implementation</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># Database and UserService are concrete classes, so they need no binding</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="nd">@inject</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_user</span><span class="p">(</span><span class="n">service</span><span class="p">:</span> <span class="n">UserService</span><span class="p">):</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="o">...</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="k">with</span> <span class="n">container</span><span class="o">.</span><span class="n">context</span><span class="p">():</span>              <span class="c1"># make this container the current one</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    <span class="n">process_user</span><span class="p">()</span>                     <span class="c1"># UserService, Database and Cache are built for you</span>
 </span></code></pre></div>
-<p><strong>Problems:</strong>
-- Repetitive boilerplate code
-- Error-prone manual wiring
-- Hard to maintain as dependencies grow</p>
-<h3 id="with-a-di-container">With a DI Container<a class="headerlink" href="#with-a-di-container" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">injectq</span><span class="w"> </span><span class="kn">import</span> <span class="n">injectq</span><span class="p">,</span> <span class="n">inject</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># Container automatically wires dependencies</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">container</span> <span class="o">=</span> <span class="n">injectq</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># Bind implementations</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">DatabaseConfig</span><span class="p">,</span> <span class="n">DatabaseConfig</span><span class="p">)</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Database</span><span class="p">,</span> <span class="n">Database</span><span class="p">)</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Cache</span><span class="p">,</span> <span class="n">RedisCache</span><span class="p">)</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1"># Usage - automatic resolution</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="nd">@inject</span>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_user</span><span class="p">(</span><span class="n">service</span><span class="p">:</span> <span class="n">UserService</span><span class="p">):</span>
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="c1"># All dependencies automatically injected</span>
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    <span class="k">pass</span>
-</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
-</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="n">process_user</span><span class="p">()</span>  <span class="c1"># No manual wiring needed!</span>
-</span></code></pre></div>
-<h2 id="types-of-dependency-injection">🎭 Types of Dependency Injection<a class="headerlink" href="#types-of-dependency-injection" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="1-constructor-injection-recommended">1. Constructor Injection (Recommended)<a class="headerlink" href="#1-constructor-injection-recommended" title="Anchor link to this section for reference">&para;</a></h3>
-<p>Dependencies are passed through the constructor:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">:</span> <span class="n">Database</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="n">Cache</span><span class="p">):</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">cache</span>
-</span></code></pre></div>
-<p><strong>Pros:</strong>
-- Dependencies are explicit and clear
-- Immutable after construction
-- Easy to test
-- Fail fast if dependencies are missing</p>
-<h3 id="2-property-injection">2. Property Injection<a class="headerlink" href="#2-property-injection" title="Anchor link to this section for reference">&para;</a></h3>
-<p>Dependencies are set via properties:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_db</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="nd">@property</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="nd">@db</span><span class="o">.</span><span class="n">setter</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_db</span> <span class="o">=</span> <span class="n">value</span>
-</span></code></pre></div>
-<p><strong>Pros:</strong>
-- Can change dependencies at runtime
-- Optional dependencies possible</p>
-<p><strong>Cons:</strong>
-- Dependencies not guaranteed to be set
-- Harder to test
-- Less explicit</p>
-<h3 id="3-method-injection">3. Method Injection<a class="headerlink" href="#3-method-injection" title="Anchor link to this section for reference">&para;</a></h3>
-<p>Dependencies are passed to specific methods:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">process_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">db</span><span class="p">:</span> <span class="n">Database</span><span class="p">):</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>        <span class="c1"># db is injected only for this method</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        <span class="k">pass</span>
-</span></code></pre></div>
-<p><strong>Pros:</strong>
-- Fine-grained control
-- Dependencies only where needed</p>
-<p><strong>Cons:</strong>
-- Verbose
-- Easy to forget to pass dependencies</p>
-<h2 id="inversion-of-control-ioc">🔄 Inversion of Control (IoC)<a class="headerlink" href="#inversion-of-control-ioc" title="Anchor link to this section for reference">&para;</a></h2>
-<p><strong>Inversion of Control</strong> is the principle behind DI. Instead of your code controlling dependency creation, the container controls it.</p>
-<h3 id="traditional-control-flow">Traditional Control Flow<a class="headerlink" href="#traditional-control-flow" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Your Code → Creates Database → Creates Cache → Creates Service
-</span></code></pre></div>
-<h3 id="inverted-control-flow">Inverted Control Flow<a class="headerlink" href="#inverted-control-flow" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Container → Creates Database → Creates Cache → Injects into Service → Your Code
-</span></code></pre></div>
-<h2 id="benefits-of-dependency-injection">🎯 Benefits of Dependency Injection<a class="headerlink" href="#benefits-of-dependency-injection" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="1-testability">1. <strong>Testability</strong><a class="headerlink" href="#1-testability" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_user_service</span><span class="p">():</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="c1"># Easy to inject mocks</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">mock_db</span> <span class="o">=</span> <span class="n">MockDatabase</span><span class="p">()</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">mock_cache</span> <span class="o">=</span> <span class="n">MockCache</span><span class="p">()</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">service</span> <span class="o">=</span> <span class="n">UserService</span><span class="p">(</span><span class="n">mock_db</span><span class="p">,</span> <span class="n">mock_cache</span><span class="p">)</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="c1"># Test the service in isolation</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>    <span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span></code></pre></div>
-<h3 id="2-flexibility">2. <strong>Flexibility</strong><a class="headerlink" href="#2-flexibility" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Easy to swap implementations</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="k">if</span> <span class="n">environment</span> <span class="o">==</span> <span class="s2">&quot;production&quot;</span><span class="p">:</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Database</span><span class="p">,</span> <span class="n">PostgreSQLDatabase</span><span class="p">)</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="k">elif</span> <span class="n">environment</span> <span class="o">==</span> <span class="s2">&quot;testing&quot;</span><span class="p">:</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Database</span><span class="p">,</span> <span class="n">InMemoryDatabase</span><span class="p">)</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="k">else</span><span class="p">:</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="n">container</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">Database</span><span class="p">,</span> <span class="n">SQLiteDatabase</span><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="3-maintainability">3. <strong>Maintainability</strong><a class="headerlink" href="#3-maintainability" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Adding a new dependency is easy</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">:</span> <span class="n">Database</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="n">Cache</span><span class="p">,</span> <span class="n">logger</span><span class="p">:</span> <span class="n">Logger</span><span class="p">):</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">cache</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>  <span class="c1"># New dependency</span>
-</span></code></pre></div>
-<h3 id="4-separation-of-concerns">4. <strong>Separation of Concerns</strong><a class="headerlink" href="#4-separation-of-concerns" title="Anchor link to this section for reference">&para;</a></h3>
-<p>Each class focuses on its single responsibility:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>      <span class="c1"># Business logic</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">Database</span><span class="p">:</span>         <span class="c1"># Data persistence</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">Cache</span><span class="p">:</span>           <span class="c1"># Caching</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">Logger</span><span class="p">:</span>          <span class="c1"># Logging</span>
-</span></code></pre></div>
-<h3 id="5-reusability">5. <strong>Reusability</strong><a class="headerlink" href="#5-reusability" title="Anchor link to this section for reference">&para;</a></h3>
-<p>Components can be reused in different contexts:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Same UserService can be used in:</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="c1"># - Web API</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="c1"># - Background worker</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="c1"># - CLI tool</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="c1"># - Tests</span>
-</span></code></pre></div>
-<h2 id="common-anti-patterns">🚨 Common Anti-Patterns<a class="headerlink" href="#common-anti-patterns" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="1-service-locator">1. <strong>Service Locator</strong><a class="headerlink" href="#1-service-locator" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">ServiceLocator</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Database</span><span class="p">)</span>  <span class="c1"># ❌ Hidden dependency</span>
-</span></code></pre></div>
-<p><strong>Problems:</strong>
-- Dependencies not explicit
-- Harder to test
-- Tightly coupled to locator</p>
-<h3 id="2-factory-overload">2. <strong>Factory Overload</strong><a class="headerlink" href="#2-factory-overload" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserServiceFactory</span><span class="p">:</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>        <span class="n">db</span> <span class="o">=</span> <span class="n">DatabaseFactory</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>        <span class="n">cache</span> <span class="o">=</span> <span class="n">CacheFactory</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>        <span class="k">return</span> <span class="n">UserService</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">cache</span><span class="p">)</span>  <span class="c1"># ❌ Manual wiring everywhere</span>
-</span></code></pre></div>
-<p><strong>Problems:</strong>
-- Boilerplate code
-- Error-prone
-- Hard to maintain</p>
-<h3 id="3-circular-dependencies">3. <strong>Circular Dependencies</strong><a class="headerlink" href="#3-circular-dependencies" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">:</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">B</span><span class="p">):</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">:</span>
-</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="n">A</span><span class="p">):</span>  <span class="c1"># ❌ Circular dependency</span>
-</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span>
-</span></code></pre></div>
-<p><strong>Problems:</strong>
-- Impossible to resolve
-- Indicates poor design</p>
-<h2 id="best-practices">🏆 Best Practices<a class="headerlink" href="#best-practices" title="Anchor link to this section for reference">&para;</a></h2>
-<h3 id="1-use-constructor-injection">1. <strong>Use Constructor Injection</strong><a class="headerlink" href="#1-use-constructor-injection" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># ✅ Good</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">:</span> <span class="n">Database</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="n">Cache</span><span class="p">):</span>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">cache</span>
-</span></code></pre></div>
-<h3 id="2-depend-on-abstractions">2. <strong>Depend on Abstractions</strong><a class="headerlink" href="#2-depend-on-abstractions" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># ✅ Good - depend on interface/protocol</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repository</span><span class="p">:</span> <span class="n">IUserRepository</span><span class="p">):</span>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">repository</span> <span class="o">=</span> <span class="n">repository</span>
-</span></code></pre></div>
-<h3 id="3-single-responsibility">3. <strong>Single Responsibility</strong><a class="headerlink" href="#3-single-responsibility" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># ✅ Good - one reason to change</span>
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repository</span><span class="p">:</span> <span class="n">IUserRepository</span><span class="p">):</span>
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">repository</span> <span class="o">=</span> <span class="n">repository</span>
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>
-</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">repository</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="4-explicit-dependencies">4. <strong>Explicit Dependencies</strong><a class="headerlink" href="#4-explicit-dependencies" title="Anchor link to this section for reference">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># ✅ Good - all dependencies visible</span>
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="nd">@inject</span>
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_order</span><span class="p">(</span>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>    <span class="n">order_service</span><span class="p">:</span> <span class="n">OrderService</span><span class="p">,</span>
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>    <span class="n">payment_service</span><span class="p">:</span> <span class="n">PaymentService</span><span class="p">,</span>
-</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>    <span class="n">notification_service</span><span class="p">:</span> <span class="n">NotificationService</span>
-</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="p">):</span>
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>    <span class="k">pass</span>
-</span></code></pre></div>
-<h2 id="summary">🎉 Summary<a class="headerlink" href="#summary" title="Anchor link to this section for reference">&para;</a></h2>
-<p>Dependency Injection is a powerful pattern that:</p>
+<p>The container controls object creation. Your code only declares what it needs. This is "inversion of control".</p>
+<h2 id="kinds-of-injection">Kinds of injection<a class="headerlink" href="#kinds-of-injection" title="Anchor link to this section for reference">&para;</a></h2>
 <ul>
-<li><strong>Improves testability</strong> by allowing easy mocking</li>
-<li><strong>Increases flexibility</strong> by enabling easy implementation swaps</li>
-<li><strong>Enhances maintainability</strong> by reducing coupling</li>
-<li><strong>Promotes reusability</strong> by creating focused components</li>
-<li><strong>Enables better architecture</strong> through clear separation of concerns</li>
+<li><strong>Constructor injection</strong> passes dependencies to <code>__init__</code>. Use it by default: dependencies are explicit, and a missing one fails when the object is built. InjectQ resolves constructor parameters from their type hints.</li>
+<li><strong>Function injection</strong> passes dependencies to a function with <code>@inject</code>. See <a href="../../injection-patterns/inject-decorator/"><code>@inject</code></a>.</li>
+<li><strong>Property and method injection</strong> set dependencies after construction or per call. They hide what an object needs, so InjectQ does not do them for you.</li>
 </ul>
-<p>InjectQ makes DI easy by providing:
-- Multiple injection patterns (<code>@inject</code>, dict-like, manual)
-- Automatic dependency resolution
-- Powerful scoping mechanisms
-- Framework integrations
-- Testing utilities</p>
-<p>Ready to dive deeper? Check out <a href="../container-pattern/">the container pattern</a> next!</p>
+<h2 id="things-to-avoid">Things to avoid<a class="headerlink" href="#things-to-avoid" title="Anchor link to this section for reference">&para;</a></h2>
+<ul>
+<li><strong>Service locator</strong>: calling <code>container.get(Database)</code> inside a class body. The dependency is hidden from the constructor signature and from tests. Ask for it in <code>__init__</code> instead.</li>
+<li><strong>Circular dependencies</strong>: <code>A</code> needs <code>B</code> and <code>B</code> needs <code>A</code>. InjectQ raises <code>CircularDependencyError</code>. Break the cycle by extracting a third class or by passing the value at call time.</li>
+</ul>
+<p>Next: <a href="../container-pattern/">the container</a>.</p>
 
 
 
@@ -2113,7 +1781,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../../getting-started/first-app/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Your First App">
+          <a href="../../skill/" class="md-footer__link md-footer__link--prev" aria-label="Previous: AI Agent Skill">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -2123,7 +1791,7 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Your First App
+                AI Agent Skill
               </div>
             </div>
           </a>
@@ -2169,7 +1837,7 @@
       
       
     
-    <a href="https://github.com/Iamsdt/injectq" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+    <a href="https://github.com/10xhub/injectq" target="_blank" rel="noopener" title="github.com" class="md-social__link">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
     </a>
   
