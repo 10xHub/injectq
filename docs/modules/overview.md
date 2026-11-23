@@ -1,10 +1,6 @@
-# Modules & Providers
+# Modules and Providers
 
-Organize your dependency injection configuration into reusable, composable units.
-
-## What are Modules?
-
-Modules are **containers for related bindings** that group services together.
+A module groups related bindings so you can install them together. Install a module with `container.install_module(...)` or pass a list when you create the container: `InjectQ([DatabaseModule()])`.
 
 ```python
 from injectq import InjectQ
@@ -18,383 +14,118 @@ class DatabaseModule(Module):
 container = InjectQ.get_instance()
 container.install_module(DatabaseModule())
 
-# Services are now available
 repo = container[UserRepository]
 ```
 
-## Module Types
+`binder` has `bind(...)`, `bind_instance(...)` and `bind_factory(..., scope=...)`. They take the same arguments as the container's methods. `bind` defaults to the singleton scope and `bind_factory` to transient.
 
-### 1. Simple Module
+## Module types
 
-Basic module for straightforward bindings:
+### SimpleModule
+
+A fluent list of bindings:
 
 ```python
 from injectq.modules import SimpleModule
 
-module = SimpleModule() \
-    .bind(Database, PostgresDatabase) \
-    .bind(Cache, RedisCache) \
+module = (
+    SimpleModule()
+    .bind(Database, PostgresDatabase)
+    .bind(Cache, RedisCache)
     .bind_instance("api_key", "secret-123")
-
+)
 container.install_module(module)
 ```
 
-### 2. Configuration Module
+### ConfigurationModule
 
-Bind configuration values:
+Binds each key of a dict to its value:
 
 ```python
 from injectq.modules import ConfigurationModule
 
-config = {
-    "db_host": "localhost",
-    "db_port": 5432,
-    "api_key": "secret-key"
-}
+container.install_module(ConfigurationModule({"db_host": "localhost", "db_port": 5432}))
 
-container.install_module(ConfigurationModule(config))
-
-# Access configuration
 host = container["db_host"]
-port = container["db_port"]
 ```
 
-### 3. Provider Module
+### ProviderModule
 
-**Most powerful** - use `@provider` methods for complex initialization:
+Mark methods with `@provider`. The return annotation says what the method provides, and its parameters are injected like a constructor's.
 
 ```python
 from injectq.modules import ProviderModule, provider
 
 class AppModule(ProviderModule):
-    @provider
-    def provide_database_config(
-        self, db_host: str, db_port: int, db_name: str
-    ) -> DatabaseConfig:
-        """Provider parameters are auto-injected"""
-        return DatabaseConfig(
-            host=db_host,
-            port=db_port,
-            database=db_name
-        )
-
-    @provider
+    @provider(scope="singleton")
     def provide_database(self, config: DatabaseConfig) -> Database:
-        """Compose dependencies with initialization logic"""
         db = Database(config)
-        db.connect()  # Custom initialization
+        db.connect()
         return db
 
-# Bind config values
-container.bind_instance("db_host", "localhost")
-container.bind_instance("db_port", 5432)
-container.bind_instance("db_name", "myapp")
+    @provider
+    def provide_user_service(self, db: Database, logger: Logger) -> UserService:
+        return UserService(db=db, logger=logger)
 
-# Install module
+container.bind_instance("db_host", "localhost")
 container.install_module(AppModule())
 
-# Get fully initialized database
-db = container[Database]
+service = container[UserService]
 ```
 
-## Provider Pattern (Recommended)
+Rules:
 
-The **@provider pattern** is the most powerful way to create complex dependencies.
+- The return annotation is required. Without it, installing the module raises `BindingError`.
+- A bare `@provider` is **transient**: the method runs on every resolve. Use `@provider(scope="singleton")`, or any other scope name, when the service should be shared or when creating it has side effects such as connecting.
+- Providers can be `async def`. Resolve them with `aget()`:
 
-### Basic Provider
-
-```python
-class ServiceModule(ProviderModule):
-    @provider
-    def provide_logger(self, app_name: str, log_level: str) -> Logger:
-        """Return type annotation determines what this provides"""
-        return Logger(name=app_name, level=log_level)
-
-# Bind parameters
-container.bind_instance("app_name", "MyApp")
-container.bind_instance("log_level", "INFO")
-
-# Install and use
-container.install_module(ServiceModule())
-logger = container[Logger]
-```
-
-### Provider scope and async providers
-
-A bare `@provider` is **transient**: the method runs on every resolve. Pass `scope=` to change that. Providers can be `async def`. Resolve those with `aget()`.
-
-```python
-class AppModule(ProviderModule):
-    @provider(scope="singleton")      # runs once
-    def provide_database(self, url: str) -> Database:
-        return Database(url)
-
-    @provider                         # runs every time
-    def provide_cache(self) -> Cache:
-        return Cache()
-
+    ```python
     @provider(scope="singleton")
     async def provide_client(self) -> Client:
         return await Client.connect()
 
-container.install_module(AppModule())
-client = await container.aget(Client)
-```
+    client = await container.aget(Client)
+    ```
 
-`ProviderModule` finds providers by scanning the class, in definition order. It does not read properties, and an error inside a provider is raised, not hidden.
+- Parameters are matched in this order: an `Inject[...]` default, a bound key with the parameter's name, then the annotation. So `db_host: str` above is filled by `bind_instance("db_host", ...)`.
+- Providers are found by scanning the class dictionaries and are installed in definition order. Properties are not evaluated. An error inside a provider is raised, not hidden.
+- Module state is available through `self`, so a module can take constructor arguments:
 
-### Provider with Dependencies
+    ```python
+    class EnvironmentModule(ProviderModule):
+        def __init__(self, environment: str):
+            self.environment = environment
 
-```python
-class UserModule(ProviderModule):
-    @provider
-    def provide_user_service(
-        self, database: Database, cache: Cache, logger: Logger
-    ) -> UserService:
-        """Dependencies are auto-injected"""
-        return UserService(db=database, cache=cache, logger=logger)
-```
+        @provider(scope="singleton")
+        def provide_database_config(self) -> DatabaseConfig:
+            if self.environment == "production":
+                return DatabaseConfig(host="prod-db.example.com", ssl=True)
+            return DatabaseConfig(host="localhost", ssl=False)
 
-### Provider with Initialization
+    container.install_module(EnvironmentModule("production"))
+    ```
 
-```python
-class DatabaseModule(ProviderModule):
-    @provider
-    def provide_database(self, config: DatabaseConfig) -> Database:
-        """Perform complex initialization"""
-        db = Database(config)
-        db.connect()
-        db.setup_tables()
-        db.run_migrations()
-        return db
-```
+## Organising modules
 
-### Environment-Specific Providers
+Keep one module per area (`DatabaseModule`, `UserModule`, `EmailModule`) instead of one large module. Install them all on the same container:
 
 ```python
-class EnvironmentModule(ProviderModule):
-    def __init__(self, environment: str):
-        self.environment = environment
-
-    @provider
-    def provide_database_config(self) -> DatabaseConfig:
-        """Use module state for environment-specific logic"""
-        if self.environment == "production":
-            return DatabaseConfig(
-                host="prod-db.example.com",
-                port=5432,
-                ssl=True
-            )
-        else:  # development
-            return DatabaseConfig(
-                host="localhost",
-                port=5432,
-                ssl=False
-            )
-
-# Usage
-container.install_module(EnvironmentModule("production"))
+container = InjectQ([InfrastructureModule(), UserModule(), OrderModule()])
 ```
 
-## Complete Example
-
-```python
-from injectq import InjectQ
-from injectq.modules import ProviderModule, provider
-
-# Domain models
-class DatabaseConfig:
-    def __init__(self, host: str, port: int):
-        self.host = host
-        self.port = port
-
-class Database:
-    def __init__(self, config: DatabaseConfig):
-        self.config = config
-        self.connected = False
-
-    def connect(self):
-        self.connected = True
-        print(f"Connected to {self.config.host}")
-
-class UserService:
-    def __init__(self, db: Database, logger: Logger):
-        self.db = db
-        self.logger = logger
-
-# Provider module
-class ApplicationModule(ProviderModule):
-    @provider
-    def provide_database_config(
-        self, db_host: str, db_port: int
-    ) -> DatabaseConfig:
-        return DatabaseConfig(host=db_host, port=db_port)
-
-    @provider
-    def provide_database(self, config: DatabaseConfig) -> Database:
-        db = Database(config)
-        db.connect()  # Initialize
-        return db
-
-    @provider
-    def provide_logger(self, log_level: str) -> Logger:
-        return Logger(level=log_level)
-
-    @provider
-    def provide_user_service(
-        self, db: Database, logger: Logger
-    ) -> UserService:
-        return UserService(db=db, logger=logger)
-
-# Setup
-container = InjectQ.get_instance()
-
-# Bind configuration
-container.bind_instance("db_host", "localhost")
-container.bind_instance("db_port", 5432)
-container.bind_instance("log_level", "INFO")
-
-# Install module
-container.install_module(ApplicationModule())
-
-# Use services
-user_service = container[UserService]
-# Database is connected, logger is configured
-```
-
-## Module Patterns
-
-### Domain Modules
-
-```python
-class UserModule(ProviderModule):
-    @provider
-    def provide_user_repository(self, db: Database) -> UserRepository:
-        return UserRepository(db)
-
-    @provider
-    def provide_user_service(self, repo: UserRepository) -> UserService:
-        return UserService(repo)
-
-class OrderModule(ProviderModule):
-    @provider
-    def provide_order_repository(self, db: Database) -> OrderRepository:
-        return OrderRepository(db)
-
-    @provider
-    def provide_order_service(self, repo: OrderRepository) -> OrderService:
-        return OrderService(repo)
-```
-
-### Infrastructure Module
-
-```python
-class InfrastructureModule(ProviderModule):
-    @provider
-    def provide_database(self, db_url: str) -> Database:
-        return Database(db_url)
-
-    @provider
-    def provide_cache(self, redis_url: str) -> Cache:
-        return RedisCache(redis_url)
-
-    @provider
-    def provide_queue(self, queue_url: str) -> Queue:
-        return MessageQueue(queue_url)
-```
-
-### Testing Modules
+A later registration of the same key replaces an earlier one, so you can install a fake module after the real one in a test:
 
 ```python
 class FakeServicesModule(ProviderModule):
-    @provider
+    @provider(scope="singleton")
     def provide_database(self) -> Database:
         return InMemoryDatabase()
 
-    @provider
-    def provide_cache(self) -> Cache:
-        return MockCache()
-
-# Test setup
 def test_user_service():
-    container = InjectQ.get_instance()
-    container.install_module(FakeServicesModule())
-    
+    container = InjectQ([InfrastructureModule(), FakeServicesModule()])
     service = container[UserService]
-    # Uses mocked dependencies
 ```
 
-## Best Practices
+For overrides inside one block, see [Overrides](../testing/overrides.md).
 
-### ✅ Use Providers for Complex Setup
-
-```python
-@provider
-def provide_database(self, config: DatabaseConfig) -> Database:
-    db = Database(config)
-    db.connect()
-    db.run_migrations()
-    return db
-```
-
-### ✅ One Module Per Domain
-
-```python
-class UserModule(ProviderModule): pass
-class OrderModule(ProviderModule): pass
-class PaymentModule(ProviderModule): pass
-```
-
-### ✅ Environment-Specific Modules
-
-```python
-class ProductionModule(ProviderModule):
-    def __init__(self):
-        self.environment = "production"
-
-    @provider
-    def provide_config(self) -> Config:
-        return Config(ssl=True, debug=False)
-```
-
-### ✅ Type Annotations Required
-
-```python
-@provider
-def provide_database(self, config: DatabaseConfig) -> Database:
-    """Return type annotation is required"""
-    return Database(config)
-```
-
-### ❌ Avoid God Modules
-
-```python
-# ❌ Bad - everything in one module
-class EverythingModule(ProviderModule):
-    # 50+ providers...
-
-# ✅ Good - focused modules
-class DatabaseModule(ProviderModule): pass
-class CacheModule(ProviderModule): pass
-class EmailModule(ProviderModule): pass
-```
-
-## Summary
-
-- **Simple Module**: Fluent API for basic bindings
-- **Configuration Module**: Bind config dictionaries
-- **Provider Module**: Most powerful - complex initialization
-
-**Provider Pattern Benefits:**
-- Auto-inject dependencies into provider methods
-- Custom initialization logic
-- Environment-specific configuration
-- Clean, organized code
-
-**Key Points:**
-- Use `@provider` decorator on methods
-- Return type annotation determines what's provided
-- Parameters are auto-injected from container
-- Great for multi-step initialization
-
-Next: [FastAPI Integration](../integrations/fastapi.md) | [Testing](../testing/overview.md)
+Next: [FastAPI integration](../integrations/fastapi.md) | [Testing](../testing/overview.md)

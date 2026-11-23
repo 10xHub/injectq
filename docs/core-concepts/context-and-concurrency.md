@@ -1,6 +1,6 @@
 # Context and Concurrency
 
-Which container does `InjectQ.get_instance()` return? Which one do `@inject` and the decorators use? This page explains how InjectQ decides, and what that means for asyncio tasks and threads.
+This page explains which container `InjectQ.get_instance()`, `@inject` and the decorators use, and what that means for asyncio tasks and threads.
 
 ## The rule
 
@@ -50,7 +50,7 @@ finally:
     ContainerContext.reset_current(token)
 ```
 
-`ContainerContext.set_current(container)` does the same as `activate()`. `ContainerContext.clear_current()` sets the current container to `None`. It cannot restore an outer value, so prefer tokens.
+`ContainerContext.set_current(container)` does the same as `activate()`. `ContainerContext.clear_current()` sets the current container to `None` and cannot restore an outer value, so prefer tokens.
 
 ## Tasks
 
@@ -85,8 +85,6 @@ asyncio.run(main())
 # A True
 # B True
 ```
-
-In 0.5 the tasks shared one variable, so one task could see the container the other had set.
 
 A task you start after activating a container sees it:
 

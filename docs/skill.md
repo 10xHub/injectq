@@ -5,38 +5,11 @@ description: Use when writing, reviewing or debugging Python code that uses the 
 
 # injectq 0.6: guide for AI coding agents
 
-injectq is a Python dependency injection container (Python 3.10+, repo: github.com/10xhub/injectq). You bind types to implementations, factories or instances in an `InjectQ` container, then resolve them with `container.get(T)` / `await container.aget(T)`, constructor injection, or `@inject` on functions. Scopes (singleton, transient, request, custom) control lifetime. It compiles one resolver per service (generated Python code, or closures with `debug=True`). Optional extras: `injectq[fastapi]`, `injectq[taskiq]`, `injectq[fastmcp]` (fastmcp >= 2.14).
-
-Contents:
-
-1. When to choose injectq
-2. Recommended structure
-3. Core API
-4. Scopes and resources
-5. Async and concurrency rules
-6. Framework integrations (FastAPI, Taskiq, FastMCP)
-7. Testing
-8. Rules and pitfalls
-9. Drawbacks and limitations
-10. Performance
-11. Debugging
-12. Upgrading from 0.5
-13. Checklist before finishing
-
-## 1. When to choose injectq
-
-Choose it when you want one container usable from web handlers, workers, CLIs and tests, with type-keyed bindings, request scopes with cleanup, and context-local test overrides.
-
-| Alternative | Trade-off (verify against that library's current docs) |
-|---|---|
-| FastAPI `Depends` | Built in, zero setup, but tied to HTTP request handling and function-level wiring. Fine for small FastAPI-only apps. injectq adds a container usable outside routes (workers, CLI, MCP) and with the same bindings in tests. |
-| wireup | Type-based, annotation-driven, validates at startup, fast. Different API (`Injected[T]`, service decorators). |
-| dishka | Explicit provider classes and scopes, many framework integrations, graph validated at container creation. More ceremony, strict. |
-| dependency-injector | Declarative containers and provider objects, Cython speedups, `Provide[...]` wiring. More verbose, string-path wiring. |
+injectq is a Python dependency injection container (Python 3.10+, github.com/10xhub/injectq). You bind types to classes, factories or instances in an `InjectQ` container and resolve them with `container.get(T)` / `await container.aget(T)`, constructor injection, or `@inject`. Scopes (singleton, transient, request, custom) control lifetime. Extras: `injectq[fastapi]`, `injectq[taskiq]`, `injectq[fastmcp]` (fastmcp >= 2.14).
 
 Do not migrate an app that already uses another container unless asked.
 
-## 2. Recommended structure
+## 1. Recommended structure
 
 1. One `InjectQ()` per application, built once at startup in a single composition root (a `build_container()` function or `Module` classes). Do not scatter `@singleton` decorators across files in a large app: bindings become invisible and import-order dependent.
 2. Bind by type: `container.bind(Repo, SqlRepo)`. Use string keys only for plain config values (`container.bind_instance("db_url", "...")`).
@@ -88,7 +61,7 @@ def main(service: Service) -> str:
 assert main() == "sqlite://"
 ```
 
-## 3. Core API
+## 2. Core API
 
 Imports: `from injectq import ...`. Names below exist in 0.6.0.
 
@@ -140,23 +113,6 @@ Typed via `@overload`: `get(type[T]) -> T`; `get(str) -> Any`; `aget` likewise; 
 `invoke` injection order for params you did not pass: parameter name as a bound key, then type annotation (non-builtin), then default; else error. Pass explicit values as keyword arguments.
 
 ### Snippets
-
-Bind and get:
-
-```python
-from injectq import InjectQ
-
-class Db: ...
-class PgDb(Db): ...
-
-c = InjectQ()
-c.bind(Db, PgDb)                      # default scope: singleton
-c.bind(Db, to=PgDb)                   # same, keyword form
-c[Db] = PgDb                          # dict form: class -> singleton binding
-db = c.get(Db)                        # or c[Db]
-assert c.try_get(int) is None         # no raise
-assert Db in c
-```
 
 Instances, string keys, factories with scope:
 
@@ -312,7 +268,7 @@ assert c.get(Repo).db is c.get(Db)
 - Types: `Scope`, `ScopeType` (`SINGLETON`, `TRANSIENT`, `REQUEST`, `ACTION`), `ServiceKey`, `ServiceFactory`, `Factory`, `AsyncFactory`, `Provider`, `AsyncProvider`, `ResourceProvider`, `AsyncResourceProvider`, `Injectable`, `Configurable`, `ScopeAware`, `logger`.
 - Lazily loaded on first access: `injectq.testing`, `DependencyProfiler`, `DependencyValidator`, `DependencyVisualizer`.
 
-## 4. Scopes and resources
+## 3. Scopes and resources
 
 ### Scopes and current container
 
@@ -396,7 +352,7 @@ assert events == ["open pool", "open session", "close session", "close pool"]
 
 Shutdown: `container.shutdown(exc=None)` (sync resources) / `await container.ashutdown(exc=None)` (sync and async resources), reverse order of creation. Teardown errors are raised after all teardowns ran (`ExceptionGroup` on 3.11+, first error with `__notes__` on 3.10). `container.track_resource(key, lifecycle)` is advanced use.
 
-## 5. Async and concurrency rules
+## 4. Async and concurrency rules
 
 ### The model
 
@@ -494,15 +450,9 @@ Scopes follow the same rule: a `with container.scope("request")` block is visibl
 
 ### Threads and singletons
 
-Reads take no lock; creation takes a per-key lock. Singletons are shared by all threads and tasks, so they must be safe to share. Put per-request mutable state in `@scoped("request")`, not in a singleton.
+Reads take no lock; creation takes a per-key lock. Singletons are shared by all threads and tasks, so they must be safe to share. Put per-request mutable state in `@scoped("request")`. Do not call `asyncio.run` inside a handler to resolve async keys; use `aget`.
 
-### Do not
-
-- Create tasks and then `activate()`, expecting the tasks to see it.
-- Rely on a global "current container" set in one task for another running task.
-- Call `asyncio.run` inside a request handler to resolve async keys; use `aget`.
-
-## 6. Framework integrations
+## 5. Framework integrations
 
 Install the extra: `pip install "injectq[fastapi]"`, `"injectq[taskiq]"` or `"injectq[fastmcp]"`. Each integration imports its framework only when its functions are called. Each makes your container the current container and opens one `"request"` scope per HTTP request / WebSocket connection (FastAPI), MCP message (FastMCP) or task (Taskiq). Request-scoped services and `@resource("request")` resources are created and torn down per unit of work.
 
@@ -671,7 +621,7 @@ async def list_users(users: Users = InjectFastMCP(Users)) -> list[str]:
 - Taskiq: `InMemoryBroker()` as above.
 - FastMCP: use `fastmcp.Client(mcp)` in-memory transport.
 
-## 7. Testing
+## 6. Testing
 
 Tools: `container.override`, `InjectQ.test_mode()`, `injectq.testing.isolated_container`, `container_fixture`, `override_dependency`, `MockModule`.
 
@@ -783,29 +733,7 @@ assert c.get("env") == "test"
 assert c.get(Db) is c.get(Db)             # bound as an instance
 ```
 
-### Scoped code
-
-```python
-from injectq import scoped
-from injectq.testing import isolated_container
-
-
-with isolated_container() as c:
-    @scoped("request")
-    class Session: ...
-
-    with c.scope("request"):
-        a = c.get(Session)
-        assert c.get(Session) is a
-    with c.scope("request"):
-        assert c.get(Session) is not a
-```
-
-### Deprecated names in tests
-
-Run `pytest -W error::DeprecationWarning`. Do not import `test_container`, `TestModule`, `pytest_container_fixture` (pytest also tries to collect `test_*` / `Test*` names imported into a test module).
-
-## 8. Rules and pitfalls
+## 7. Rules and pitfalls
 
 Things that raise in 0.6, with the fix:
 
@@ -824,41 +752,27 @@ Things that raise in 0.6, with the fix:
 
 Behaviour traps (no exception, wrong result):
 
-- Current-container model: `container.activate()`, `ContainerContext.set_current(c)` and `with container.context()` change the container only for the current task or thread and everything started from it afterwards (`asyncio.create_task`, `asyncio.to_thread`, anyio). Already-running sibling tasks do not see it. Plain `threading.Thread` and `loop.run_in_executor` do NOT inherit it: they see the global container and no scopes. Pass the container explicitly, or `contextvars.copy_context().run`, or `with container.context():` inside the worker. `activate()` returns a token: restore with `ContainerContext.reset_current(token)`.
-- Sync Taskiq task bodies run in `run_in_executor`: `InjectQ.get_instance()` and `@inject` inside a `def` task use the global container. Make tasks `async def`, or use only the injected parameters.
-- `override()` is local to the current context, slows resolution while active, and does not change objects that already hold the old value (see section 7).
+- The current container and scopes are `ContextVar`s: plain `threading.Thread` and `loop.run_in_executor` do not see them, and already-running sibling tasks do not see a later `activate()` (section 4).
+- Sync Taskiq task bodies run in `run_in_executor`: `get_instance()` and `@inject` there use the global container. Use `async def` tasks.
+- `override()` is local to the current context, slows resolution while active, and does not change objects that already hold the old value (see section 6).
 - Parameter defaults are used only when the parameter's own key (by type, or name) is not bound. A bound key always beats the default.
 - `Inject[T]` marker beats a bound parameter name. An unresolvable `Inject[...]` raises; it never passes through as a value.
 - Last registration wins for a key, whatever kind. Rebinding drops that key's cached singleton. `bind_factory` is transient by default (called on every resolve): add `scope="singleton"` to cache.
 - Exceptions raised by your own `@inject` function pass through unchanged. Only resolution failures are `InjectionError`. Constructor errors during resolution are wrapped in `InjectionError` once, for the class that failed; injectq's own errors are not wrapped.
 - `InjectQ(debug=True)` disables generated code (slower, simpler tracebacks): keep it off in production.
 
-Removed or deprecated names - do not write them (full table in section 12):
+Do not write deprecated or removed names (`test_container`, `TestModule`, `pytest_container_fixture`, `InjectAPI`, `InjectTask`, `InjectMCP`, `setup_mcp`, `get_container_mcp`, `get_injector_instance_taskiq`, `injectq.components`, `thread_safe=`, `use_async_scopes=`, the scope names `"async_request"`/`"async_action"`). Section 10 has the replacements. Run tests with `pytest -W error::DeprecationWarning` to find them.
 
-- `injectq.testing.test_container`, `TestModule`, `pytest_container_fixture` -> `isolated_container`, `MockModule`, `container_fixture`.
-- `InjectAPI`, `InjectTask`, `InjectMCP` -> `InjectFastAPI`, `InjectTaskiq`, `InjectFastMCP`; `get_injector_instance_taskiq`, `setup_mcp`, `get_container_mcp` -> `get_container_taskiq`, `setup_fastmcp`, `get_container_fastmcp`.
-- `injectq.components` and `Component*` names: no replacement (use modules, providers, bindings); removed in 0.7.
-- Scope names `"async_request"`, `"async_action"` -> `"request"`, `"action"`. `container._scope_manager.register_scope("x", obj)`, `ThreadLocalScope`, `RequestScope` and friends -> `container.register_scope("x")`.
-- `DependencyResolver.resolve/resolve_async`, `injectq.core.async_scopes`, `injectq.core.thread_safety` -> `container.get/aget`, `container.async_scope`, plain locks.
-- `InjectQ(thread_safe=..., use_async_scopes=...)` -> `InjectQ()`.
+Limitations to tell the user about:
 
-Deprecated names still work in 0.6 with a `DeprecationWarning`. Run tests with `pytest -W error::DeprecationWarning` to find them.
-
-## 9. Drawbacks and limitations
-
-State these honestly to the user.
-
-- Runtime container: wiring errors surface at first resolve unless you call `validate()`/`compile()` at startup.
-- Type-keyed. Two bindings of one type need distinct keys (a subclass, a wrapper class, or a string key).
-- `override()` slows the container while active and does not rewrite already-built singletons.
-- Generated resolvers are harder to step through; use `debug=True` or read `resolver.source(key)`.
+- Wiring errors surface at first resolve unless you call `validate()` or `compile()` at startup.
+- Bindings are type-keyed: two bindings of one type need distinct keys (a subclass, a wrapper class or a string key).
+- `override()`, an attached profiler and `debug=True` use slower resolution paths. Generated resolvers are harder to step through (use `debug=True`).
 - Free-threaded CPython is not tested; the `fastmcp` extra cannot be installed on Python 3.15 yet.
-- Request scope and the current container are ContextVars: plain threads and `run_in_executor` do not see them.
-- `InjectQ(debug=True)`, an attached profiler and an active `override()` use slower paths.
 
-## 10. Performance
+## 8. Performance
 
-`get()` of a cached singleton and building small graphs are sub-microsecond on a warmed container. Median microseconds per operation, CPython 3.13, same machine for all libraries; hand-written means plain constructor calls with no container. Scenarios: S1 cached singleton, S2 transient chain `C(B(A()))`, S3 wide graph (5 transients over 5 singletons), S4 request scope enter/resolve/exit, S5 `@inject` call with 3 singletons, S6 async S2, S7 build a 50-service container.
+`get()` of a cached singleton and building small graphs are sub-microsecond on a warmed container. Median microseconds per operation, CPython 3.13, same machine for all libraries; hand-written means plain constructor calls with no container. Scenarios: S1 cached singleton, S2 transient chain `C(B(A()))`, S3 wide graph (5 transients over 5 singletons), S4 request scope enter/resolve/exit, S5 `@inject` call with 3 singletons, S6 async S2.
 
 <!-- BENCH:SKILL_TABLE -->
 | µs/op (median, lower is better) | S1 singleton | S2 transient chain | S3 wide graph | S4 request scope | S5 injected call | S6 async chain |
@@ -920,21 +834,18 @@ _14 libraries, AMD Ryzen 5 5600G with Radeon Graphics, CPython 3.13.13, median o
 
 How the engine behaves:
 
-- Each service gets one resolver function. Singleton keys use small linked closures. A transient or scoped key starts on closures and, on its 2nd resolve, is replaced by one generated Python function that calls constructors inline; singleton and scoped dependencies are read from the cache.
-- `container.compile()` generates every resolver immediately and raises if any service cannot be resolved. Call it at startup.
-- Any registry change (`bind`, `unbind`, `override`) discards compiled code; it is rebuilt on the next resolve. Bind everything at startup, not per request.
-- `@inject` builds its plan on the first call (signature and type-hint inspection) and reuses compiled resolvers after.
-- Entering/leaving a request scope is cheap (a ContextVar set plus an exit stack). Binding thousands of services is linear; do it once.
+- Each service gets one resolver function. Singleton keys use small linked closures. A transient or scoped key starts on closures and, on its 2nd resolve, is replaced by one generated Python function that calls constructors inline.
+- A registry change (`bind`, rebinding, `del c[key]`) discards compiled code, which is rebuilt on the next resolve.
+- `@inject` builds its plan on the first call and reuses compiled resolvers after.
 
-Tuning guidance:
+Tuning:
 
-- Do not micro-optimise DI. A web request spends tens to hundreds of microseconds in the framework; the container costs about a microsecond. Do not contort the design for it.
-- Never benchmark the first resolve of a key. Warm up with at least 2 resolves, or call `container.compile()`.
-- Prefer singleton for expensive things, transient for cheap ones. Scoped resolves cost a scope-cache lookup.
-- Avoid `bind`/`override` in hot paths. Keep `debug=True`, profilers and `override()` out of production.
-- Reproduce numbers with `python benchmarks/run.py` (injectq only) or `make bench-compare` (cross-library, pinned versions). Each library runs in its own process; median of 25 timed repeats after warm-up; scenarios are verified for equivalence first. To prove a regression, `python benchmarks/check.py` compares with `baseline.json` (more than 20% slower on S1-S6 fails). Full explanation: the Benchmarks page of the docs.
+- Do not micro-optimise DI: the container costs about a microsecond per request.
+- Never benchmark the first resolve of a key. Warm up with 2 resolves or call `container.compile()`.
+- Bind everything at startup, not per request. Keep `debug=True`, profilers and `override()` out of production.
+- Reproduce numbers with `python benchmarks/run.py` (injectq only) or `make bench-compare` (cross-library). See the Benchmarks page of the docs.
 
-## 11. Debugging
+## 9. Debugging
 
 - `container.validate()` lists every unresolvable service and cycle (`InjectionError`) without building instances. Also: `c.validate()` accepts defaults and `allow_none`.
 - `container.compile()` builds all resolvers; raises on the first problem set.
@@ -944,7 +855,7 @@ Tuning guidance:
 - `InjectQ(debug=True)` while developing: plain closures, steppable frames, `source()` returns `None`.
 - Time resolutions: `from injectq.diagnostics import DependencyProfiler`, then `container.attach_profiler(p)` / `container.detach_profiler()`. Profiler `start()` keeps data; `reset()` clears it.
 
-## 12. Upgrading from 0.5
+## 10. Upgrading from 0.5
 
 Order of work:
 
@@ -982,63 +893,35 @@ Order of work:
 | `injectq.utils`: `resolve_forward_ref`, `Injected`, `is_concrete_type`, `get_type_name`, `safe_issubclass`, `is_injectable_function`, `ThreadLocalStorage` | `typing.get_type_hints`, `inspect`, `issubclass`, `Inject[...]` |
 | `injectq.integrations.fastapi._request_container` | `get_container_fastapi()` |
 
-### Behaviour changes
+### Behaviour changes (0.5 to 0.6)
 
-1. Current container is per task/thread (ContextVar). `activate()` / `set_current()` return a token; restore with `ContainerContext.reset_current(token)` or use `with container.context():`. `run_in_executor` and plain threads do not inherit it.
-2. In FastAPI, FastMCP and Taskiq, `InjectQ.get_instance()` and `@inject` inside handlers use the container you passed to `setup_*` (0.5 used the global one). Bind what `@inject` helpers need in that container. Exception: sync Taskiq task bodies.
-3. Request scope is per `with` block. Resolving a request-scoped key outside a block raises `ScopeError` (0.5 returned an instance). Two blocks give two instances. Nested same-name scopes restore the outer one.
-4. `register_scope(name)` takes only a name. Unknown scope names raise `ScopeError`.
-5. `aget()` honours scopes and returns the same singleton as `get()`; singletons are created once under concurrency.
+1. The current container is per task and thread. `activate()` and `set_current()` return a token for `ContainerContext.reset_current(token)`; `with container.context():` is simpler. `run_in_executor` and plain threads do not inherit it. In 0.5, `set_current()` changed the container for every task on the thread.
+2. In FastAPI, FastMCP and Taskiq, `InjectQ.get_instance()` and `@inject` use the container passed to `setup_*` (0.5 used the global one). Sync Taskiq task bodies are the exception.
+3. Request scope is per `with` block. A request-scoped key outside a block raises `ScopeError` (0.5 returned an instance); two blocks give two instances; nested same-name scopes restore the outer one.
+4. `register_scope(name)` takes only a name (0.5: `container._scope_manager.register_scope("job", JobScope())`). Unknown scope names raise `ScopeError`.
+5. `aget()` honours scopes and returns the same singleton as `get()`. Singletons are created once under concurrency.
 6. `get()` on a key that needs an async factory raises `InjectionError` (0.5 returned a coroutine).
-7. One provider map: the later registration of a key wins whatever its kind (0.5: a factory always won). Rebinding drops that key's cached singleton. `allow_override=False` rejects the second registration of any kind.
-8. `override()` is context-local, transitive, works on factory-bound keys, does not clear other singletons.
-9. `@inject`: your own exceptions pass through unwrapped (0.5 wrapped them in `InjectionError`); only a failure to resolve a parameter raises `InjectionError`. Plans build on first call, so forward references and `from __future__ import annotations` work. `Inject[T]` is a plain marker and beats a bound parameter name; an unresolvable one raises.
-10. Parameter defaults are used only when the parameter's own key is not bound. A required parameter with no annotation/default raises at first resolve.
-11. `validate()` reports cycles, accepts defaults and `allow_none`, lists every problem. `compile()` builds all resolvers and raises on the first set of errors.
-12. Decorators `@singleton/@transient/@scoped/@register_as/@resource` work bare and with arguments; bare `@scoped` = `"request"`. `@resource` binds under its return-annotation type; transient resources are rejected (`ResourceError`). `@provider(scope=...)` and `binder.bind_factory(..., scope=...)` are new.
-13. Resource teardown errors are raised (all teardowns run first). `container.shutdown()` / `await container.ashutdown()` tear down in reverse order.
-14. Integration errors are raised, not logged-then-raised. `InjectQMCPMiddleware` no longer subclasses FastMCP's `Middleware`.
+7. One provider map: the later registration of a key wins whatever its kind (0.5: a factory always won). Rebinding drops the cached singleton.
+8. `override()` is context-local, transitive, works on factory-bound keys and does not clear other singletons.
+9. `@inject` does not wrap your exceptions (0.5 wrapped them in `InjectionError`). Plans build on first call, so forward references work. `Inject[T]` is a plain marker that beats a bound parameter name.
+10. Parameter defaults are used only when the parameter's own key is not bound. A required parameter with no annotation or default raises at first resolve.
+11. `validate()` reports cycles and lists every problem; `compile()` raises on errors.
+12. Decorators `@singleton/@transient/@scoped/@register_as/@resource` work bare and with arguments; bare `@scoped` is `"request"`. `@resource` binds under its return annotation type.
+13. Resource teardown errors are raised after all teardowns ran. `shutdown()` / `ashutdown()` tear down in reverse order.
+14. Integration errors are raised, not logged first. `InjectQMCPMiddleware` no longer subclasses FastMCP's `Middleware`.
 15. `InjectQ.test_mode()` also sets the container as the current context container.
 
-Before and after:
+New in 0.6: generated resolvers, `InjectQ(debug=True)`, context-local overrides, scope exit stacks (`current_exit_stack`, `track_resource`), `shutdown()` / `ashutdown()`, `bind_factory(..., scope=...)`, `ScopeError` / `AlreadyRegisteredError` / `ModuleBinder` / `ResourceError` exported from `injectq`, `InjectFastMCP`, `setup_fastmcp`, `get_container_taskiq`, `injectq.utils.graph`, `attach_profiler` / `detach_profiler`.
 
-```python
-# 0.5
-from injectq.testing import test_container, TestModule, pytest_container_fixture
-container = pytest_container_fixture()
+## 11. Checklist before finishing
 
-# 0.6
-from injectq.testing import isolated_container, MockModule, container_fixture
-container = container_fixture()
-```
-
-```python
-# 0.5: set_current changed the container for every task on the thread
-ContainerContext.set_current(container)
-await asyncio.gather(job_a(), job_b())
-
-# 0.6
-with container.context():
-    await asyncio.gather(job_a(), job_b())
-```
-
-```python
-# 0.5: container._scope_manager.register_scope("job", JobScope())
-# 0.6
-container.register_scope("job")
-```
-
-New in 0.6: generated resolvers; `InjectQ(debug=True)`; context-local overrides; scope exit stacks (`current_exit_stack`, `track_resource`); `shutdown()` / `ashutdown()`; `bind_factory(..., scope=...)`; `ScopeError`, `AlreadyRegisteredError`, `ModuleBinder`, `ResourceError` exported from `injectq`; `InjectFastMCP`, `setup_fastmcp`, `get_container_taskiq`; `injectq.utils.graph`; `attach_profiler` / `detach_profiler`.
-
-## 13. Checklist before finishing
-
-- [ ] One container, built in one place; no bindings created per request.
-- [ ] `aget` in async code; no `get()` on async factories or async resources.
-- [ ] Every request-scoped service is only resolved inside a scope (framework integration or `with container.scope(...)`).
-- [ ] Type keys (string keys only for plain values); custom scope names registered; no singleton depends on a scoped service; singletons are safe to share across threads.
-- [ ] Resources have teardown, and `shutdown()`/`ashutdown()` is called at exit (lifespan handler for FastAPI).
-- [ ] Nothing relies on a plain thread or `run_in_executor` seeing the container or a scope.
-- [ ] `container.validate()` or `compile()` runs at startup (and in a test).
-- [ ] Tests use `override()` / `isolated_container()` / `container_fixture()`, not edits to a shared container.
-- [ ] No deprecated/removed names or `thread_safe=`/`use_async_scopes=`; `pytest -W error::DeprecationWarning` is clean.
-- [ ] Optional extras installed for the integration used (`pip install "injectq[fastapi]"`).
+- One container, built in one place; no bindings created per request.
+- `aget` in async code; no `get()` on async factories or resources.
+- Request-scoped services are resolved only inside a scope (integration or `with container.scope(...)`); no singleton depends on a scoped service.
+- Type keys (string keys only for plain values); custom scope names registered.
+- Resources have teardown, and `shutdown()` / `ashutdown()` runs at exit (lifespan handler for FastAPI).
+- Nothing relies on a plain thread or `run_in_executor` seeing the container or a scope.
+- `container.validate()` or `compile()` runs at startup and in a test.
+- Tests use `override()`, `isolated_container()` or `container_fixture()`, not edits to a shared container.
+- No deprecated or removed names; `pytest -W error::DeprecationWarning` is clean.
+- The extra for the integration is installed (`pip install "injectq[fastapi]"`).

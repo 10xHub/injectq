@@ -1,6 +1,6 @@
 # Resources and Cleanup
 
-Some services need cleanup: a database session to close, a file to flush, a lock to release. InjectQ ties cleanup to a scope or to the container's shutdown.
+A resource is a service that needs cleanup, such as a connection to close or a file to flush. InjectQ runs the cleanup when its scope exits or when the container shuts down.
 
 ## `@resource`
 
@@ -49,7 +49,7 @@ http = await container.aget(HttpClient)
 await container.ashutdown()
 ```
 
-Resolve async resources with `aget`. `get()` raises `InjectionError` for a key that needs an async factory.
+Resolve async resources with `aget()`. `get()` raises `InjectionError` for a key that needs an async factory.
 
 ## Resources with a scope
 
@@ -73,14 +73,12 @@ with container.scope("request"):
 # "session closed" is printed here
 ```
 
-Use `async_scope` and `await container.aget(...)` for async resources:
+Async resources need `aget()` and `async_scope`, because the teardown must be awaited:
 
 ```python
 async with container.async_scope("request"):
     s = await container.aget(AsyncSession)
 ```
-
-Resolving an async resource with `get()` raises `InjectionError`. Use `aget()`, and use `async_scope`, because the teardown must be awaited.
 
 A transient resource makes no sense (nobody would close it), so `@resource("transient")` raises `ResourceError` when the function is decorated.
 
@@ -134,19 +132,9 @@ await container.ashutdown()      # sync and async resources
 - Each closed resource is removed from the singleton cache. Resolving it again creates a new one.
 - Pass an exception to hand it to the teardown code: `container.shutdown(exc)`.
 - `shutdown()` skips async resources. Use `ashutdown()` when you have any.
+- Teardown failures are collected and raised together, as described above.
 
-A typical app:
-
-```python
-container = InjectQ()
-...
-try:
-    run()
-finally:
-    container.shutdown()
-```
-
-In FastAPI, call `await container.ashutdown()` from the lifespan handler:
+Call it when the app stops, for example in a `finally` block. In FastAPI, call `await container.ashutdown()` from the lifespan handler:
 
 ```python
 from contextlib import asynccontextmanager
@@ -159,8 +147,6 @@ async def lifespan(app):
 
 app = FastAPI(lifespan=lifespan)
 ```
-
-## Concurrency
 
 A resource is created once, even if many tasks or threads ask for it at the same moment. Two resources with the same function name in different modules do not replace each other.
 

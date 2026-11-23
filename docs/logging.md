@@ -1,23 +1,15 @@
-# Logger Usage
+# Logging
 
-InjectQ provides a logger for library events. By default, it uses a `NullHandler` to avoid unwanted output, but you can easily enable logging in your application.
-
-## Basic Usage
+InjectQ logs to the standard `logging` logger named `injectq`. It has a `NullHandler`, so nothing is printed until you configure it.
 
 ```python
 import logging
-from injectq.utils.logging import logger
 
-# Add a handler to see logs in the console
+logger = logging.getLogger("injectq")      # same object as `from injectq import logger`
 handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter('[%(levelname)s] %(name)s: %(message)s'))
+handler.setFormatter(logging.Formatter("[%(levelname)s] %(name)s: %(message)s"))
 logger.addHandler(handler)
-logger.setLevel(logging.INFO)
-
-logger.info("InjectQ log message")
+logger.setLevel(logging.DEBUG)
 ```
 
-## Notes
-- The logger name is `injectq`.
-- No logs are shown unless you add a handler and set a level.
-- You can configure the logger as needed for your application.
+Use `logging.basicConfig(level=logging.DEBUG)` or your application's own logging configuration instead if you already have one. The logger records binding and module installation at `DEBUG` and `INFO`; resolution errors are raised as exceptions, not only logged.

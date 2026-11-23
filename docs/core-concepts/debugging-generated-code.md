@@ -1,15 +1,15 @@
 # Debugging Generated Code
 
-InjectQ 0.6 compiles each service into one Python function. For `UserService` that needs `Repo` that needs `Db`, it builds a function that creates all three with plain constructor calls. This is why resolving is fast.
+InjectQ 0.6 compiles each service into one Python function. For a `Service` that needs `Repo`, which needs `Db`, it builds a function that creates all three with plain constructor calls.
 
-This page shows how to look at that code, and how to turn it off when you want simpler tracebacks.
+This page shows how to read that code and how to turn it off for simpler tracebacks.
 
 ## How a service gets compiled
 
 1. The first `get(Key)` builds a plan for `Key`: its parameters, their types and scopes. Cycles are found here.
 2. Singleton keys use small linked closures. A singleton is created once, so generated code would not help.
 3. A transient or scoped key starts on closures. On its **second** resolve, it is replaced by one generated function. Dependencies that are transient are created inline, and singleton or scoped dependencies are read from the cache.
-4. `container.compile()` generates every resolver now. It also raises if any service cannot be resolved, so it is a good startup check.
+4. `container.compile()` generates every resolver now. It also raises `InjectionError` if any registered service cannot be resolved, so it works as a startup check. A factory that needs arguments from the caller counts as unresolvable.
 
 A change to the registry (a `bind`, an `unbind`, an override) throws the compiled code away. It is rebuilt on the next resolve.
 
@@ -79,13 +79,13 @@ For an async resolver use `source(key, is_async=True)`. It exists only for keys 
 
 ## Tracebacks
 
-The generated code is registered with `linecache` under the file name `<injectq-generated:Service>`. When your constructor fails, the traceback shows the generated line:
+The generated code is registered with `linecache` under the file name `<injectq-generated:Name>`. Once a key has been compiled (after `compile()` or its second resolve), a failing constructor shows the generated line in the traceback:
 
 ```text
 Traceback (most recent call last):
-  File "<injectq-generated:Service>", line 14, in resolve_Service
-    return Service(repo, db_2)
-  File "app.py", line 7, in __init__
+  File "<injectq-generated:Boom>", line 8, in resolve_Boom
+    return Boom(db)
+  File "app.py", line 4, in __init__
     raise RuntimeError("boom")
 RuntimeError: boom
 
@@ -93,7 +93,7 @@ The above exception was the direct cause of the following exception:
 
 Traceback (most recent call last):
   ...
-injectq.utils.exceptions.InjectionError: Failed to instantiate <class 'app.Service'>: boom
+injectq.utils.exceptions.InjectionError: Failed to instantiate <class 'app.Boom'>: boom
 ```
 
 Read it from the top:
@@ -111,11 +111,11 @@ container = InjectQ(debug=True)
 
 With `debug=True` no code is generated. Resolution uses plain Python closures that call your constructors in order. You get:
 
-- Shorter tracebacks that stay inside `injectq/core/resolver.py` and your code.
-- Code you can step through with a debugger, because every frame is a real source file.
+- Tracebacks whose frames are real source files (`injectq/core/resolver.py` and your code).
+- Code you can step through with a debugger.
 - `source()` returns `None`.
 
-The cost is speed: closures are a little slower than generated code. Use `debug=True` while you develop, and leave it off in production. See [Benchmarks](../benchmarks.md) for numbers.
+Closures are a little slower than generated code. Use `debug=True` while you debug and leave it off otherwise. See [Benchmarks](../benchmarks.md).
 
 ## Other helpers
 

@@ -1,163 +1,66 @@
 # @inject Decorator
 
-The **`@inject` decorator** is InjectQ's most powerful and recommended way to inject dependencies. It automatically resolves and injects dependencies based on type hints, making your code clean and declarative.
-
-## 🎯 Basic Usage
-
-The `@inject` decorator eliminates manual dependency management:
+`@inject` fills in a function's parameters from the container, based on their type hints. Call the function without those arguments.
 
 ```python
 from injectq import InjectQ, inject
 
 container = InjectQ.get_instance()
-
-# Set up container
 container[Database] = Database
 container[UserService] = UserService
 
-# Use @inject decorator
 @inject
 def process_user(service: UserService, db: Database) -> None:
-    # Dependencies automatically injected
-    user = service.get_user(1)
-    db.save(user)
+    db.save(service.get_user(1))
 
-# Call without parameters - dependencies injected automatically
-process_user()
+process_user()    # service and db are injected
 ```
 
-## 🏗️ How It Works
+Dependencies of dependencies are built too. A class with no binding and an injectable constructor is built automatically.
 
-### Automatic Resolution
+## How parameters are resolved
 
-The `@inject` decorator analyzes function signatures and resolves dependencies:
+For each parameter, in this order:
 
-```python
-@inject
-def create_report(
-    user_service: UserService,
-    analytics: AnalyticsService,
-    cache: Cache,
-    config: AppConfig
-) -> Report:
-    # InjectQ automatically:
-    # 1. Gets UserService from container
-    # 2. Gets AnalyticsService from container
-    # 3. Gets Cache from container
-    # 4. Gets AppConfig from container
-    # 5. Calls the function with all dependencies
-    pass
-```
+1. An argument you pass wins. Only missing parameters are injected.
+2. An `Inject[...]` default marks the key explicitly (see below).
+3. A bound key with the same name as the parameter.
+4. The type annotation.
+5. The parameter's default value, for parameters that cannot be built (such as `retries: int = 3`).
 
-### Type-Based Resolution
-
-Dependencies are resolved based on type hints:
+A bound protocol works like any other key:
 
 ```python
-from injectq import InjectQ
-
-container = InjectQ.get_instance()
-
-class IUserRepository(Protocol):
-    def get_by_id(self, id: int) -> Optional[User]: ...
-
-class UserRepository:
-    def get_by_id(self, id: int) -> Optional[User]:
-        # Implementation
-        pass
-
-# Register implementation
 container.bind(IUserRepository, UserRepository)
 
 @inject
-def get_user(repo: IUserRepository) -> Optional[User]:
-    # InjectQ finds UserRepository for IUserRepository
+def get_user(repo: IUserRepository):
     return repo.get_by_id(1)
 ```
 
-## 🎨 Advanced Patterns
+### `Inject[...]`
 
-### Async Functions
-
-Works seamlessly with async functions:
+Use it to inject a key that is not the annotation, such as a string key:
 
 ```python
-@inject
-async def process_user_async(service: UserService, user_id: int) -> User:
-    # All dependencies injected
-    user = await service.get_user_async(user_id)
-    return user
+from injectq import Inject, inject
 
-# Usage
-result = await process_user_async(user_id=123)
-```
-
-### Class Methods
-
-Can be used on class methods:
-
-```python
-class UserController:
-    @inject
-    def get_user(self, service: UserService, user_id: int) -> User:
-        # 'self' is not injected, other parameters are
-        return service.get_user(user_id)
-
-    @classmethod
-    @inject
-    def create_user(cls, service: UserService, data: dict) -> User:
-        # 'cls' is not injected
-        return service.create_user(data)
-```
-
-### Static Methods
-
-Works with static methods:
-
-```python
-class UserUtils:
-    @staticmethod
-    @inject
-    def validate_user(service: UserService, user_id: int) -> bool:
-        user = service.get_user(user_id)
-        return user is not None and user.is_active
-```
-
-### Nested Injection
-
-Dependencies can have their own dependencies:
-
-```python
-class Database:
-    def __init__(self, config: DatabaseConfig):
-        self.config = config
-
-class UserRepository:
-    def __init__(self, db: Database):
-        self.db = db
-
-class UserService:
-    def __init__(self, repo: UserRepository):
-        self.repo = repo
-
-# Register only the top-level service
-container[UserService] = UserService
+container["db_url"] = "postgresql://localhost/app"
 
 @inject
-def use_service(service: UserService) -> None:
-    # InjectQ automatically creates:
-    # 1. DatabaseConfig
-    # 2. Database (with DatabaseConfig)
-    # 3. UserRepository (with Database)
-    # 4. UserService (with UserRepository)
-    pass
+def connect(url: str = Inject["db_url"]) -> None:
+    ...
 ```
 
-## 🔧 Integration Patterns
+An `Inject[...]` marker beats a bound key that matches the parameter name. If the key cannot be resolved, the call raises. The marker is plain data: it does not cache anything, and `repr()` does not resolve it. Outside `@inject`, an `Inject[T]` value resolves from the current container each time you read an attribute on it.
 
-### With Classes
+## What it can decorate
 
-Use `@inject` on `__init__` methods:
+- Sync and async functions (`await process(...)` works as usual).
+- Generators and async generators. Injection happens on the first `next()`.
+- Methods. `self` and `cls` are skipped. `@classmethod` and `@staticmethod` work in either order with `@inject`.
+- `__init__`, so a class can receive injected constructor parameters when you call `UserController()`.
+- `functools.partial` objects and callable objects.
 
 ```python
 class UserController:
@@ -166,105 +69,14 @@ class UserController:
         self.service = service
         self.logger = logger
 
-    def get_user(self, user_id: int) -> User:
-        self.logger.info(f"Getting user {user_id}")
-        return self.service.get_user(user_id)
-
-# Usage
-controller = UserController()  # Dependencies automatically injected
+controller = UserController()
 ```
 
-### With Context Managers
+The injection plan is built on the first call, not at decoration time. Forward references and `from __future__ import annotations` therefore work, and the decorator can run before the services are bound.
 
-```python
-class DatabaseTransaction:
-    @inject
-    def __init__(self, db: Database):
-        self.db = db
+## Errors
 
-    def __enter__(self):
-        self.db.begin_transaction()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type:
-            self.db.rollback()
-        else:
-            self.db.commit()
-
-@inject
-def process_with_transaction(service: UserService) -> None:
-    with DatabaseTransaction() as tx:
-        # Transaction automatically injected
-        service.update_user(1, {"name": "New Name"})
-```
-
-## 🧪 Testing with @inject
-
-Test your injected functions easily:
-
-```python
-from injectq.testing import isolated_container
-from injectq import inject
-
-def test_user_service():
-    with isolated_container() as container:
-        # Set up test dependencies
-        container[UserService] = MockUserService
-        container[Database] = MockDatabase
-
-        # Test the function
-        @inject
-        def get_user(service: UserService) -> User:
-            return service.get_user(1)
-        
-        result = get_user()
-        assert result is not None
-```
-
-## 🚨 Error Handling
-
-### Missing Dependencies
-
-```python
-@inject
-def process_data(service: UserService) -> None:
-    pass
-
-# If UserService is not registered
-try:
-    process_data()
-except InjectionError as e:
-    # "Cannot inject parameter 'service' of process_data: No binding found ..."
-    # e.__cause__ is the DependencyNotFoundError
-    print(f"Missing dependency: {e}")
-```
-
-### Circular Dependencies
-
-```python
-class A:
-    def __init__(self, b: B):
-        self.b = b
-
-class B:
-    def __init__(self, a: A):  # Circular!
-        self.a = a
-
-container.bind(A, A)
-container.bind(B, B)
-
-@inject
-def use_a(a: A) -> None:
-    pass
-
-# Will raise CircularDependencyError
-use_a()
-```
-
-### Errors from your own code
-
-Exceptions raised inside your function are **not** wrapped. They reach the caller unchanged:
+Your own exceptions pass through unchanged. `@inject` does not wrap them:
 
 ```python
 @inject
@@ -274,171 +86,44 @@ def handler(repo: UserRepository) -> None:
 try:
     handler()
 except ValueError:
-    ...  # your ValueError, not InjectionError
+    ...    # not InjectionError
 ```
 
-Only a failure to build a parameter raises `InjectionError`, and its message names the parameter.
-
-## How `@inject` behaves
-
-- The plan is built on the **first call**, so forward references and `from __future__ import annotations` work.
-- Arguments you pass win. Only missing parameters are injected.
-- Works on sync and async functions, generators and async generators (resolved on the first `next()`), and on `@classmethod` and `@staticmethod` in either order.
-- `Inject[T]` as a default marks a parameter explicitly. It beats a bound key with the same parameter name. It is a plain marker: no caching, and `repr()` has no side effects.
-- A parameter default is used only when the parameter's own key is not bound.
-- Inside FastAPI, FastMCP and Taskiq handlers, `@inject` uses the container given to `setup_*`. See [Context and concurrency](../core-concepts/context-and-concurrency.md).
+A failure to resolve a parameter raises `InjectionError`. The message names the function and the parameter, and `__cause__` holds the original error:
 
 ```python
-from typing import Annotated
-from injectq import Inject, inject
-
 @inject
-def connect(url: Annotated[str, Inject("db_url")]) -> None:
-    ...
+def connect(url: str) -> None: ...
+
+connect()
+# InjectionError: Cannot inject parameter 'url' of connect: No binding found for type: <class 'str'>
+# connect() raised from DependencyNotFoundError
 ```
 
-## 🏆 Best Practices
+A dependency cycle raises `CircularDependencyError` unchanged.
 
-### 1. Use Type Hints
+## Which container
+
+`@inject` uses the current container: `InjectQ.get_instance()`, or the one set with `container.activate()` or `with container.context():`. Inside FastAPI, FastMCP and Taskiq handlers it is the container you passed to `setup_*`. See [Context and concurrency](../core-concepts/context-and-concurrency.md).
+
+Request-scoped dependencies need an active scope. Frameworks enter one per request. In plain code, wrap the call in `with container.scope("request"):`.
+
+## Testing
 
 ```python
-# ✅ Good - explicit type hints
-@inject
-def process_user(service: UserService, user_id: int) -> User:
-    pass
+from injectq.testing import isolated_container
 
-# ❌ Avoid - missing type hints
-@inject
-def process_user(service, user_id):
-    pass
+def test_get_user():
+    with isolated_container() as container:
+        container[UserService] = FakeUserService()
+
+        @inject
+        def get_user(service: UserService):
+            return service.get_user(1)
+
+        assert get_user() is not None
 ```
 
-### 2. Prefer Protocols
+To replace a service for the duration of a block, use [`container.override`](../testing/overrides.md).
 
-```python
-# ✅ Good - depend on abstractions
-class IUserService(Protocol):
-    def get_user(self, id: int) -> User: ...
-
-@inject
-def process_user(service: IUserService) -> None:
-    pass
-
-# ❌ Avoid - depend on concrete classes
-@inject
-def process_user(service: UserService) -> None:
-    pass
-```
-
-### 3. Keep Functions Focused
-
-```python
-# ✅ Good - single responsibility
-@inject
-def create_user(service: UserService, data: CreateUserRequest) -> User:
-    return service.create_user(data)
-
-@inject
-def send_welcome_email(email_service: EmailService, user: User) -> None:
-    email_service.send_welcome(user)
-
-# ❌ Avoid - multiple responsibilities
-@inject
-def create_user_and_send_email(
-    user_service: UserService,
-    email_service: EmailService,
-    data: CreateUserRequest
-) -> User:
-    user = user_service.create_user(data)
-    email_service.send_welcome(user)  # Multiple concerns
-    return user
-```
-
-### 4. Handle Optional Dependencies
-
-```python
-# ✅ Good - optional dependencies
-@inject
-def log_request(logger: Optional[Logger], request: Request) -> None:
-    if logger:
-        logger.info(f"Request: {request.path}")
-
-# ✅ Good - default values
-@inject
-def process_data(cache: Optional[Cache] = None) -> None:
-    if cache:
-        # Use cache
-        pass
-    else:
-        # Cache not available
-        pass
-```
-
-### 5. Use Descriptive Names
-
-```python
-# ✅ Good - descriptive parameter names
-@inject
-def authenticate_user(
-    auth_service: AuthenticationService,
-    user_credentials: UserCredentials
-) -> AuthResult:
-    pass
-
-# ❌ Avoid - unclear names
-@inject
-def auth(s: AuthenticationService, c: UserCredentials) -> AuthResult:
-    pass
-```
-
-## 🔄 Comparison with Other Patterns
-
-### @inject vs Dict Interface
-
-```python
-# Dict interface - manual resolution
-def process_user(user_id: int) -> User:
-    service = container[UserService]
-    return service.get_user(user_id)
-
-# @inject - automatic resolution
-@inject
-def process_user(service: UserService, user_id: int) -> User:
-    return service.get_user(user_id)
-```
-
-## 🎯 When to Use @inject
-
-### ✅ Ideal For
-
-- **Most applications** - Recommended default approach
-- **Complex dependency graphs** - Automatic resolution
-- **Type safety** - Full mypy support
-- **Clean code** - Declarative dependency specification
-- **Testing** - Easy to mock and override
-
-### ⚠️ Considerations
-
-- **Performance** - Slight overhead for resolution (can be optimized)
-- **Debugging** - Dependencies not visible in function calls
-- **Learning curve** - Need to understand type hints
-
-## 🎉 Summary
-
-The `@inject` decorator provides:
-
-- **Automatic dependency resolution** - No manual wiring
-- **Type-based injection** - Uses type hints for resolution
-- **Clean syntax** - Declarative and readable
-- **Full type safety** - Works with mypy and IDEs
-- **Async support** - Works with async functions
-- **Testing friendly** - Easy to override dependencies
-
-**Key benefits:**
-- Eliminates boilerplate dependency management
-- Makes dependencies explicit through type hints
-- Enables easy testing with dependency overrides
-- Works seamlessly with all InjectQ features
-- Provides excellent IDE support and autocomplete
-
-Ready for more? See [Factory Methods](factory-methods.md) and [Testing](../testing/overview.md).
+Next: [Factory methods](factory-methods.md) | [Testing](../testing/overview.md)

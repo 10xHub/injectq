@@ -3,15 +3,14 @@
 [![PyPI version](https://badge.fury.io/py/injectq.svg)](https://pypi.org/project/injectq/)
 [![Python versions](https://img.shields.io/pypi/pyversions/injectq.svg)](https://pypi.org/project/injectq/)
 [![License](https://img.shields.io/github/license/10xhub/injectq.svg)](https://github.com/10xhub/injectq/blob/main/LICENSE)
-[![Coverage](https://img.shields.io/badge/coverage-73%25-yellow.svg)](#)
+[![Coverage](https://img.shields.io/badge/coverage-87%25-green.svg)](#)
 
-
-InjectQ is a lightweight, type-friendly dependency injection library for Python focused on clarity, performance, and pragmatic integrations.
+InjectQ is a type-friendly dependency injection library for Python. It supports sync and async code, scopes, modules, and FastAPI, FastMCP and Taskiq integrations.
 
 !!! tip "Using an AI coding agent?"
-    Using an AI coding agent (Claude Code, Cursor, Copilot, ...)? Give it [skill.md](https://raw.githubusercontent.com/10xhub/injectq/main/docs/skill.md): one file with everything it needs to use injectq correctly: recommended approach, API, pitfalls, limitations and benchmarks. Rendered page: [AI Agent Skill](skill.md).
+    Give it [skill.md](https://raw.githubusercontent.com/10xhub/injectq/main/docs/skill.md): one file with the recommended approach, API, pitfalls and limitations. Rendered page: [AI Agent Skill](skill.md).
 
-## Quick example (recommended)
+## Quick example
 
 ```python
 from injectq import InjectQ, inject, singleton
@@ -35,34 +34,30 @@ if __name__ == "__main__":
     main()
 ```
 
-## Features at a glance
+## Features
 
-- Simple dict-like API and binding methods
-- Decorator- and type-based injection (`@inject`, `Inject[T]`)
-- Factories: dict-like factories, `call_factory()`, and 🆕 hybrid `invoke()` / `ainvoke()` for parameterized factories
-- Scopes and lifetimes: `@singleton`, `@transient`, `@scoped("request")`; one request scope per `with` block, sync or async, with exit stacks for cleanup
-- A resolver compiled per service (generated code, or plain closures with `debug=True`)
+- Dict-like API, `bind()` methods, `@inject` and `Inject[T]`
+- Lifetimes: `@singleton`, `@transient`, `@scoped("request")`, with exit stacks for cleanup
+- Factories: `call_factory()`, plus `invoke()` / `ainvoke()` for factories that mix injected and manual arguments
+- Async APIs: `aget()`, `acall_factory()`, `ainvoke()`, `async_scope()`
 - Modules and providers: `Module`, `SimpleModule`, `ProviderModule`, `@provider`
-- Integrations: FastAPI (`InjectFastAPI`), FastMCP (`InjectFastMCP`), and Taskiq (`InjectTaskiq`) as optional extras
-- Async-first APIs: `aget()`, `acall_factory()`, `ainvoke()`
+- A resolver compiled per service (generated code, or plain closures with `debug=True`)
 - Safe under threads and asyncio tasks: the current container and scopes live in `ContextVar`s, and reads take no lock
-- Diagnostics & visualization: dependency graph and visualizer
-- Testing utilities: context-local `container.override(...)`, `override_dependency`, `isolated_container`, `InjectQ.test_mode()`
-- Benchmarks: comprehensive reports and quick guide
+- Integrations: `InjectFastAPI`, `InjectFastMCP`, `InjectTaskiq` (optional extras)
+- Diagnostics: dependency graph, validation, visualizer
+- Testing: `container.override(...)`, `override_dependency`, `isolated_container`, `InjectQ.test_mode()`
 
 ## Core patterns
 
 ### Dict-like interface
 
 ```python
-from injectq import InjectQ
-
 container = InjectQ.get_instance()
 container[str] = "config_value"
 container[Database] = Database()
 ```
 
-### Function/class injection
+### Function injection
 
 ```python
 @inject
@@ -70,27 +65,20 @@ def process(service: UserService):
     ...
 ```
 
-### Factory with parameters (hybrid)
-
-Combine dependency injection with manual arguments when a factory needs both DI-managed dependencies and runtime parameters:
+### Factory with injected and manual arguments
 
 ```python
-# Factory needs both DI and custom args
 def create_service(db: Database, cache: Cache, user_id: str):
     return UserService(db, cache, user_id)
 
 container.bind_factory("user_service", create_service)
 
-# Auto-inject db and cache, provide user_id manually
+# db and cache are injected, user_id is passed by hand
 service = container.invoke("user_service", user_id="user123")
-
-# Async version
-service = await container.ainvoke("async_service", batch_size=100)
-
-# You can also access and call the raw factory directly
-factory = container.get_factory("user_service")
-service2 = factory(user_id="user456")
+service = await container.ainvoke("async_service", batch_size=100)  # async factories
 ```
+
+See [Factory Methods](injection-patterns/factory-methods.md).
 
 ### Scopes and lifetimes
 
@@ -100,23 +88,22 @@ from injectq import InjectQ, singleton, transient, scoped
 container = InjectQ.get_instance()
 
 @singleton
-class Database: ...  # One instance app-wide
+class Database: ...        # one instance app-wide
 
 @transient
-class Validator: ...  # New instance every resolution
+class Validator: ...       # new instance every resolution
 
 @scoped("request")
-class RequestContext: ...  # One per request scope
+class RequestContext: ...  # one instance per request scope
 
-# Working with scopes
-with container.scope("request"):          # async: `async with container.async_scope("request"):`
+with container.scope("request"):    # async: `async with container.async_scope("request"):`
     ctx1 = container.get(RequestContext)
     ctx2 = container.get(RequestContext)
     assert ctx1 is ctx2
 # Outside the block, container.get(RequestContext) raises ScopeError
 ```
 
-### FastAPI integration (example)
+### FastAPI
 
 ```python
 from typing import Annotated
@@ -141,7 +128,7 @@ async def get_user(
     return user_service.get_user(user_id)
 ```
 
-### Taskiq integration (example)
+### Taskiq
 
 ```python
 from typing import Annotated
@@ -183,7 +170,7 @@ class Providers(ProviderModule):
 container = InjectQ(modules=[AppModule(), Services(), Providers()])
 ```
 
-### Testing utilities
+### Testing
 
 ```python
 from injectq import InjectQ
@@ -191,27 +178,24 @@ from injectq.testing import override_dependency, isolated_container
 
 container = InjectQ.get_instance()
 
-# Temporarily override a dependency
 with override_dependency(Database, MockDatabase()):
     service = container.get(UserService)
 
-# Isolated test container
-with isolated_container() as test_cont:
-    test_cont.bind(Database, MockDatabase)
+with isolated_container() as test_container:
+    test_container.bind(Database, MockDatabase)
     ...
 ```
 
-## Documentation sections
+## Where to go next
 
-- Getting started (installation & quick-start)
-- Injection patterns (dict-style, decorator, Inject[T])
-- Scopes and lifecycle (singleton, transient, request), resources and cleanup
-- Context and concurrency (tasks, threads, `to_thread`)
-- Modules and providers
-- Integrations (FastAPI, FastMCP, Taskiq)
-- Testing utilities and examples
-- **Performance benchmarks** - Comprehensive benchmark reports and quick guide
-- API reference and the [0.6 migration guide](migration-0.6.md)
+- [Installation](getting-started/installation.md) and [Quick Start](getting-started/quick-start.md)
+- [Injection patterns](injection-patterns/inject-decorator.md)
+- [Scopes](scopes/understanding-scopes.md) and [resources](scopes/resources.md)
+- [Context and concurrency](core-concepts/context-and-concurrency.md)
+- [Modules](modules/overview.md)
+- Integrations: [FastAPI](integrations/fastapi.md), [FastMCP](integrations/fastmcp.md), [Taskiq](integrations/taskiq.md)
+- [Testing](testing/overview.md)
+- [API reference](api-reference/index.md) and the [0.6 migration guide](migration-0.6.md)
 
 ## Performance
 
@@ -280,5 +264,3 @@ Scenarios: **S1** resolve a cached singleton, **S2** a 3-level transient chain, 
 ## Contributing & License
 
 See `CONTRIBUTING.md` and `LICENSE` for contribution rules and licensing.
-
-Note: This repository maintains a test coverage floor of 73% enforced by CI and pytest configuration.

@@ -1,27 +1,11 @@
 # API Reference
 
-Quick reference for InjectQ's essential API.
+- [Quick Reference](quick-reference.md): every exported name with a short example (container, binding, resolving, decorators, scopes, resources, modules, context, overrides and testing, diagnostics, errors, integrations).
 
-## Quick Start
+Longer explanations:
 
-See the **[Quick Reference Guide](quick-reference.md)** for common API patterns and code examples.
-
-## Main Topics Covered
-
-- Container creation and configuration
-- Binding services (dict interface and bind methods)
-- Decorators (@inject, @singleton, @transient, @scoped, @resource)
-- Module system and providers
-- Testing utilities (isolated_container, override_dependency)
-- Exception handling
-- Scope management
-- Type-safe injection
-
-## For Detailed Implementation
-
-For implementation details beyond the quick reference, refer to:
-
-- [Injection Patterns](../injection-patterns/inject-decorator.md) - Different ways to inject dependencies
-- [Scopes](../scopes/understanding-scopes.md) - Service lifetime management
-- [Modules](../modules/overview.md) - Organizing dependencies
-- [Testing](../testing/overview.md) - Testing your dependency-injected code
+- [Injection patterns](../injection-patterns/inject-decorator.md)
+- [Scopes](../scopes/understanding-scopes.md)
+- [Modules](../modules/overview.md)
+- [Testing](../testing/overview.md)
+- [Upgrading from 0.5](../migration-0.6.md)

@@ -1,6 +1,6 @@
 # Upgrading from 0.5 to 0.6
 
-InjectQ 0.6 rewrites the resolution engine, the scopes and the context handling. Most code keeps working. This page lists every change that can break code or behave differently, with a before and after for each.
+InjectQ 0.6 rewrites the resolution engine, the scopes and the context handling. Most code keeps working. This page lists every change that can break code or behave differently.
 
 ## Upgrade in four steps
 
@@ -14,9 +14,7 @@ InjectQ 0.6 rewrites the resolution engine, the scopes and the context handling.
 3. Replace removed names using the [removed names table](#removed-names). These raise `ImportError` or `AttributeError` now.
 4. Read [Behaviour changes](#behaviour-changes) and [Things that now raise](#things-that-now-raise). These are the changes that do not show up as an import error.
 
-!!! tip "The two bugs behind most of this"
-    - In 0.5, the "current container" lived in a place shared by all asyncio tasks on a thread. One task activating a container could change what a sibling task saw. In 0.6 it is a `ContextVar`, so each task and thread has its own view.
-    - In 0.5, a FastAPI request container was not visible to `InjectQ.get_instance()`, `@inject` and anything else that looked up "the current container". In 0.6 the middleware makes it current for the whole request.
+Two bugs drive most of the changes: the "current container" was shared by all asyncio tasks on a thread, and a FastAPI request container was invisible to `InjectQ.get_instance()` and `@inject`. Both are covered under [Behaviour changes](#behaviour-changes).
 
 ## Deprecated names
 
@@ -38,7 +36,7 @@ These work in 0.6, emit a `DeprecationWarning` when used, and are removed in 0.7
 | `InjectQ(thread_safe=...)` | remove the argument | deprecated: accepted, ignored, warns |
 | `InjectQ(use_async_scopes=...)` | remove the argument | deprecated: accepted, ignored, warns |
 
-Why the testing rename: pytest collects anything named `test_*` and `Test*` that you import into a test module. `from injectq.testing import test_container, TestModule` could make pytest try to run them.
+The testing names changed because pytest collects anything named `test_*` or `Test*` that you import into a test module.
 
 ```python
 # Before (0.5)
@@ -358,17 +356,6 @@ See [Scopes and resources](scopes/resources.md).
 
 ## What is new
 
-A short list. Each item has its own page.
+See the [Changelog](changelog.md) for the full list of additions: the new resolver engine, typed `get`/`aget`, `InjectQ(debug=True)`, context-local overrides, scope exit stacks and `shutdown()`, scoped factories and providers, `InjectFastMCP`, `injectq.utils.graph`, and `attach_profiler()`.
 
-- A new engine: each service gets one generated resolver function. See [Debugging generated code](core-concepts/debugging-generated-code.md) and [Benchmarks](benchmarks.md).
-- Typed resolution: `container.get`, `aget`, `try_get` and `atry_get` have `@overload`s, so `container.get(UserService)` is typed `UserService`, a string key gives `Any`, and `try_get` gives `T | None`. Caveat: an abstract class as the key trips mypy's `type-abstract` check; use `# type: ignore[type-abstract]` or a string/Protocol key.
-- `InjectQ(debug=True)` for plain closures and plain tracebacks.
-- Context-local overrides, transitive and safe under concurrency: [Overrides](testing/overrides.md).
-- Scopes with exit stacks: `container.current_exit_stack("request")`, `track_resource`, `shutdown()`, `ashutdown()`.
-- `bind_factory(..., scope=...)` and `@provider(scope=...)`.
-- `ScopeError`, `AlreadyRegisteredError`, `ModuleBinder` and `ResourceError` are exported from `injectq`.
-- `InjectFastMCP`, `setup_fastmcp`, `get_container_fastmcp`, `get_container_taskiq`, `InjectQTaskiqMiddleware`.
-- `injectq.utils.graph`: `find_cycles`, `find_path`, `reachable`.
-- `container.attach_profiler(...)` and `detach_profiler()`.
-
-Full list: [Changelog](changelog.md).
+One typing caveat: an abstract class as the key trips mypy's `type-abstract` check. Use `# type: ignore[type-abstract]` or a string or Protocol key.
