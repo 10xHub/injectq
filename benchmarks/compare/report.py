@@ -241,8 +241,12 @@ def readme_table(rows):
     out.append("| fastest DI library | " + " | ".join(wins) + " |")
     out.append("")
     out.append("Bold: fastest DI library in the column (hand-written excluded). n/a: the library has no such feature.")
-    for i, (l, t) in enumerate(notes, 1):
-        out.append(f"\n[{i}] **{name(l)}**: {t}")
+    if notes:
+        # Collapsed so the table stays the first thing readers see (GitHub and mkdocs render <details>).
+        out.append("\n<details>\n<summary>Setup notes per library ([1]-[%d])</summary>\n" % len(notes))
+        for i, (l, t) in enumerate(notes, 1):
+            out.append(f"\n[{i}] **{name(l)}**: {t}")
+        out.append("\n</details>")
     return "\n".join(out)
 
 
@@ -387,7 +391,7 @@ def svg_chart(rows):
             body.append(f'<text class="val{" inj" if l == "injectq" else ""}" x="{x + 5:.1f}" y="{yy + BAR - 2}">{fmt(v)} µs</text>')
             yy += BAR + GAP
         if nas:
-            body.append(f'<text class="na" x="{LEFT - 8}" y="{yy + 9}" text-anchor="end">n/a: {esc(", ".join(name(n) for n in nas))}</text>')
+            body.append(f'<text class="na" x="{LEFT}" y="{yy + 9}" text-anchor="start">n/a: {esc(", ".join(name(n) for n in nas))}</text>')
     title = "DI resolution cost, µs per operation (log scale, shorter is faster)"
     m = (rows.get("injectq") or {}).get("meta") or {}
     sub = f"{m.get('cpu', '')} · CPython {m.get('python', {}).get('version', '')} · median of {m.get('repeats', '?')} repeats"

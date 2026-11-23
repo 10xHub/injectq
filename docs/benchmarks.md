@@ -140,13 +140,27 @@ for k in K[1:]:
 ### Machine and versions
 
 <!-- BENCH:META -->
-_Not generated yet: run `PUBLISH=1 make bench-compare` (see Reproduce)._
+- **Date**: 2026-11-23T11:11:36Z
+- **CPU**: AMD Ryzen 5 5600G with Radeon Graphics (12 logical CPUs)
+- **OS**: Linux-7.3.4-1-cachyos-x86_64-with-glibc2.44
+- **Python**: CPython 3.13.13 (main Jun  2 2026 22:27:49, Clang 22.1.3 ; optimized build: True, LTO: True, GIL enabled: True)
+- **Libraries**: aioinject 1.11.0, dependency-injector 4.49.1, dishka 1.10.1, diwire 1.5.0, inject 5.5.0, injector 0.24.0, injectq 0.6.0, kink 0.9.0, lagom 2.7.7, punq 0.9.0, rodi 2.1.0, svcs 26.2.0, that-depends 4.3.0, wireup 2.13.1
+- **Repeats**: 25 per scenario, 0.02 s per repeat; median of repeats, microseconds per operation
 <!-- /BENCH:META -->
 
 ### Equivalence notes
 
 <!-- BENCH:NOTES -->
-_Not generated yet._
+- **hand-written** is plain constructor calls with module-level singletons (S4 uses a minimal dict-backed per-request cache). It is the floor: no container, no resolution.
+- **wireup**: transients and request-scoped services can only be resolved from a scope. S2, S3 and S6 resolve from one long-lived scope; S4 enters and exits a scope per operation; S5 enters a scope per call (what `inject_from_container` does).
+- **dishka** has no transient lifetime: `cache=False` is its documented equivalent. All services except the request-scoped one are registered in `Scope.APP`.
+- **svcs** caches every service per `Container`, so "transient" is a fresh `Container` per operation (the container construction is part of the measured cost).
+- **that-depends**: S5 uses `@inject(scope=None)` (skips entering an inject scope on every call; the cheapest idiomatic form). S4 uses a `ContextResource` in `ContextScopes.REQUEST`.
+- **injector**: request scope is a custom `Scope` (the documented extension point), not a built-in. **punq**, **kink** and **inject** have no request scope (n/a). **kink** and **inject** wire classes by mutating `__init__` / a global injector.
+- **rodi**: S7 includes `build_provider()` (eager validation and wiring), so S7 and S7r are the same cost. **aioinject**: `SyncContainer` for S1-S5/S7, async `Container` for S6. **diwire**: S5 passes `diwire_resolver=` explicitly because creating any other `Container` clears its global fallback.
+- **lagom** autowires unregistered classes as transients; the singletons and the 50-class chain are registered explicitly.
+- **dependency-injector**: S6 uses providers in async mode; Factory/Singleton providers are declared once, as in its docs.
+- S7 measures building the container; S7r additionally resolves the 50th service (a 50-deep chain), because some libraries defer work (graph analysis, code generation) to the first resolve.
 <!-- /BENCH:NOTES -->
 
 ## Results
@@ -156,19 +170,100 @@ _Not generated yet._
 Fastest DI library per row in bold; the hand-written column is the floor, not a competitor.
 
 <!-- BENCH:README_TABLE -->
-_Not generated yet._
+| µs/op (median, lower is better) | S1 singleton | S2 transient chain | S3 wide graph | S4 request scope | S5 injected call | S6 async chain |
+|---|--:|--:|--:|--:|--:|--:|
+| **injectq** | 0.083 | **0.302** | **0.550** | 0.968 | **0.143** | **0.427** |
+| aioinject [1] | 0.295 | 0.787 | 1.768 | 2.278 | n/a | 0.992 |
+| dependency-injector [2] | **0.057** | 1.203 | 3.038 | n/a | 1.127 | 37.8 |
+| dishka [3] | 0.307 | 0.516 | 1.069 | 1.526 | 1.165 | 1.068 |
+| diwire [4] | 0.424 | 0.609 | 0.884 | 4.609 | 6.820 | 0.874 |
+| inject [5] | 0.158 | 4.785 | 12.2 | n/a | 2.462 | n/a |
+| injector [6] | 1.331 | 42.7 | 90.6 | 14.4 | 16.8 | n/a |
+| kink [7] | 0.168 | 3.688 | 12.6 | n/a | 2.366 | n/a |
+| lagom [8] | 0.155 | 5.624 | 12.0 | n/a | 1.474 | n/a |
+| punq [9] | 1.097 | 36.5 | 90.6 | n/a | n/a | n/a |
+| rodi [10] | 0.290 | 0.758 | 1.852 | **0.836** | 1.056 | n/a |
+| svcs [11] | 0.189 | 2.590 | 8.087 | 1.940 | n/a | 3.068 |
+| that-depends [12] | 0.077 | 0.938 | 3.479 | 24.7 | 3.163 | 1.569 |
+| wireup [13] | 0.092 | 0.512 | 1.434 | 1.130 | 0.269 | 0.676 |
+| _hand-written (floor)_ | _0.019_ | _0.166_ | _0.355_ | _0.345_ | _0.041_ | _0.229_ |
+| **injectq rank** | **3 of 14** | **1 of 14** | **1 of 14** | **2 of 9** | **1 of 11** | **1 of 8** |
+| fastest DI library | dependency-injector | injectq | injectq | rodi | injectq | injectq |
+
+Bold: fastest DI library in the column (hand-written excluded). n/a: the library has no such feature.
+
+<details>
+<summary>Setup notes per library ([1]-[13])</summary>
+
+
+[1] **aioinject**: sync `SyncContainer` for S1-S5/S7, async `Container` for S6; transients registered in the lifetime scope to resolve from the root context. n/a: S5 no generic injection decorator (per-framework `inject` only).
+
+[2] **dependency-injector**: S6 uses providers in async mode. n/a: S4 no enter/exit request scope (only context-local singletons, a different mechanism).
+
+[3] **dishka**: no transient lifetime; `cache=False` is its equivalent.
+
+[4] **diwire**: default `SCOPED` lifetime at the root scope = singleton; transient via `Lifetime.TRANSIENT`; S5 passes `diwire_resolver=` explicitly.
+
+[5] **inject**: one global injector; singletons via `bind_to_constructor`, transients via `bind_to_provider`, constructors wired with `autoparams`. n/a: S4 no request scope; S6 no async resolution.
+
+[6] **injector**: request scope is a custom `Scope` subclass (cache swapped on enter/exit); constructors need `@inject` (applied to the benchmark classes). n/a: S6 no async API.
+
+[7] **kink**: `@inject` on a class registers it (singleton; `use_factory=True` = transient) and mutates `__init__`; S7 restores `__init__` before re-decorating. n/a: S4 no request scope; S6 no async resolution.
+
+[8] **lagom**: unregistered classes are autowired as transient. n/a: S4 no request scope; S6 no async resolution.
+
+[9] **punq**: transient is the default scope. n/a: S4 no request scope (only transient and singleton); S5 no injection decorator; S6 no async API.
+
+[10] **rodi**: resolved with `provider.get` / `provider.exec` (each call creates an activation scope); S7 includes `build_provider()`, which validates and wires eagerly. n/a: S6 no async resolution (sync only).
+
+[11] **svcs**: caches per `Container`, so transient = a new `Container` per operation (its construction is timed). n/a: S5 no generic injection decorator (framework integrations only).
+
+[12] **that-depends**: S5 with `@inject(scope=None)`; S4 via a `ContextResource` in `ContextScopes.REQUEST`.
+
+[13] **wireup**: transients and scoped services resolve from a scope: S2, S3, S6 use one long-lived scope, S4/S5 enter one per operation.
+
+</details>
 <!-- /BENCH:README_TABLE -->
 
 ### Chart
 
 <!-- BENCH:CHART -->
-_Not generated yet._
+![Resolution cost per scenario, log scale](assets/benchmarks.svg)
 <!-- /BENCH:CHART -->
 
 ### Full table
 
 <!-- BENCH:FULL_TABLE -->
-_Not generated yet._
+| Scenario (µs/op, median; × = relative to hand-written) | injectq | aioinject | dependency-injector | dishka | diwire | inject | injector | kink | lagom | punq | rodi | svcs | that-depends | wireup | hand-written |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| S1 cached singleton | 0.083 (4.3x) | 0.295 (15x) | **0.057** (2.9x) | 0.307 (16x) | 0.424 (22x) | 0.158 (8.2x) | 1.331 (69x) | 0.168 (8.7x) | 0.155 (8.0x) | 1.097 (57x) | 0.290 (15x) | 0.189 (9.8x) | 0.077 (4.0x) | 0.092 (4.8x) | 0.019 |
+| S2 transient chain (3 deep) | **0.302** (1.8x) | 0.787 (4.7x) | 1.203 (7.3x) | 0.516 (3.1x) | 0.609 (3.7x) | 4.785 (29x) | 42.7 (258x) | 3.688 (22x) | 5.624 (34x) | 36.5 (220x) | 0.758 (4.6x) | 2.590 (16x) | 0.938 (5.7x) | 0.512 (3.1x) | 0.166 |
+| S3 wide graph (5 transients, 5 singletons) | **0.550** (1.5x) | 1.768 (5.0x) | 3.038 (8.6x) | 1.069 (3.0x) | 0.884 (2.5x) | 12.2 (34x) | 90.6 (255x) | 12.6 (35x) | 12.0 (34x) | 90.6 (255x) | 1.852 (5.2x) | 8.087 (23x) | 3.479 (9.8x) | 1.434 (4.0x) | 0.355 |
+| S4 request scope: enter, resolve, exit | 0.968 (2.8x) | 2.278 (6.6x) | n/a [1] | 1.526 (4.4x) | 4.609 (13x) | n/a [2] | 14.4 (42x) | n/a [2] | n/a [2] | n/a [3] | **0.836** (2.4x) | 1.940 (5.6x) | 24.7 (72x) | 1.130 (3.3x) | 0.345 |
+| S5 injected function call (3 deps) | **0.143** (3.5x) | n/a [4] | 1.127 (27x) | 1.165 (28x) | 6.820 (166x) | 2.462 (60x) | 16.8 (409x) | 2.366 (58x) | 1.474 (36x) | n/a [5] | 1.056 (26x) | n/a [6] | 3.163 (77x) | 0.269 (6.5x) | 0.041 |
+| S6 async transient chain | **0.427** (1.9x) | 0.992 (4.3x) | 37.8 (165x) | 1.068 (4.7x) | 0.874 (3.8x) | n/a [7] | n/a [8] | n/a [7] | n/a [7] | n/a [8] | n/a [9] | 3.068 (13x) | 1.569 (6.8x) | 0.676 (2.9x) | 0.229 |
+| S7 build container (50 services) | 27.4 (21x) | 623 (482x) | 295 (228x) | 4,151 (3,212x) | 2,612 (2,021x) | **13.9** (11x) | 72.5 (56x) | 784 (606x) | 54.0 (42x) | 121 (93x) | 585 (452x) | 369 (286x) | 194 (150x) | 9,768 (7,557x) | 1.292 |
+| S7r build container + resolve 50-deep chain | 251 (37x) | 1,924 (280x) | 432 (63x) | 8,858 (1,291x) | 45,764 (6,668x) | **98.3** (14x) | 800 (116x) | 897 (131x) | 888 (129x) | 767 (112x) | 589 (86x) | 451 (66x) | 216 (31x) | 9,642 (1,405x) | 6.863 |
+
+Bold: fastest DI library in the row (hand-written excluded).
+
+[1] n/a: no enter/exit request scope (only context-local singletons, a different mechanism).
+
+[2] n/a: no request scope.
+
+[3] n/a: no request scope (only transient and singleton).
+
+[4] n/a: no generic injection decorator (per-framework `inject` only).
+
+[5] n/a: no injection decorator.
+
+[6] n/a: no generic injection decorator (framework integrations only).
+
+[7] n/a: no async resolution.
+
+[8] n/a: no async API.
+
+[9] n/a: no async resolution (sync only).
 <!-- /BENCH:FULL_TABLE -->
 
 ## Where injectq is not the fastest
@@ -176,7 +271,10 @@ _Not generated yet._
 Generated from the same run, so it cannot drift from the tables:
 
 <!-- BENCH:NOT_FASTEST -->
-_Not generated yet._
+- **S1 cached singleton**: injectq is not fastest. dependency-injector takes 0.057 µs, injectq 0.083 µs (1.5x slower); injectq ranks 3 of 14.
+- **S4 request scope: enter, resolve, exit**: injectq is not fastest. rodi takes 0.836 µs, injectq 0.968 µs (1.2x slower); injectq ranks 2 of 9.
+- **S7 build container (50 services)**: injectq is not fastest. inject takes 13.9 µs, injectq 27.4 µs (2.0x slower); injectq ranks 2 of 14.
+- **S7r build container + resolve 50-deep chain**: injectq is not fastest. inject takes 98.3 µs, injectq 251 µs (2.6x slower); injectq ranks 3 of 14.
 <!-- /BENCH:NOT_FASTEST -->
 
 Context to read these rows with:
@@ -204,7 +302,7 @@ load generator.
 - Plain FastAPI `Depends` and a hand-wired app without DI are included as reference points.
 
 <!-- BENCH:HTTP_TABLE -->
-_Not generated yet: run `python benchmarks/http/run_http.py`._
+_(HTTP results not generated yet: run `python benchmarks/http/run_http.py`.)_
 <!-- /BENCH:HTTP_TABLE -->
 
 Requests per second are for one worker on one machine; compare the ratios between rows, not the

@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Focus:** a new resolution engine, correct context and scope handling, and cleanup of the public API.
 
-Upgrading from 0.5? Read the [0.6 migration guide](migration-0.6.md). Benchmark numbers: see the [Benchmark Report](benchmark-report.md).
+Upgrading from 0.5? Read the [0.6 migration guide](migration-0.6.md). Benchmark numbers: see [Benchmarks](benchmarks.md).
 
 ### Fixed
 
@@ -96,7 +96,7 @@ Removed in 0.7. They work now and emit `DeprecationWarning`.
 
 ### Performance
 
-Benchmark numbers for 0.6.0 will be published with the release. See the [Benchmark Report](benchmark-report.md).
+Benchmarks: compared with 13 other Python DI libraries, injectq 0.6 is fastest on transient chains, wide graphs, `@inject` calls and async resolution, 2nd on request scopes and 3rd on cached singletons. See [Benchmarks](benchmarks.md).
 
 ---
 

@@ -87,7 +87,7 @@ setup_taskiq(container, broker)   # request scope per task
 
 ### Performance
 
-Benchmark numbers for 0.6.0: see the [Benchmark Report](docs/benchmark-report.md). They will be published with the release.
+Benchmarks: compared with 13 other Python DI libraries on the same object graphs, injectq 0.6 is fastest on transient chains, wide graphs, `@inject` calls and async resolution, 2nd on request scopes and 3rd on cached singletons (CPython 3.13). Full tables, method and raw JSON: [docs/benchmarks.md](docs/benchmarks.md) and [benchmarks/results/](benchmarks/results/).
 
 ---
 

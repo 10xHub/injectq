@@ -1,0 +1,315 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1835" width="960" height="1835" role="img" aria-label="DI resolution cost, µs per operation (log scale, shorter is faster)">
+<title>DI resolution cost, µs per operation (log scale, shorter is faster)</title>
+<style>
+text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: #1f2328; font-size: 11px; }
+.bg { fill: #ffffff; } .grid { stroke: #d0d7de; stroke-width: 1; }
+.tick, .na, .sub { fill: #656d76; font-size: 10px; }
+.ttl { font-size: 15px; font-weight: 600; } .grp { font-size: 12px; font-weight: 600; }
+@media (prefers-color-scheme: dark) {
+  text { fill: #e6edf3; } .bg { fill: #0d1117; } .grid { stroke: #3d444d; }
+  .tick, .na, .sub { fill: #9198a1; }
+}
+.inj { font-weight: 700; }
+</style>
+<rect class="bg" width="960" height="1835"/>
+<text class="ttl" x="12" y="22">DI resolution cost, µs per operation (log scale, shorter is faster)</text>
+<text class="sub" x="12" y="38">AMD Ryzen 5 5600G with Radeon Graphics · CPython 3.13.13 · median of 25 repeats</text>
+<line class="grid" x1="190.0" y1="64" x2="190.0" y2="1779"/>
+<text class="tick" x="190.0" y="58" text-anchor="middle">0.01</text>
+<line class="grid" x1="303.3" y1="64" x2="303.3" y2="1779"/>
+<text class="tick" x="303.3" y="58" text-anchor="middle">0.1</text>
+<line class="grid" x1="416.7" y1="64" x2="416.7" y2="1779"/>
+<text class="tick" x="416.7" y="58" text-anchor="middle">1</text>
+<line class="grid" x1="530.0" y1="64" x2="530.0" y2="1779"/>
+<text class="tick" x="530.0" y="58" text-anchor="middle">10</text>
+<line class="grid" x1="643.3" y1="64" x2="643.3" y2="1779"/>
+<text class="tick" x="643.3" y="58" text-anchor="middle">100</text>
+<line class="grid" x1="756.7" y1="64" x2="756.7" y2="1779"/>
+<text class="tick" x="756.7" y="58" text-anchor="middle">1,000</text>
+<line class="grid" x1="870.0" y1="64" x2="870.0" y2="1779"/>
+<text class="tick" x="870.0" y="58" text-anchor="middle">10,000</text>
+<text class="grp" x="12" y="92">S1 cached singleton</text>
+<text class="name" x="182" y="112" text-anchor="end">hand-written</text>
+<rect x="190" y="102" width="32.3" height="12" rx="2" fill="#8A9099"/>
+<text class="val" x="227.3" y="112">0.019 µs</text>
+<text class="name" x="182" y="127" text-anchor="end">dependency-injector</text>
+<rect x="190" y="117" width="85.4" height="12" rx="2" fill="#9D755D"/>
+<text class="val" x="280.4" y="127">0.057 µs</text>
+<text class="name" x="182" y="142" text-anchor="end">that-depends</text>
+<rect x="190" y="132" width="100.2" height="12" rx="2" fill="#B279A2"/>
+<text class="val" x="295.2" y="142">0.077 µs</text>
+<text class="name inj" x="182" y="157" text-anchor="end">injectq</text>
+<rect x="190" y="147" width="104.1" height="12" rx="2" fill="#E4572E"/>
+<text class="val inj" x="299.1" y="157">0.083 µs</text>
+<text class="name" x="182" y="172" text-anchor="end">wireup</text>
+<rect x="190" y="162" width="109.2" height="12" rx="2" fill="#4C78A8"/>
+<text class="val" x="304.2" y="172">0.092 µs</text>
+<text class="name" x="182" y="187" text-anchor="end">lagom</text>
+<rect x="190" y="177" width="134.9" height="12" rx="2" fill="#54A24B"/>
+<text class="val" x="329.9" y="187">0.155 µs</text>
+<text class="name" x="182" y="202" text-anchor="end">inject</text>
+<rect x="190" y="192" width="136.0" height="12" rx="2" fill="#D67195"/>
+<text class="val" x="331.0" y="202">0.158 µs</text>
+<text class="name" x="182" y="217" text-anchor="end">kink</text>
+<rect x="190" y="207" width="138.9" height="12" rx="2" fill="#A0CBE8"/>
+<text class="val" x="333.9" y="217">0.168 µs</text>
+<text class="name" x="182" y="232" text-anchor="end">svcs</text>
+<rect x="190" y="222" width="144.5" height="12" rx="2" fill="#C9A227"/>
+<text class="val" x="339.5" y="232">0.189 µs</text>
+<text class="name" x="182" y="247" text-anchor="end">rodi</text>
+<rect x="190" y="237" width="165.7" height="12" rx="2" fill="#B6992D"/>
+<text class="val" x="360.7" y="247">0.290 µs</text>
+<text class="name" x="182" y="262" text-anchor="end">aioinject</text>
+<rect x="190" y="252" width="166.5" height="12" rx="2" fill="#F58518"/>
+<text class="val" x="361.5" y="262">0.295 µs</text>
+<text class="name" x="182" y="277" text-anchor="end">dishka</text>
+<rect x="190" y="267" width="168.6" height="12" rx="2" fill="#2A9D8F"/>
+<text class="val" x="363.6" y="277">0.307 µs</text>
+<text class="name" x="182" y="292" text-anchor="end">diwire</text>
+<rect x="190" y="282" width="184.4" height="12" rx="2" fill="#72B7B2"/>
+<text class="val" x="379.4" y="292">0.424 µs</text>
+<text class="name" x="182" y="307" text-anchor="end">punq</text>
+<rect x="190" y="297" width="231.2" height="12" rx="2" fill="#8CD17D"/>
+<text class="val" x="426.2" y="307">1.097 µs</text>
+<text class="name" x="182" y="322" text-anchor="end">injector</text>
+<rect x="190" y="312" width="240.7" height="12" rx="2" fill="#5778A4"/>
+<text class="val" x="435.7" y="322">1.331 µs</text>
+<text class="grp" x="12" y="361">S2 transient chain (3 deep)</text>
+<text class="name" x="182" y="381" text-anchor="end">hand-written</text>
+<rect x="190" y="371" width="138.2" height="12" rx="2" fill="#8A9099"/>
+<text class="val" x="333.2" y="381">0.166 µs</text>
+<text class="name inj" x="182" y="396" text-anchor="end">injectq</text>
+<rect x="190" y="386" width="167.7" height="12" rx="2" fill="#E4572E"/>
+<text class="val inj" x="362.7" y="396">0.302 µs</text>
+<text class="name" x="182" y="411" text-anchor="end">wireup</text>
+<rect x="190" y="401" width="193.8" height="12" rx="2" fill="#4C78A8"/>
+<text class="val" x="388.8" y="411">0.512 µs</text>
+<text class="name" x="182" y="426" text-anchor="end">dishka</text>
+<rect x="190" y="416" width="194.1" height="12" rx="2" fill="#2A9D8F"/>
+<text class="val" x="389.1" y="426">0.516 µs</text>
+<text class="name" x="182" y="441" text-anchor="end">diwire</text>
+<rect x="190" y="431" width="202.3" height="12" rx="2" fill="#72B7B2"/>
+<text class="val" x="397.3" y="441">0.609 µs</text>
+<text class="name" x="182" y="456" text-anchor="end">rodi</text>
+<rect x="190" y="446" width="213.0" height="12" rx="2" fill="#B6992D"/>
+<text class="val" x="408.0" y="456">0.758 µs</text>
+<text class="name" x="182" y="471" text-anchor="end">aioinject</text>
+<rect x="190" y="461" width="214.9" height="12" rx="2" fill="#F58518"/>
+<text class="val" x="409.9" y="471">0.787 µs</text>
+<text class="name" x="182" y="486" text-anchor="end">that-depends</text>
+<rect x="190" y="476" width="223.5" height="12" rx="2" fill="#B279A2"/>
+<text class="val" x="418.5" y="486">0.938 µs</text>
+<text class="name" x="182" y="501" text-anchor="end">dependency-injector</text>
+<rect x="190" y="491" width="235.8" height="12" rx="2" fill="#9D755D"/>
+<text class="val" x="430.8" y="501">1.203 µs</text>
+<text class="name" x="182" y="516" text-anchor="end">svcs</text>
+<rect x="190" y="506" width="273.5" height="12" rx="2" fill="#C9A227"/>
+<text class="val" x="468.5" y="516">2.590 µs</text>
+<text class="name" x="182" y="531" text-anchor="end">kink</text>
+<rect x="190" y="521" width="290.9" height="12" rx="2" fill="#A0CBE8"/>
+<text class="val" x="485.9" y="531">3.688 µs</text>
+<text class="name" x="182" y="546" text-anchor="end">inject</text>
+<rect x="190" y="536" width="303.7" height="12" rx="2" fill="#D67195"/>
+<text class="val" x="498.7" y="546">4.785 µs</text>
+<text class="name" x="182" y="561" text-anchor="end">lagom</text>
+<rect x="190" y="551" width="311.7" height="12" rx="2" fill="#54A24B"/>
+<text class="val" x="506.7" y="561">5.624 µs</text>
+<text class="name" x="182" y="576" text-anchor="end">punq</text>
+<rect x="190" y="566" width="403.7" height="12" rx="2" fill="#8CD17D"/>
+<text class="val" x="598.7" y="576">36.5 µs</text>
+<text class="name" x="182" y="591" text-anchor="end">injector</text>
+<rect x="190" y="581" width="411.4" height="12" rx="2" fill="#5778A4"/>
+<text class="val" x="606.4" y="591">42.7 µs</text>
+<text class="grp" x="12" y="630">S3 wide graph (5 transients, 5 singletons)</text>
+<text class="name" x="182" y="650" text-anchor="end">hand-written</text>
+<rect x="190" y="640" width="175.7" height="12" rx="2" fill="#8A9099"/>
+<text class="val" x="370.7" y="650">0.355 µs</text>
+<text class="name inj" x="182" y="665" text-anchor="end">injectq</text>
+<rect x="190" y="655" width="197.2" height="12" rx="2" fill="#E4572E"/>
+<text class="val inj" x="392.2" y="665">0.550 µs</text>
+<text class="name" x="182" y="680" text-anchor="end">diwire</text>
+<rect x="190" y="670" width="220.6" height="12" rx="2" fill="#72B7B2"/>
+<text class="val" x="415.6" y="680">0.884 µs</text>
+<text class="name" x="182" y="695" text-anchor="end">dishka</text>
+<rect x="190" y="685" width="230.0" height="12" rx="2" fill="#2A9D8F"/>
+<text class="val" x="425.0" y="695">1.069 µs</text>
+<text class="name" x="182" y="710" text-anchor="end">wireup</text>
+<rect x="190" y="700" width="244.4" height="12" rx="2" fill="#4C78A8"/>
+<text class="val" x="439.4" y="710">1.434 µs</text>
+<text class="name" x="182" y="725" text-anchor="end">aioinject</text>
+<rect x="190" y="715" width="254.7" height="12" rx="2" fill="#F58518"/>
+<text class="val" x="449.7" y="725">1.768 µs</text>
+<text class="name" x="182" y="740" text-anchor="end">rodi</text>
+<rect x="190" y="730" width="257.0" height="12" rx="2" fill="#B6992D"/>
+<text class="val" x="452.0" y="740">1.852 µs</text>
+<text class="name" x="182" y="755" text-anchor="end">dependency-injector</text>
+<rect x="190" y="745" width="281.4" height="12" rx="2" fill="#9D755D"/>
+<text class="val" x="476.4" y="755">3.038 µs</text>
+<text class="name" x="182" y="770" text-anchor="end">that-depends</text>
+<rect x="190" y="760" width="288.0" height="12" rx="2" fill="#B279A2"/>
+<text class="val" x="483.0" y="770">3.479 µs</text>
+<text class="name" x="182" y="785" text-anchor="end">svcs</text>
+<rect x="190" y="775" width="329.5" height="12" rx="2" fill="#C9A227"/>
+<text class="val" x="524.5" y="785">8.087 µs</text>
+<text class="name" x="182" y="800" text-anchor="end">lagom</text>
+<rect x="190" y="790" width="348.8" height="12" rx="2" fill="#54A24B"/>
+<text class="val" x="543.8" y="800">12.0 µs</text>
+<text class="name" x="182" y="815" text-anchor="end">inject</text>
+<rect x="190" y="805" width="349.9" height="12" rx="2" fill="#D67195"/>
+<text class="val" x="544.9" y="815">12.2 µs</text>
+<text class="name" x="182" y="830" text-anchor="end">kink</text>
+<rect x="190" y="820" width="351.3" height="12" rx="2" fill="#A0CBE8"/>
+<text class="val" x="546.3" y="830">12.6 µs</text>
+<text class="name" x="182" y="845" text-anchor="end">injector</text>
+<rect x="190" y="835" width="448.5" height="12" rx="2" fill="#5778A4"/>
+<text class="val" x="643.5" y="845">90.6 µs</text>
+<text class="name" x="182" y="860" text-anchor="end">punq</text>
+<rect x="190" y="850" width="448.5" height="12" rx="2" fill="#8CD17D"/>
+<text class="val" x="643.5" y="860">90.6 µs</text>
+<text class="grp" x="12" y="899">S4 request scope: enter, resolve, exit</text>
+<text class="name" x="182" y="919" text-anchor="end">hand-written</text>
+<rect x="190" y="909" width="174.3" height="12" rx="2" fill="#8A9099"/>
+<text class="val" x="369.3" y="919">0.345 µs</text>
+<text class="name" x="182" y="934" text-anchor="end">rodi</text>
+<rect x="190" y="924" width="217.9" height="12" rx="2" fill="#B6992D"/>
+<text class="val" x="412.9" y="934">0.836 µs</text>
+<text class="name inj" x="182" y="949" text-anchor="end">injectq</text>
+<rect x="190" y="939" width="225.0" height="12" rx="2" fill="#E4572E"/>
+<text class="val inj" x="420.0" y="949">0.968 µs</text>
+<text class="name" x="182" y="964" text-anchor="end">wireup</text>
+<rect x="190" y="954" width="232.7" height="12" rx="2" fill="#4C78A8"/>
+<text class="val" x="427.7" y="964">1.130 µs</text>
+<text class="name" x="182" y="979" text-anchor="end">dishka</text>
+<rect x="190" y="969" width="247.5" height="12" rx="2" fill="#2A9D8F"/>
+<text class="val" x="442.5" y="979">1.526 µs</text>
+<text class="name" x="182" y="994" text-anchor="end">svcs</text>
+<rect x="190" y="984" width="259.3" height="12" rx="2" fill="#C9A227"/>
+<text class="val" x="454.3" y="994">1.940 µs</text>
+<text class="name" x="182" y="1009" text-anchor="end">aioinject</text>
+<rect x="190" y="999" width="267.2" height="12" rx="2" fill="#F58518"/>
+<text class="val" x="462.2" y="1009">2.278 µs</text>
+<text class="name" x="182" y="1024" text-anchor="end">diwire</text>
+<rect x="190" y="1014" width="301.9" height="12" rx="2" fill="#72B7B2"/>
+<text class="val" x="496.9" y="1024">4.609 µs</text>
+<text class="name" x="182" y="1039" text-anchor="end">injector</text>
+<rect x="190" y="1029" width="357.9" height="12" rx="2" fill="#5778A4"/>
+<text class="val" x="552.9" y="1039">14.4 µs</text>
+<text class="name" x="182" y="1054" text-anchor="end">that-depends</text>
+<rect x="190" y="1044" width="384.5" height="12" rx="2" fill="#B279A2"/>
+<text class="val" x="579.5" y="1054">24.7 µs</text>
+<text class="na" x="190" y="1068" text-anchor="start">n/a: dependency-injector, inject, kink, lagom, punq</text>
+<text class="grp" x="12" y="1107">S5 injected function call (3 deps)</text>
+<text class="name" x="182" y="1127" text-anchor="end">hand-written</text>
+<rect x="190" y="1117" width="69.6" height="12" rx="2" fill="#8A9099"/>
+<text class="val" x="264.6" y="1127">0.041 µs</text>
+<text class="name inj" x="182" y="1142" text-anchor="end">injectq</text>
+<rect x="190" y="1132" width="131.0" height="12" rx="2" fill="#E4572E"/>
+<text class="val inj" x="326.0" y="1142">0.143 µs</text>
+<text class="name" x="182" y="1157" text-anchor="end">wireup</text>
+<rect x="190" y="1147" width="162.1" height="12" rx="2" fill="#4C78A8"/>
+<text class="val" x="357.1" y="1157">0.269 µs</text>
+<text class="name" x="182" y="1172" text-anchor="end">rodi</text>
+<rect x="190" y="1162" width="229.4" height="12" rx="2" fill="#B6992D"/>
+<text class="val" x="424.4" y="1172">1.056 µs</text>
+<text class="name" x="182" y="1187" text-anchor="end">dependency-injector</text>
+<rect x="190" y="1177" width="232.5" height="12" rx="2" fill="#9D755D"/>
+<text class="val" x="427.5" y="1187">1.127 µs</text>
+<text class="name" x="182" y="1202" text-anchor="end">dishka</text>
+<rect x="190" y="1192" width="234.2" height="12" rx="2" fill="#2A9D8F"/>
+<text class="val" x="429.2" y="1202">1.165 µs</text>
+<text class="name" x="182" y="1217" text-anchor="end">lagom</text>
+<rect x="190" y="1207" width="245.8" height="12" rx="2" fill="#54A24B"/>
+<text class="val" x="440.8" y="1217">1.474 µs</text>
+<text class="name" x="182" y="1232" text-anchor="end">kink</text>
+<rect x="190" y="1222" width="269.1" height="12" rx="2" fill="#A0CBE8"/>
+<text class="val" x="464.1" y="1232">2.366 µs</text>
+<text class="name" x="182" y="1247" text-anchor="end">inject</text>
+<rect x="190" y="1237" width="271.0" height="12" rx="2" fill="#D67195"/>
+<text class="val" x="466.0" y="1247">2.462 µs</text>
+<text class="name" x="182" y="1262" text-anchor="end">that-depends</text>
+<rect x="190" y="1252" width="283.3" height="12" rx="2" fill="#B279A2"/>
+<text class="val" x="478.3" y="1262">3.163 µs</text>
+<text class="name" x="182" y="1277" text-anchor="end">diwire</text>
+<rect x="190" y="1267" width="321.2" height="12" rx="2" fill="#72B7B2"/>
+<text class="val" x="516.2" y="1277">6.820 µs</text>
+<text class="name" x="182" y="1292" text-anchor="end">injector</text>
+<rect x="190" y="1282" width="365.6" height="12" rx="2" fill="#5778A4"/>
+<text class="val" x="560.6" y="1292">16.8 µs</text>
+<text class="na" x="190" y="1306" text-anchor="start">n/a: aioinject, punq, svcs</text>
+<text class="grp" x="12" y="1345">S6 async transient chain</text>
+<text class="name" x="182" y="1365" text-anchor="end">hand-written</text>
+<rect x="190" y="1355" width="154.2" height="12" rx="2" fill="#8A9099"/>
+<text class="val" x="349.2" y="1365">0.229 µs</text>
+<text class="name inj" x="182" y="1380" text-anchor="end">injectq</text>
+<rect x="190" y="1370" width="184.7" height="12" rx="2" fill="#E4572E"/>
+<text class="val inj" x="379.7" y="1380">0.427 µs</text>
+<text class="name" x="182" y="1395" text-anchor="end">wireup</text>
+<rect x="190" y="1385" width="207.4" height="12" rx="2" fill="#4C78A8"/>
+<text class="val" x="402.4" y="1395">0.676 µs</text>
+<text class="name" x="182" y="1410" text-anchor="end">diwire</text>
+<rect x="190" y="1400" width="220.1" height="12" rx="2" fill="#72B7B2"/>
+<text class="val" x="415.1" y="1410">0.874 µs</text>
+<text class="name" x="182" y="1425" text-anchor="end">aioinject</text>
+<rect x="190" y="1415" width="226.3" height="12" rx="2" fill="#F58518"/>
+<text class="val" x="421.3" y="1425">0.992 µs</text>
+<text class="name" x="182" y="1440" text-anchor="end">dishka</text>
+<rect x="190" y="1430" width="229.9" height="12" rx="2" fill="#2A9D8F"/>
+<text class="val" x="424.9" y="1440">1.068 µs</text>
+<text class="name" x="182" y="1455" text-anchor="end">that-depends</text>
+<rect x="190" y="1445" width="248.8" height="12" rx="2" fill="#B279A2"/>
+<text class="val" x="443.8" y="1455">1.569 µs</text>
+<text class="name" x="182" y="1470" text-anchor="end">svcs</text>
+<rect x="190" y="1460" width="281.9" height="12" rx="2" fill="#C9A227"/>
+<text class="val" x="476.9" y="1470">3.068 µs</text>
+<text class="name" x="182" y="1485" text-anchor="end">dependency-injector</text>
+<rect x="190" y="1475" width="405.5" height="12" rx="2" fill="#9D755D"/>
+<text class="val" x="600.5" y="1485">37.8 µs</text>
+<text class="na" x="190" y="1499" text-anchor="start">n/a: inject, injector, kink, lagom, punq, rodi</text>
+<text class="grp" x="12" y="1538">S7 build container (50 services)</text>
+<text class="name" x="182" y="1558" text-anchor="end">hand-written</text>
+<rect x="190" y="1548" width="239.3" height="12" rx="2" fill="#8A9099"/>
+<text class="val" x="434.3" y="1558">1.292 µs</text>
+<text class="name" x="182" y="1573" text-anchor="end">inject</text>
+<rect x="190" y="1563" width="356.1" height="12" rx="2" fill="#D67195"/>
+<text class="val" x="551.1" y="1573">13.9 µs</text>
+<text class="name inj" x="182" y="1588" text-anchor="end">injectq</text>
+<rect x="190" y="1578" width="389.7" height="12" rx="2" fill="#E4572E"/>
+<text class="val inj" x="584.7" y="1588">27.4 µs</text>
+<text class="name" x="182" y="1603" text-anchor="end">lagom</text>
+<rect x="190" y="1593" width="423.0" height="12" rx="2" fill="#54A24B"/>
+<text class="val" x="618.0" y="1603">54.0 µs</text>
+<text class="name" x="182" y="1618" text-anchor="end">injector</text>
+<rect x="190" y="1608" width="437.5" height="12" rx="2" fill="#5778A4"/>
+<text class="val" x="632.5" y="1618">72.5 µs</text>
+<text class="name" x="182" y="1633" text-anchor="end">punq</text>
+<rect x="190" y="1623" width="462.6" height="12" rx="2" fill="#8CD17D"/>
+<text class="val" x="657.6" y="1633">121 µs</text>
+<text class="name" x="182" y="1648" text-anchor="end">that-depends</text>
+<rect x="190" y="1638" width="486.0" height="12" rx="2" fill="#B279A2"/>
+<text class="val" x="681.0" y="1648">194 µs</text>
+<text class="name" x="182" y="1663" text-anchor="end">dependency-injector</text>
+<rect x="190" y="1653" width="506.5" height="12" rx="2" fill="#9D755D"/>
+<text class="val" x="701.5" y="1663">295 µs</text>
+<text class="name" x="182" y="1678" text-anchor="end">svcs</text>
+<rect x="190" y="1668" width="517.6" height="12" rx="2" fill="#C9A227"/>
+<text class="val" x="712.6" y="1678">369 µs</text>
+<text class="name" x="182" y="1693" text-anchor="end">rodi</text>
+<rect x="190" y="1683" width="540.3" height="12" rx="2" fill="#B6992D"/>
+<text class="val" x="735.3" y="1693">585 µs</text>
+<text class="name" x="182" y="1708" text-anchor="end">aioinject</text>
+<rect x="190" y="1698" width="543.4" height="12" rx="2" fill="#F58518"/>
+<text class="val" x="738.4" y="1708">623 µs</text>
+<text class="name" x="182" y="1723" text-anchor="end">kink</text>
+<rect x="190" y="1713" width="554.7" height="12" rx="2" fill="#A0CBE8"/>
+<text class="val" x="749.7" y="1723">784 µs</text>
+<text class="name" x="182" y="1738" text-anchor="end">diwire</text>
+<rect x="190" y="1728" width="613.9" height="12" rx="2" fill="#72B7B2"/>
+<text class="val" x="808.9" y="1738">2,612 µs</text>
+<text class="name" x="182" y="1753" text-anchor="end">dishka</text>
+<rect x="190" y="1743" width="636.7" height="12" rx="2" fill="#2A9D8F"/>
+<text class="val" x="831.7" y="1753">4,151 µs</text>
+<text class="name" x="182" y="1768" text-anchor="end">wireup</text>
+<rect x="190" y="1758" width="678.8" height="12" rx="2" fill="#4C78A8"/>
+<text class="val" x="873.8" y="1768">9,768 µs</text>
+<text class="sub" x="12" y="1821">Bars start at 0.01 µs; each gridline is 10x. hand-written = plain constructor calls (the floor). n/a = library has no equivalent feature.</text>
+</svg>

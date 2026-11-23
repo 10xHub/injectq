@@ -1,0 +1,6 @@
+- **Date**: 2026-11-23T11:11:36Z
+- **CPU**: AMD Ryzen 5 5600G with Radeon Graphics (12 logical CPUs)
+- **OS**: Linux-7.3.4-1-cachyos-x86_64-with-glibc2.44
+- **Python**: CPython 3.13.13 (main Jun  2 2026 22:27:49, Clang 22.1.3 ; optimized build: True, LTO: True, GIL enabled: True)
+- **Libraries**: aioinject 1.11.0, dependency-injector 4.49.1, dishka 1.10.1, diwire 1.5.0, inject 5.5.0, injector 0.24.0, injectq 0.6.0, kink 0.9.0, lagom 2.7.7, punq 0.9.0, rodi 2.1.0, svcs 26.2.0, that-depends 4.3.0, wireup 2.13.1
+- **Repeats**: 25 per scenario, 0.02 s per repeat; median of repeats, microseconds per operation

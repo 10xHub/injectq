@@ -130,8 +130,7 @@ nav:
       - Testing Patterns: testing/testing-patterns.md
       - Overrides: testing/overrides.md
   - Performance:
-      - Benchmark Report: benchmark-report.md
-      - Quick Guide: benchmark-guide.md
+      - Benchmarks: benchmarks.md
   - API Reference:
       - Overview: api-reference/index.md
       - Quick Reference: api-reference/quick-reference.md
