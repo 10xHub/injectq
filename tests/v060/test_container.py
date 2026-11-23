@@ -285,15 +285,16 @@ def test_validate_detects_cycles():
         c.validate()
 
 
-def test_validate_checks_factory_only_services():
+def test_validate_defers_factory_with_unresolvable_param():
     c = InjectQ()
 
     def factory(i: Iface) -> Service:
         return Service()
 
     c.bind_factory(Service, factory)
+    c.validate()
     with pytest.raises((DependencyNotFoundError, InjectionError)):
-        c.validate()
+        c.get(Service)
 
 
 def test_compile_raises_on_unresolvable_dependency():

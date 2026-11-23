@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.6.0] - Unreleased
+## [0.6.1] - Unreleased
+
+### Fixed
+
+- `validate()` and `compile()` failed for factories that take call-time arguments (used with `call_factory`/`get_factory`). A factory whose parameters the container cannot fill is now skipped; resolving it with `get()`/`aget()`/`@inject` still raises. Cycles and classes depending on such a factory are still reported.
+
+---
+
+## [0.6.0] - Released
 
 **Focus:** a new resolution engine, correct context and scope handling, and cleanup of the public API.
 

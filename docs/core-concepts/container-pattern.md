@@ -91,7 +91,7 @@ container.invoke("user_service", user_id="u1")             # Database is injecte
 await container.ainvoke("user_service", user_id="u1")      # same, for async factories
 ```
 
-`get_factory(key)` returns the function itself. A factory that needs caller arguments cannot be resolved with `get()`, and `compile()` and `validate()` report it. See [Factory methods](../injection-patterns/factory-methods.md).
+`get_factory(key)` returns the function itself. A factory that needs caller arguments cannot be resolved with `get()`. `validate()` and `compile()` skip it. See [Factory methods](../injection-patterns/factory-methods.md).
 
 ### Modules
 
@@ -126,8 +126,8 @@ See [Service lifetimes](service-lifetimes.md) for the lifetimes and [Scopes](../
 ## Checking and compiling
 
 ```python
-container.validate()    # InjectionError listing every key that cannot be built, including cycles
-container.compile()     # builds every resolver now; raises on any error
+container.validate()    # InjectionError listing every key that cannot be built, including cycles (factories with call-time arguments are skipped)
+container.compile()     # builds every resolver now; raises on any error (factories with call-time arguments are skipped)
 ```
 
 Both run without creating your objects. Call one at startup to fail early. Resolving a cycle directly with `get()` raises `CircularDependencyError`.

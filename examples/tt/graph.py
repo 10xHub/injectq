@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from injectq import Inject, InjectQ, inject
-
-from .compiled import CompiledGraph
+from injectq import InjectQ
 
 
 class BaseCheckpointer:
@@ -26,6 +24,8 @@ class Graph:
         self.edges = {}
 
     def compile(self):
+        from .compiled import CompiledGraph  # noqa: PLC0415 - avoids an import cycle
+
         container = InjectQ.get_instance()
 
         container.bind(Graph, self)
