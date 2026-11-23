@@ -156,7 +156,7 @@ def main():
     print("\n🧪 7. Testing Support:")
 
     # Test with isolated container
-    with injectq.testing.test_container() as test_cont:
+    with injectq.testing.isolated_container() as test_cont:
         test_cont.bind_instance(str, "sqlite://test.db")
         test_cont.bind_instance(int, 3000)
 

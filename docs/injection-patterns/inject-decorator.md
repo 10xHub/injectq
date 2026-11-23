@@ -204,11 +204,11 @@ def process_with_transaction(service: UserService) -> None:
 Test your injected functions easily:
 
 ```python
-from injectq.testing import test_container
+from injectq.testing import isolated_container
 from injectq import inject
 
 def test_user_service():
-    with test_container() as container:
+    with isolated_container() as container:
         # Set up test dependencies
         container[UserService] = MockUserService
         container[Database] = MockDatabase

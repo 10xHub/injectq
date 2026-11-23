@@ -694,18 +694,30 @@ class _Injector:
                 continue  # not passable (e.g. bound away by a partial)
             fail = self._failer(param.name)
             key = resolver.lookup_key(param)
+            slot: _Slot | None = None
             if key is _MISSING:
                 if param.has_default or param.unresolved is None:
                     # Default applies; or unannotated: the caller passes it.
-                    continue
-                late = self._late(container, param, is_async=is_async)
-                slots.append(_Slot(j, sig, None, late, fail, coro=is_async))
+                    pass
+                else:
+                    late = self._late(container, param, is_async=is_async)
+                    slot = _Slot(j, sig, None, late, fail, coro=is_async)
             elif not resolver.can_resolve(key):
                 if not param.has_default:  # e.g. Inject[Unbound]: raises if needed
                     missing = functools.partial(_raise_missing, key)
-                    slots.append(_Slot(j, sig, key, missing, fail))
+                    slot = _Slot(j, sig, key, missing, fail)
             else:
-                slots.append(self._slot(container, j, key, fail, is_async=is_async))
+                slot = self._slot(container, j, key, fail, is_async=is_async)
+            # While overrides are active, a parameter an override can reach
+            # is resolved per context (the plan above where none is active).
+            per_context = resolver.param_resolver(param, is_async=is_async)
+            if per_context is not None:
+                base = (slot.resolve, slot.coro) if slot is not None else (None, False)
+                resolve = per_context(*base)
+                slot_key = None if key is _MISSING else key
+                slot = _Slot(j, sig, slot_key, resolve, fail, coro=is_async)
+            if slot is not None:
+                slots.append(slot)
         return slots
 
     def _slot(

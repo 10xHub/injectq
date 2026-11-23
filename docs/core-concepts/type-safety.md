@@ -177,7 +177,7 @@ Use type-safe mocks for testing:
 
 ```python
 from typing import Protocol
-from injectq.testing import test_container
+from injectq.testing import isolated_container
 from injectq import inject, singleton
 
 class DatabaseProtocol(Protocol):
@@ -195,7 +195,7 @@ class UserService:
         self.db = db
 
 def test_user_service():
-    with test_container() as container:
+    with isolated_container() as container:
         container.bind(DatabaseProtocol, MockDatabase)
         container.bind(UserService, UserService)
 

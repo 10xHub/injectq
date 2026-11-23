@@ -54,7 +54,6 @@ class Svc:
 # --- validator ---------------------------------------------------------------
 
 
-@xf(10, "validator: auto-injectable dependencies are not errors")
 def test_validator_accepts_auto_injectable_dependencies():
     c = InjectQ()
     c.bind(UsesLeaf, UsesLeaf)
@@ -69,7 +68,6 @@ def test_validator_accepts_defaulted_params():
     assert result.is_valid, str(result)
 
 
-@xf(10, "validator: unresolvable forward refs are reported, not raised as NameError")
 def test_validator_reports_unresolvable_forward_ref_instead_of_crashing():
     c = InjectQ()
     c.bind(BadRef, BadRef)
@@ -77,7 +75,6 @@ def test_validator_reports_unresolvable_forward_ref_instead_of_crashing():
     assert not result.is_valid
 
 
-@xf(10, "validator: cycles through string annotations are detected")
 def test_validator_detects_cycle_with_string_annotations():
     c = InjectQ()
     c.bind(CycA, CycA)
@@ -90,7 +87,6 @@ def test_validator_detects_cycle_with_string_annotations():
 # --- visualizer --------------------------------------------------------------
 
 
-@xf(10, "visualizer: finds real cycles declared with string annotations")
 def test_visualizer_finds_cycle_with_string_annotations():
     c = InjectQ()
     c.bind(CycA, CycA)
@@ -98,7 +94,6 @@ def test_visualizer_finds_cycle_with_string_annotations():
     assert DependencyVisualizer(c).find_cycles()
 
 
-@xf(10, "visualizer: DOT labels are clean class names")
 def test_visualizer_dot_labels_have_no_repr_noise():
     c = InjectQ()
     c.bind(Svc, Svc)
@@ -107,7 +102,6 @@ def test_visualizer_dot_labels_have_no_repr_noise():
     assert "'>" not in dot
 
 
-@xf(10, "visualizer: edges follow string-annotated constructor dependencies")
 def test_visualizer_edges_for_string_annotations():
     c = InjectQ()
     c.bind(UsesLeaf, UsesLeaf)
@@ -120,7 +114,6 @@ def test_visualizer_edges_for_string_annotations():
 # --- profiler ----------------------------------------------------------------
 
 
-@xf(10, "profiler: records metrics for real container.get() calls when active")
 def test_profiler_records_real_container_resolutions():
     c = InjectQ()
     c.bind(UsesLeaf, UsesLeaf)
@@ -185,3 +178,84 @@ def test_profiler_detailed_report_with_mixed_key_types():
         profiler.end_resolution(Svc)
     report = profiler.report(detailed=True)
     assert "string-key" in report
+
+
+# --- step 10: shared graph helpers, escaping, caching, exports -----------------
+
+
+def test_graph_helpers():
+    from injectq.utils.graph import find_cycles, find_path, reachable
+
+    graph = {"a": ["b"], "b": ["c", "a"], "c": [], "d": ["d"]}
+    assert sorted(map(sorted, find_cycles(graph))) == [["a", "b"], ["d"]]
+    assert find_path(graph, "a", "c") == ["a", "b", "c"]
+    assert find_path(graph, "c", "a") is None
+    assert reachable(graph, "a") == ["a", "b", "c"]
+
+
+def test_graph_helpers_deep_chain_does_not_recurse():
+    from injectq.utils.graph import find_cycles
+
+    graph = {i: [i + 1] for i in range(5000)}
+    graph[5000] = [0]
+    assert len(find_cycles(graph)) == 1
+
+
+def test_visualizer_dot_escapes_identifiers_and_labels():
+    c = InjectQ()
+    c.bind_instance('we"ird\\key', 1)
+    dot = DependencyVisualizer(c).to_dot()
+    assert '"we\\"ird\\\\key"' in dot
+
+
+def test_visualizer_cycles_are_closed_paths():
+    c = InjectQ()
+    c.bind(CycA, CycA)
+    c.bind(CycB, CycB)
+    (cycle, *_) = DependencyVisualizer(c).find_cycles()
+    assert cycle[0] == cycle[-1]
+    assert {CycA, CycB} == set(cycle)
+
+
+def test_visualizer_analyses_once_per_container_version():
+    c = InjectQ()
+    c.bind(Svc, Svc)
+    viz = DependencyVisualizer(c)
+    viz.to_json()
+    graph = viz._dependency_graph
+    viz.to_dot()
+    viz.find_cycles()
+    assert viz._dependency_graph is graph  # not rebuilt
+    c.bind(Leaf, Leaf)
+    viz.to_json()
+    assert Leaf in viz._dependency_graph
+
+
+def test_validator_matches_container_validate():
+    c = InjectQ()
+    c.bind(UsesLeaf, UsesLeaf)
+    c.bind(Defaulted, Defaulted)
+    c.validate()  # does not raise
+    assert DependencyValidator(c).validate().is_valid
+
+
+def test_root_exports_and_lazy_diagnostics():
+    import subprocess
+    import sys
+
+    code = (
+        "import sys, injectq;"
+        "assert injectq.__version__ == '0.6.0';"
+        "assert 'injectq.diagnostics' not in sys.modules;"
+        "names = ['AlreadyRegisteredError', 'ModuleBinder', 'ResourceError', 'ScopeError'];"
+        "[getattr(injectq, n) for n in names];"
+        "assert injectq.DependencyValidator.__module__ == 'injectq.diagnostics.validation';"
+        "assert 'injectq.diagnostics' in sys.modules"
+    )
+    out = subprocess.run(
+        [sys.executable, "-W", "error", "-c", code],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert out.returncode == 0, out.stderr

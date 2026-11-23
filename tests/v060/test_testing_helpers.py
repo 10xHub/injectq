@@ -13,8 +13,6 @@ import pytest
 
 from injectq import ContainerContext, InjectQ
 
-from ._helpers import xf
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -26,7 +24,6 @@ class Dep:
 # --- renamed helpers ---------------------------------------------------------
 
 
-@xf(6, "container_fixture / isolated_container / MockModule exist")
 def test_renamed_helpers_are_exported():
     import injectq.testing as t
 
@@ -39,7 +36,6 @@ def test_renamed_helpers_are_exported():
     assert not t.MockModule.__name__.startswith("Test")
 
 
-@xf(6, "isolated_container yields a working container")
 def test_isolated_container_yields_container():
     from injectq.testing import isolated_container
 
@@ -48,7 +44,6 @@ def test_isolated_container_yields_container():
         assert isinstance(c.get(Dep), Dep)
 
 
-@xf(6, "MockModule installs mocks and values")
 def test_mock_module_binds_mocks_and_values():
     from injectq.testing import MockModule
 
@@ -58,7 +53,6 @@ def test_mock_module_binds_mocks_and_values():
     assert c.get(Dep) is not None
 
 
-@xf(6, "old name test_container() emits DeprecationWarning")
 def test_old_test_container_warns():
     from injectq.testing import test_container
 
@@ -66,7 +60,6 @@ def test_old_test_container_warns():
         pass
 
 
-@xf(6, "old name TestModule emits DeprecationWarning")
 def test_old_test_module_warns():
     from injectq.testing import TestModule
 
@@ -74,7 +67,6 @@ def test_old_test_module_warns():
         TestModule()
 
 
-@xf(6, "old name pytest_container_fixture emits DeprecationWarning")
 def test_old_pytest_container_fixture_warns():
     from injectq.testing import pytest_container_fixture
 
@@ -94,7 +86,6 @@ def test_old_names_still_importable():
 # --- container visibility ----------------------------------------------------
 
 
-@xf(6, "test_container() is visible to get_instance() while a context is active")
 def test_test_container_visible_while_context_active():
     from injectq.testing import test_container
 
@@ -124,7 +115,16 @@ def _run_pytest(tmp_path: Path, conftest: str, test: str):
     env["PYTHONPATH"] = str(REPO_ROOT) + os.pathsep + env.get("PYTHONPATH", "")
     env.pop("PYTEST_ADDOPTS", None)
     return subprocess.run(  # noqa: S603
-        [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-W", "ignore::DeprecationWarning"],
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "-W",
+            "ignore::DeprecationWarning",
+        ],
         cwd=tmp_path,
         env=env,
         capture_output=True,
@@ -134,7 +134,6 @@ def _run_pytest(tmp_path: Path, conftest: str, test: str):
     )
 
 
-@xf(6, "container_fixture can be imported into conftest.py")
 def test_container_fixture_in_conftest_works(tmp_path):
     proc = _run_pytest(
         tmp_path,
@@ -152,7 +151,6 @@ def test_container_fixture_in_conftest_works(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-@xf(6, "importing the renamed helpers into a test module collects nothing extra")
 def test_renamed_helpers_not_collected_as_tests(tmp_path):
     proc = _run_pytest(
         tmp_path,
@@ -167,3 +165,37 @@ def test_renamed_helpers_not_collected_as_tests(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "1 passed" in proc.stdout
     assert "warning" not in proc.stdout.lower()
+
+
+def test_mock_factory_caches_per_type_and_kwargs():
+    from injectq.testing import MockFactory
+
+    f = MockFactory()
+    a = f.create_mock(Dep, name="a")
+    assert f.create_mock(Dep, name="a") is a
+    b = f.create_mock(Dep, name="b")
+    assert b is not a
+    assert b.name == "b"
+    assert type(a).__name__ == "MockDep"
+
+
+def test_isolated_container_restores_global_and_context():
+    from injectq.testing import isolated_container
+
+    glob = InjectQ.get_instance()
+    with isolated_container() as outer, isolated_container() as inner:
+        assert InjectQ.get_instance() is inner
+        assert inner is not outer
+    assert InjectQ.get_instance() is glob
+    assert ContainerContext.get_current() is None
+
+
+def test_deprecated_aliases_are_not_collectable():
+    import injectq.testing as t
+
+    assert t.test_container.__test__ is False
+    assert t.TestModule.__test__ is False
+    assert issubclass(t.TestModule, t.MockModule)
+    for name in ("test_container", "TestModule", "pytest_container_fixture"):
+        assert name not in t.__all__
+        assert name not in vars(t)

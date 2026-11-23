@@ -105,8 +105,8 @@ InjectQ's container consists of several key components:
 class InjectQ:
     def __init__(self):
         self._registry = ServiceRegistry()        # Service registrations
-        self._resolver = DependencyResolver()     # Dependency resolution
-        self._scope_manager = ScopeManager()      # Lifetime management
+        self._resolver = DependencyResolver(...)  # Compiles one resolver per service
+        self._scope_manager = ScopeManager()      # Singleton cache and active scopes
 ```
 
 ### Service Registry
@@ -232,10 +232,14 @@ Containers that create child scopes:
 # Main container
 container = InjectQ()
 
-# Create a request scope
-async with container.scope("request"):
-    # Services in this scope are isolated
+# Enter a request scope
+with container.scope("request"):
+    # Request-scoped services in this block are isolated
     request_service = container.get(RequestService)
+
+# In async code
+async with container.async_scope("request"):
+    request_service = await container.aget(RequestService)
 ```
 
 ## 📋 Container Configuration Patterns
@@ -575,22 +579,21 @@ assert user_service is another_service  # True for singletons
 
 ### 3. Cleanup Phase
 
-Clean up resources when the application shuts down:
+Close resources when the application shuts down:
 
 ```python
 from injectq import InjectQ
 
 container = InjectQ()
 
-# Manual cleanup
-container.clear()
+# Close singleton resources (@resource), last created first
+container.shutdown()            # or: await container.ashutdown()
 
-# Or use context manager
-with container.context():
-    # Use container
-    pass
-# Automatic cleanup when exiting context
+# Remove all bindings and cached instances
+container.clear()
 ```
+
+`with container.context():` only makes the container the current one for the block. It does not clean anything up. Request-scoped resources are closed when their `container.scope(...)` block exits. See [Resources and cleanup](../scopes/resources.md).
 
 ## 🚀 Advanced Container Features
 
@@ -682,7 +685,7 @@ else:
 Create isolated containers for testing:
 
 ```python
-from injectq.testing import test_container
+from injectq.testing import isolated_container
 from injectq import singleton, inject
 from abc import ABC, abstractmethod
 
@@ -705,7 +708,7 @@ class UserService:
         return self.db.get_user(user_id)
 
 def test_user_service():
-    with test_container() as container:
+    with isolated_container() as container:
         # Set up test dependencies
         container.bind(Database, MockDatabase)
         container.bind(UserService, UserService)

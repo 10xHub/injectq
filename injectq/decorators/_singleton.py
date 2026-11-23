@@ -5,7 +5,6 @@ from collections.abc import Callable
 from typing import Any, TypeVar, overload
 
 from injectq.core import InjectQ, ScopeType
-from injectq.core.registry import ServiceBinding
 from injectq.utils import BindingError
 
 
@@ -36,10 +35,7 @@ def _register(
     """
     target_container = container if container is not None else InjectQ.get_instance()
     if factory:
-        target_container._registry.set_provider(  # noqa: SLF001
-            key,
-            ServiceBinding(key, target, _scope_str(scope), is_factory=True),
-        )
+        target_container.bind_factory(key, target, scope=scope)
     else:
         target_container.bind(key, target, scope=scope)
     _logger.info(

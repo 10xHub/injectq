@@ -17,8 +17,6 @@ from injectq.utils import (
     InjectionError,
 )
 
-from ._helpers import xf
-
 
 class Plain:
     """No __init__ at all."""
@@ -98,7 +96,6 @@ def test_override_applies_to_factory_bound_key():
     assert c.get("k") == "real"
 
 
-@xf(6, "override evicts only its own key's cached singleton")
 def test_override_keeps_unrelated_singletons():
     c = InjectQ()
     c.bind(Dep, Dep, scope="singleton")
@@ -109,7 +106,6 @@ def test_override_keeps_unrelated_singletons():
     assert c.get(Dep) is dep_before
 
 
-@xf(6, "override restores the original binding and cached singleton")
 def test_override_restores_original_singleton_instance():
     c = InjectQ()
     c.bind(Service, Service, scope="singleton")
@@ -119,7 +115,6 @@ def test_override_restores_original_singleton_instance():
     assert c.get(Service) is original
 
 
-@xf(6, "override is invisible to other threads")
 def test_override_is_not_seen_by_other_threads():
     c = InjectQ()
     c.bind(Service, Service, scope="singleton")
@@ -132,7 +127,6 @@ def test_override_is_not_seen_by_other_threads():
     assert seen[0] != "fake"
 
 
-@xf(6, "override leaves no allow_concrete registrations behind")
 def test_override_leaves_no_concrete_registrations():
     c = InjectQ()
     c.bind(Service, Service)
@@ -142,7 +136,6 @@ def test_override_leaves_no_concrete_registrations():
     assert Dep not in c
 
 
-@xf(6, "override works with allow_override=False (overrides are not rebinding)")
 def test_override_with_allow_override_false():
     c = InjectQ(allow_override=False)
     c.bind(Service, Service)
@@ -151,7 +144,6 @@ def test_override_with_allow_override_false():
     assert isinstance(c.get(Service), Service)
 
 
-@xf(6, "test_mode is honoured while a context container is active")
 def test_test_mode_wins_over_active_context_container():
     outer = InjectQ()
     with ContainerContext.use(outer), InjectQ.test_mode() as test_c:

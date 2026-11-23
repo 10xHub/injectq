@@ -22,13 +22,12 @@ that is unwound LIFO when the scope exits.
 
 from __future__ import annotations
 
-import asyncio
 import contextvars
 import inspect
 import logging
 import threading
 from abc import ABC, abstractmethod
-from contextlib import AsyncExitStack, ExitStack, asynccontextmanager
+from contextlib import AsyncExitStack, ExitStack
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -36,7 +35,9 @@ from injectq.utils import ScopeError
 
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Callable, Mapping
+    import asyncio
+    from collections.abc import Callable, Mapping
+    from types import TracebackType
 
 
 _logger = logging.getLogger("injectq.core")
@@ -87,18 +88,116 @@ class Scope(ABC):
 
 
 class _Frame:
-    """State of one entry into a named context scope."""
+    """One entry into a named context scope; also its context manager.
 
-    __slots__ = ("closed", "exit_stack", "instances", "is_async", "name", "pending")
+    ``ScopeManager.scope_context`` / ``async_scope_context`` return a new,
+    not yet entered frame. Entering it sets a new active-scopes mapping with
+    the frame under its name; exiting closes the exit stack (only created if
+    something was pushed onto it), drops the instances and resets the token.
+    A frame object entered again after exiting starts a fresh entry.
+    """
 
-    def __init__(self, name: str, is_async: bool) -> None:
-        self.name = name
-        self.is_async = is_async
+    __slots__ = (
+        "_manager",
+        "_token",
+        "closed",
+        "exit_stack",
+        "instances",
+        "name",
+        "pending",
+    )
+
+    is_async = False  # True for _AsyncFrame (its exit stack is async)
+
+    def __init__(self, manager: ScopeManager, name: Any) -> None:
+        self._manager = manager
+        self.name = name  # as given until entered, then the resolved name
+        self.closed = True  # the rest is set on entry
+        self._token: contextvars.Token[Mapping[str, _Frame]]
+        self.instances: dict[Any, Any]
+        self.exit_stack: ExitStack | AsyncExitStack | None
+        self.pending: (
+            dict[Any, tuple[asyncio.AbstractEventLoop, asyncio.Future[Any]]] | None
+        )
+
+    def __enter__(self) -> None:
+        manager = self._manager
+        name = self.name
+        if type(name) is not str or name not in manager._context_names:  # noqa: SLF001
+            name = manager._entry_name(name)  # noqa: SLF001
+            if name is None:
+                return  # singleton / transient: a no-op kept for compatibility
+            self.name = name
+        self.instances = {}
+        self.exit_stack = self.pending = None
         self.closed = False
-        self.instances: dict[Any, Any] = {}
-        self.pending: dict[Any, tuple[asyncio.AbstractEventLoop, asyncio.Future[Any]]]
-        self.pending = {}
-        self.exit_stack: ExitStack | AsyncExitStack | None = None
+        var = manager._active  # noqa: SLF001
+        active = var.get()
+        if active:
+            mapping = dict(active)
+            mapping[name] = self
+            self._token = var.set(mapping)
+        else:
+            self._token = var.set({name: self})
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        if self.closed:
+            return  # never entered, or a singleton / transient no-op
+        self.closed = True
+        stack = self.exit_stack
+        try:
+            if stack is not None and isinstance(stack, ExitStack):
+                # Teardowns see the exception; it is never suppressed.
+                stack.__exit__(exc_type, exc, tb)
+        finally:
+            self.instances.clear()
+            try:
+                self._manager._active.reset(self._token)  # noqa: SLF001
+            except (ValueError, RuntimeError) as error:
+                _token_not_reset(error)
+
+    async def __aenter__(self) -> None:
+        self.__enter__()
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        if self.closed:
+            return
+        self.closed = True
+        stack = self.exit_stack
+        try:
+            if isinstance(stack, AsyncExitStack):
+                # Teardowns see the exception; it is never suppressed.
+                await stack.__aexit__(exc_type, exc, tb)
+            elif stack is not None:
+                stack.__exit__(exc_type, exc, tb)
+        finally:
+            self.instances.clear()
+            try:
+                self._manager._active.reset(self._token)  # noqa: SLF001
+            except (ValueError, RuntimeError) as error:
+                _token_not_reset(error)
+
+
+class _AsyncFrame(_Frame):
+    """A frame entered with ``async with``: its exit stack is async."""
+
+    __slots__ = ()
+    is_async = True
+
+
+def _token_not_reset(error: Exception) -> None:
+    # ValueError: token from another Context; RuntimeError: already used.
+    _logger.debug("Scope context token not reset: %s", error)
 
 
 _EMPTY: Mapping[str, _Frame] = {}
@@ -115,27 +214,6 @@ def _resolve_name(scope: Any) -> str:
     raise ScopeError(msg)
 
 
-class _SyncScope:
-    """Context manager returned by ``ScopeManager.scope_context``."""
-
-    __slots__ = ("_frame", "_manager", "_name", "_token")
-
-    def __init__(self, manager: ScopeManager, name: str | ScopeType) -> None:
-        self._manager = manager
-        self._name = name
-        self._frame: _Frame | None = None
-        self._token: contextvars.Token[Mapping[str, _Frame]] | None = None
-
-    def __enter__(self) -> None:
-        self._frame, self._token = self._manager._enter(self._name, is_async=False)  # noqa: SLF001
-
-    def __exit__(self, *exc_info: object) -> None:
-        frame, token = self._frame, self._token
-        if frame is not None and token is not None:
-            self._frame = self._token = None
-            self._manager._exit(frame, token)  # noqa: SLF001
-
-
 class ScopeManager:
     """Owns singleton instances and the active named context scopes."""
 
@@ -146,13 +224,17 @@ class ScopeManager:
             thread_safe: Ignored; creation is always thread-safe.
         """
         self._singletons: dict[Any, Any] = {}
+        # Bumped (after the removal) whenever a cached singleton is removed,
+        # so generated code that baked one in as a constant can tell. A list,
+        # read as ``generation[0]`` by generated code.
+        self.singleton_generation = [0]
         self._singleton_locks: dict[Any, threading.RLock] = {}
         self._singleton_pending: dict[
             Any, tuple[asyncio.AbstractEventLoop, asyncio.Future[Any]]
         ] = {}
-        self._context_names = {ScopeType.REQUEST.value, ScopeType.ACTION.value}
+        self._context_names = {"request", "action"}  # + register_scope()
         self._active: contextvars.ContextVar[Mapping[str, _Frame]] = (
-            contextvars.ContextVar(f"injectq_scopes_{id(self):x}", default=_EMPTY)
+            contextvars.ContextVar("injectq_scopes", default=_EMPTY)
         )
 
     # ------------------------------------------------------------------ names
@@ -180,6 +262,12 @@ class ScopeManager:
         """Return True if the named scope is active in the current context."""
         return _resolve_name(scope_name) in self._active.get()
 
+    def _entry_name(self, scope: Any) -> str | None:
+        """Validated name of a scope to enter; None for singleton / transient."""
+        name = _resolve_name(scope)
+        self._check_name(name)
+        return None if name in (SINGLETON, TRANSIENT) else name
+
     def _check_name(self, name: str) -> None:
         if name not in self._context_names and name not in (SINGLETON, TRANSIENT):
             msg = f"Unknown scope: {name}"
@@ -198,69 +286,22 @@ class ScopeManager:
 
     # ------------------------------------------------------------- enter/exit
 
-    def _enter(
-        self, scope: str | ScopeType, is_async: bool
-    ) -> tuple[_Frame | None, contextvars.Token[Mapping[str, _Frame]] | None]:
-        name = _resolve_name(scope)
-        self._check_name(name)
-        if name in (SINGLETON, TRANSIENT):
-            # Nothing to enter: kept as a no-op for compatibility.
-            return None, None
-        frame = _Frame(name, is_async)
-        active = dict(self._active.get())
-        active[name] = frame
-        return frame, self._active.set(active)
-
-    def _reset(self, token: contextvars.Token[Mapping[str, _Frame]]) -> None:
-        try:
-            self._active.reset(token)
-        except (ValueError, RuntimeError) as exc:
-            # ValueError: token from another Context; RuntimeError: already used.
-            _logger.debug("Scope context token not reset: %s", exc)
-
-    def scope_context(self, scope_name: str | ScopeType) -> _SyncScope:
+    def scope_context(self, scope_name: str | ScopeType) -> _Frame:
         """Enter a named scope for the duration of a ``with`` block.
 
         On exit the scope's exit stack is closed (LIFO), the scope's instances
         are dropped and the previously active scope of that name, if any, is
         restored.
         """
-        return _SyncScope(self, scope_name)
+        return _Frame(self, scope_name)
 
-    def _exit(
-        self,
-        frame: _Frame,
-        token: contextvars.Token[Mapping[str, _Frame]],
-    ) -> None:
-        frame.closed = True
-        try:
-            stack = frame.exit_stack
-            if isinstance(stack, ExitStack):
-                stack.close()
-        finally:
-            frame.instances.clear()
-            self._reset(token)
+    def async_scope_context(self, scope_name: str | ScopeType) -> _Frame:
+        """Async form of ``scope_context`` (``async with``).
 
-    @asynccontextmanager
-    async def async_scope_context(
-        self, scope_name: str | ScopeType
-    ) -> AsyncIterator[None]:
-        """Async form of ``scope_context``; the exit stack is awaited on exit."""
-        frame, token = self._enter(scope_name, is_async=True)
-        if frame is None or token is None:
-            yield
-            return
-        try:
-            yield
-        finally:
-            frame.closed = True
-            try:
-                stack = frame.exit_stack
-                if isinstance(stack, AsyncExitStack):
-                    await stack.aclose()
-            finally:
-                frame.instances.clear()
-                self._reset(token)
+        The scope's exit stack is an ``AsyncExitStack``, awaited on exit with
+        the exception leaving the block (if any); it is never suppressed.
+        """
+        return _AsyncFrame(self, scope_name)
 
     def current_exit_stack(
         self, scope_name: str | ScopeType
@@ -340,7 +381,10 @@ class ScopeManager:
         instance = frame.instances.get(key, _MISSING)
         if instance is not _MISSING:
             return instance
-        return await self._acreate(key, factory, frame.instances, frame.pending)
+        pending = frame.pending
+        if pending is None:
+            pending = frame.pending = {}
+        return await self._acreate(key, factory, frame.instances, pending)
 
     async def _acreate(
         self,
@@ -349,6 +393,8 @@ class ScopeManager:
         store: dict[Any, Any],
         pending: dict[Any, tuple[asyncio.AbstractEventLoop, asyncio.Future[Any]]],
     ) -> Any:
+        import asyncio  # noqa: PLC0415 - imported lazily (import time)
+
         loop = asyncio.get_running_loop()
         while True:
             instance = store.get(key, _MISSING)
@@ -408,14 +454,29 @@ class ScopeManager:
         self._check_name(name)
         if name == SINGLETON:
             self._singletons.clear()
+            self.singleton_generation[0] += 1
             return
         frame = self._active.get().get(name)
         if frame is not None:
             frame.instances.clear()
 
+    def evict_singleton(self, key: Any, value: Any = _MISSING) -> bool:
+        """Drop ``key``'s cached singleton (only if it is ``value``, if given).
+
+        Returns True if one was dropped.
+        """
+        singletons = self._singletons
+        current = singletons.get(key, _MISSING)
+        if current is _MISSING or (value is not _MISSING and current is not value):
+            return False
+        singletons.pop(key, None)
+        self.singleton_generation[0] += 1  # after the removal (see __init__)
+        return True
+
     def clear_all_scopes(self) -> None:
         """Drop all singletons and the instances of every active context scope."""
         self._singletons.clear()
+        self.singleton_generation[0] += 1
         for frame in self._active.get().values():
             frame.instances.clear()
 

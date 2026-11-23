@@ -32,9 +32,25 @@ How a key is resolved:
    eagerly. Generated source is kept in ``sources`` and registered in
    ``linecache`` as ``<injectq-generated:Name>``, so tracebacks show it.
    Singleton keys (created once) and resolvers compiled while a profiler is
-   set stay on closures. Singletons are looked up, not baked in as
-   constants: ``clear_scope("singleton")`` empties the cache without a
-   registry change, so a baked instance could outlive it.
+   set or overrides are active stay on closures. Singletons are looked up,
+   not baked in as constants: ``clear_scope("singleton")`` empties the cache
+   without a registry change, so a baked instance could outlive it.
+
+5. Overrides (``container.override``): the override layer of the current
+   context lives in a ``ContextVar`` owned by the container (see
+   ``OverrideLayer``). While no override is active anywhere, compiled code
+   knows nothing about overrides (zero cost). While at least one is active
+   (``override_var`` set), every resolver is compiled as closures wrapped
+   by ``_guard``: in a context without a layer it runs the normal resolver,
+   which is built from the registry alone, exactly as without overrides.
+   In a context with a layer it hands the key to the *override world* of
+   that layer's key set (``_OverrideWorld``): a second set of plans in
+   which the overridden keys resolve to the layer's values (also when they
+   are not registered); keys whose graph reaches one are built afresh,
+   caching singleton / scoped results in the layer (never in the shared
+   caches); every other key runs its normal resolver. Other contexts never
+   see a world, so overrides cannot change their defaults, errors or
+   plans.
 
 All compiled state is dropped (the dicts are replaced, never mutated in
 place) whenever the registry changes. Reads take no lock; compilation runs
@@ -69,7 +85,8 @@ from .scopes import SINGLETON, TRANSIENT
 
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping
+    from collections.abc import Callable
+    from contextvars import ContextVar
 
     from .registry import ServiceBinding, ServiceRegistry
     from .scopes import ScopeManager
@@ -496,36 +513,79 @@ def _constant(value: Any) -> Callable[[], Any]:
     return constant
 
 
-def _instrument(profiler: Any, key: Any, fn: Callable[[], Any]) -> Callable[[], Any]:
+def _instrument(
+    profiler: Any,
+    key: Any,
+    fn: Callable[[], Any],
+    is_cached: Callable[[Any], bool] | None = None,
+) -> Callable[[], Any]:
+    """Report every call of ``fn`` to ``profiler``.
+
+    ``is_cached(key)`` (singletons) tells whether the call is a cache hit.
+    """
     start, end = profiler.on_resolve_start, profiler.on_resolve_end
 
     def profiled() -> Any:
+        hit = is_cached is not None and is_cached(key)
         token = start(key)
         try:
             value = fn()
         except BaseException:
             end(token, cache_hit=False)
             raise
-        end(token, cache_hit=False)
+        end(token, cache_hit=hit)
         return value
 
     return profiled
 
 
-def _ainstrument(profiler: Any, key: Any, fn: Callable[[], Any]) -> Callable[[], Any]:
+def _ainstrument(
+    profiler: Any,
+    key: Any,
+    fn: Callable[[], Any],
+    is_cached: Callable[[Any], bool] | None = None,
+) -> Callable[[], Any]:
     start, end = profiler.on_resolve_start, profiler.on_resolve_end
 
     async def profiled() -> Any:
+        hit = is_cached is not None and is_cached(key)
         token = start(key)
         try:
             value = await fn()
         except BaseException:
             end(token, cache_hit=False)
             raise
-        end(token, cache_hit=False)
+        end(token, cache_hit=hit)
         return value
 
     return profiled
+
+
+class OverrideLayer:
+    """The overrides active in one context (immutable once set in the var).
+
+    ``values``: key -> override value (outer overrides included).
+    ``cache``: singletons whose graph reaches an overridden key, created
+    while this layer was active; dropped with it. (Such scoped instances
+    live in their scope entry, under ``(layer, key)``.)
+    ``locks`` / ``pending``: per cache key, the creation lock (sync) and
+    the in-flight future (async), so concurrent threads / tasks sharing
+    the layer create each such instance once.
+    """
+
+    __slots__ = ("cache", "keys", "locks", "pending", "values")
+
+    def __init__(self, values: dict[Any, Any]) -> None:
+        self.values = values
+        self.keys = frozenset(values)
+        self.cache: dict[Any, Any] = {}
+        self.locks: dict[Any, threading.RLock] = {}
+        self.pending: dict[Any, Any] = {}
+
+
+# What an override world's ``provider()`` returns for an overridden key that
+# is not registered (only its truth value is used).
+_OVERRIDDEN: Any = object()
 
 
 class DependencyResolver:
@@ -545,8 +605,16 @@ class DependencyResolver:
         self.codegen = codegen
         # Generated source per (key, is_async), for inspection / debugging.
         self.sources: dict[tuple[Any, bool], str] = {}
-        # Override layer consulted when compiling a key (filled by step 6).
-        self.overrides: Mapping[ServiceKey, ServiceBinding] = {}
+        # Set while any override of the container is active (in any context):
+        # resolvers are then compiled with ``_guard`` (see the module doc).
+        self.override_var: ContextVar[OverrideLayer | None] | None = None
+        # Every key overridden in some context.
+        self.override_keys: frozenset[Any] = frozenset()
+        # Override worlds per layer key set, and the unguarded resolvers
+        # they fall back to (see ``_OverrideWorld``).
+        self._worlds: dict[frozenset[Any], _OverrideWorld] = {}
+        self._raw: dict[Any, Callable[[], Any]] = {}
+        self._araw: dict[Any, tuple[Callable[[], Any], bool]] = {}
         # Profiler hook: when set at compile time, every compiled resolver is
         # wrapped by ``_instrument`` (``on_resolve_start`` / ``on_resolve_end``
         # protocol of ``injectq.diagnostics.profiling``); None costs nothing.
@@ -565,6 +633,7 @@ class DependencyResolver:
         self._closures: dict[Any, Callable[[], Any]] = {}
         self._aclosures: dict[Any, tuple[Callable[[], Any], bool]] = {}
         self._promoted: dict[Callable[[], Any], Callable[[], Any]] = {}
+        self._reaches: dict[Any, frozenset[Any]] = {}
 
     # ------------------------------------------------------------ invalidation
 
@@ -582,16 +651,114 @@ class DependencyResolver:
             self._closures = {}
             self._aclosures = {}
             self._promoted = {}
+            self._reaches = {}
+            self._worlds = {}
+            self._raw = {}
+            self._araw = {}
             self._dirty = False
+
+    def set_override_state(
+        self,
+        var: ContextVar[OverrideLayer | None] | None,
+        keys: frozenset[Any],
+    ) -> None:
+        """Switch override mode on (``var``) / off (None); drop compiled code."""
+        with self._lock:
+            self._dirty = True  # force invalidate() to run
+            self.override_var = var
+            self.override_keys = keys
+            self.invalidate()
+
+    def world(self, keys: frozenset[Any]) -> _OverrideWorld:
+        """The override world for a layer overriding exactly ``keys``."""
+        world = self._worlds.get(keys)
+        if world is None:
+            with self._lock:
+                self._dirty = True
+                world = self._worlds.get(keys)
+                if world is None:
+                    world = self._worlds[keys] = _OverrideWorld(self, keys)
+        return world
+
+    def param_resolver(self, param: Param, *, is_async: bool) -> Any:
+        """Per-context resolver of an ``@inject`` parameter, or None.
+
+        While overrides are active, a parameter whose lookup an override can
+        change (its marker, name or annotation is overridden somewhere) is
+        resolved per call: in a context without a layer by ``base`` (the
+        normal slot resolver; None if the normal plan leaves the parameter to
+        its default), in a context with one by that layer's override world.
+        Returns ``fn(base, base_is_coro)`` building that resolver, or None
+        if no override can affect the parameter.
+        """
+        var = self.override_var
+        keys = self.override_keys
+        if var is None or not keys:
+            return None
+        try:
+            hit = (
+                (param.marker is not _MISSING and param.marker in keys)
+                or (
+                    (param.annotation is not _EMPTY or param.unresolved is not None)
+                    and param.name in keys
+                )
+                or (param.annotation is not _EMPTY and param.annotation in keys)
+            )
+        except TypeError:  # unhashable marker / annotation
+            return None
+        if not hit:
+            return None
+        has_default, default = param.has_default, param.default
+        world_of = self.world
+
+        def build(base: Callable[[], Any] | None, base_coro: bool) -> Any:
+            def from_world(layer: OverrideLayer) -> tuple[Any, Any, bool]:
+                world = world_of(layer.keys)
+                key = world.lookup_key(param)
+                if key is _MISSING or not world.can_resolve(key):
+                    if has_default:
+                        return default, None, False
+                    if key is _MISSING and base is not None:
+                        return _MISSING, base, base_coro
+                    raise DependencyNotFoundError(key)
+                if is_async:
+                    fn, coro = world.compile_async(key)
+                    return _MISSING, fn, coro
+                return _MISSING, world.compile_sync(key), False
+
+            if is_async:
+
+                async def aresolve_param() -> Any:
+                    layer = var.get()
+                    if layer is None:
+                        if base is None:
+                            return default
+                        value = base()
+                        return (await value) if base_coro else value
+                    value, fn, coro = from_world(layer)
+                    if fn is None:
+                        return value
+                    value = fn()
+                    return (await value) if coro else value
+
+                return aresolve_param
+
+            def resolve_param() -> Any:
+                layer = var.get()
+                if layer is None:
+                    return default if base is None else base()
+                value, fn, _ = from_world(layer)
+                return value if fn is None else fn()
+
+            return resolve_param
+
+        return build
 
     # ----------------------------------------------------------------- lookup
 
     def provider(self, key: Any) -> ServiceBinding | None:
-        """The registered provider for ``key``, overrides first."""
-        binding = self.overrides.get(key) if self.overrides else None
-        if binding is None:
-            binding = self.registry.get_provider(key)
-        return binding
+        """The registered provider for ``key``."""
+        return self.registry.get_provider(key)
 
     def can_resolve(self, key: Any) -> bool:
         """True if ``key`` is registered or is an auto-resolvable class."""
@@ -640,6 +807,9 @@ class DependencyResolver:
         node = self._nodes.get(key)
         if node is not None:
             return node
+        return self._build_node(key)
+
+    def _build_node(self, key: Any) -> Node:
         if key in self._building:
             start = self._building.index(key)
             raise CircularDependencyError([*self._building[start:], key])
@@ -755,9 +925,18 @@ class DependencyResolver:
         else:
             fn = self._scoped(node, self._create(node))
         if self.profiler is not None:
-            fn = _instrument(self.profiler, key, fn)
+            fn = _instrument(self.profiler, key, fn, self._hit_probe(node))
+        if self.override_var is not None:
+            self._raw[key] = fn
+            fn = self._guard(key, fn)
         self.sync[key] = fn
         return fn
+
+    def _hit_probe(self, node: Node) -> Callable[[Any], bool] | None:
+        """For the profiler: tells whether a singleton is already cached."""
+        if node.scope != SINGLETON:
+            return None
+        return self.scope_manager._singletons.__contains__  # noqa: SLF001
 
     def _create(self, node: Node) -> Callable[[], Any]:
         """Build the zero-argument creation function of a class/factory node."""
@@ -839,10 +1018,79 @@ class DependencyResolver:
         else:
             fn = self._ascoped(node, self._acreate(node))
             if self.profiler is not None:
-                fn = _ainstrument(self.profiler, key, fn)
+                fn = _ainstrument(self.profiler, key, fn, self._hit_probe(node))
+            if self.override_var is not None:
+                self._araw[key] = (fn, True)
+                fn = self._aguard(key, fn)
             entry = (fn, True)
         self.async_[key] = entry
         return entry
+
+    def raw_sync(self, key: Any) -> Callable[[], Any]:
+        """``key``'s resolver without the override guard (overrides active)."""
+        fn = self._raw.get(key)
+        if fn is None:
+            with self._lock:
+                self._dirty = True
+                self._compile_sync(key)
+                fn = self._raw[key]
+        return fn
+
+    def raw_async(self, key: Any) -> tuple[Callable[[], Any], bool]:
+        """Async form of ``raw_sync``."""
+        entry = self._araw.get(key)
+        if entry is None:
+            with self._lock:
+                self._dirty = True
+                entry = self._compile_async(key)
+                if entry[1]:
+                    entry = self._araw[key]
+                else:
+                    entry = (self.raw_sync(key), False)
+        return entry
+
+    # -------------------------------------------------------------- overrides
+
+    def _reach(self, key: Any) -> frozenset[Any]:
+        """Every key ``key``'s graph depends on (transitively)."""
+        reach = self._reaches.get(key)
+        if reach is None:
+            out: set[Any] = set()
+            for dep in self._node(key).deps:
+                if dep.key is not _MISSING:
+                    out.add(dep.key)
+                    out |= self._reach(dep.key)
+            reach = self._reaches[key] = frozenset(out)
+        return reach
+
+    def _guard(self, key: Any, fn: Callable[[], Any]) -> Callable[[], Any]:
+        """Wrap a sync resolver: a context with overrides uses its world."""
+        var = self.override_var
+        assert var is not None
+        world_of = self.world
+
+        def guarded() -> Any:
+            layer = var.get()
+            if layer is None:
+                return fn()
+            return world_of(layer.keys).compile_sync(key)()
+
+        return guarded
+
+    def _aguard(self, key: Any, fn: Callable[[], Any]) -> Callable[[], Any]:
+        """Async form of ``_guard`` (``fn`` is a coroutine function)."""
+        var = self.override_var
+        assert var is not None
+        world_of = self.world
+
+        async def aguarded() -> Any:
+            layer = var.get()
+            if layer is None:
+                return await fn()
+            wfn, coro = world_of(layer.keys).compile_async(key)
+            return (await wfn()) if coro else wfn()
+
+        return aguarded
 
     # ------------------------------------------------------ warm-up closures
     #
@@ -852,15 +1100,19 @@ class DependencyResolver:
     # stub and is never promoted on its own (its parent's generated code
     # inlines it, or calls its stub once it is resolved directly).
 
+    def _plain(self) -> bool:
+        """True if resolvers may be generated (no profiler, no overrides)."""
+        return self.codegen and self.profiler is None and self.override_var is None
+
     def _link_sync(self, key: Any) -> Callable[[], Any]:
         """The sync resolver a closure calls for dependency ``key``."""
-        if self.codegen and self.profiler is None:
+        if self._plain():
             return self._closure(key)
         return self._compile_sync(key)
 
     def _link_async(self, key: Any) -> tuple[Callable[[], Any], bool]:
         """The ``aget`` resolver a closure calls for dependency ``key``."""
-        if self.codegen and self.profiler is None:
+        if self._plain():
             return self._aclosure(key)
         return self._compile_async(key)
 
@@ -951,8 +1203,7 @@ class DependencyResolver:
     def _generated(self, node: Node, *, is_async: bool) -> bool:
         """True if ``node``'s resolver should become generated code."""
         return (
-            self.codegen
-            and self.profiler is None
+            self._plain()
             and node.scope != SINGLETON
             and (is_async or not node.is_async)
         )
@@ -1046,10 +1297,8 @@ class DependencyResolver:
     # ------------------------------------------------------------ whole graph
 
     def registered_keys(self) -> list[Any]:
-        """Every registered key (overrides included)."""
-        keys = list(self.registry.get_all_providers())
-        keys.extend(k for k in self.overrides if k not in keys)
-        return keys
+        """Every registered key."""
+        return list(self.registry.get_all_providers())
 
     def validate(self) -> list[str]:
         """Build the plan of every registered key; return the errors found."""
@@ -1115,6 +1364,143 @@ class DependencyResolver:
                 continue
             out.append(dep_key)
         return out
+
+
+class _OverrideWorld(DependencyResolver):
+    """The plans of one override layer key set (see the module doc, point 5).
+
+    Overridden keys resolve to the current layer's values, registered or
+    not; keys whose graph reaches one are created afresh, singleton /
+    scoped results cached in the layer; every other key runs the base
+    resolver unchanged (its plan is then the base plan). Only called in a
+    context whose layer overrides exactly ``keys``. Shares the base's lock
+    and analysis cache; dropped with the base's compiled state.
+    """
+
+    def __init__(self, base: DependencyResolver, keys: frozenset[Any]) -> None:
+        super().__init__(base.registry, base.scope_manager, codegen=False)
+        var = base.override_var
+        assert var is not None
+        self.base = base
+        self.keys = keys
+        self.var = var
+        self.profiler = base.profiler
+        self._lock = base._lock
+        self._analysis = base._analysis
+
+    def provider(self, key: Any) -> Any:
+        """The registered provider, else a marker for an overridden key."""
+        binding = self.registry.get_provider(key)
+        if binding is None and key in self.keys:
+            return _OVERRIDDEN
+        return binding
+
+    def _node(self, key: Any) -> Node:
+        node = self._nodes.get(key)
+        if node is not None:
+            return node
+        if key in self.keys:
+            var = self.var
+
+            def overridden() -> Any:
+                layer = var.get()
+                assert layer is not None
+                return layer.values[key]
+
+            node = Node(key, None, FACTORY, overridden, TRANSIENT, (), is_async=False)
+            self._nodes[key] = node
+            return node
+        return self._build_node(key)
+
+    def _compile_sync(self, key: Any) -> Callable[[], Any]:
+        fn = self.sync.get(key)
+        if fn is not None:
+            return fn
+        node = self._node(key)
+        if key in self.keys:
+            fn = node.target
+        elif self.keys.isdisjoint(self._reach(key)):
+            fn = self.base.raw_sync(key)
+        else:
+            fn = self._layered(node, self._create(node))
+            if self.profiler is not None:
+                fn = _instrument(self.profiler, key, fn)
+        self.sync[key] = fn
+        return fn
+
+    def _compile_async(self, key: Any) -> tuple[Callable[[], Any], bool]:
+        entry = self.async_.get(key)
+        if entry is not None:
+            return entry
+        node = self._node(key)
+        if key in self.keys:
+            entry = (node.target, False)
+        elif self.keys.isdisjoint(self._reach(key)):
+            entry = self.base.raw_async(key)
+        elif not node.needs_async:
+            entry = (self._compile_sync(key), False)
+        else:
+            fn = self._alayered(node, self._acreate(node))
+            if self.profiler is not None:
+                fn = _ainstrument(self.profiler, key, fn)
+            entry = (fn, True)
+        self.async_[key] = entry
+        return entry
+
+    def _layered(self, node: Node, create: Callable[[], Any]) -> Callable[[], Any]:
+        """Creation cached in the current layer (singleton / scoped keys)."""
+        key, scope = node.key, node.scope
+        if scope == TRANSIENT:
+            return create
+        var = self.var
+        frame_of = self.scope_manager._frame  # noqa: SLF001
+
+        def layered() -> Any:
+            layer = var.get()
+            assert layer is not None
+            if scope == SINGLETON:
+                cache, cache_key = layer.cache, key
+            else:  # in the scope entry, under a key private to the layer
+                cache, cache_key = frame_of(scope).instances, (layer, key)
+            value = cache.get(cache_key, _MISSING)
+            if value is _MISSING:
+                lock = layer.locks.get(cache_key)
+                if lock is None:
+                    lock = layer.locks.setdefault(cache_key, threading.RLock())
+                with lock:
+                    value = cache.get(cache_key, _MISSING)
+                    if value is _MISSING:
+                        value = cache[cache_key] = create()
+            return value
+
+        return layered
+
+    def _alayered(self, node: Node, acreate: Callable[[], Any]) -> Callable[[], Any]:
+        """Async form of ``_layered``: concurrent awaiters share one creation."""
+        key, scope = node.key, node.scope
+        if scope == TRANSIENT:
+            return acreate
+        var = self.var
+        frame_of = self.scope_manager._frame  # noqa: SLF001
+        create_once = self.scope_manager._acreate  # noqa: SLF001
+
+        async def alayered() -> Any:
+            layer = var.get()
+            assert layer is not None
+            if scope == SINGLETON:
+                cache, cache_key, pending = layer.cache, key, layer.pending
+            else:
+                frame = frame_of(scope)
+                cache, cache_key = frame.instances, (layer, key)
+                pending = frame.pending
+                if pending is None:
+                    pending = frame.pending = {}
+            value = cache.get(cache_key, _MISSING)
+            if value is not _MISSING:
+                return value
+            return await create_once(cache_key, acreate, cache, pending)
+
+        return alayered
 
 
 # ---------------------------------------------------------------------- codegen
@@ -1367,7 +1753,7 @@ class _CodeGen:
                 f"    if {frame} is None or {frame}.closed:",
                 f"        {frame} = {frame_of}({name})  # raises ScopeError",
                 f"    {instances} = {frame}.instances",
-                f"    {value} = {instances}.get({key}, _M)",
+                f"    {value} = {instances}.get({key}, _M) if {instances} else _M",
                 f"    if {value} is not _M:",
                 f"        return {value}",
             ]

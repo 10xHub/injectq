@@ -1,6 +1,6 @@
 # FastAPI Integration
 
-InjectQ provides seamless dependency injection for FastAPI using modern, high-performance patterns with ContextVars for per-request container propagation.
+InjectQ plugs into FastAPI with one middleware and one dependency marker. Each request gets the right container and its own `"request"` scope.
 
 ## Installation
 
@@ -38,17 +38,25 @@ def get_user(
 
 ## How It Works
 
-The FastAPI integration uses:
+`setup_fastapi(container, app)` adds `InjectQRequestMiddleware` (a pure ASGI middleware) and stores the container on `app.state`. For every HTTP or WebSocket connection the middleware:
 
--  **ContextVar-based middleware** (`InjectQRequestMiddleware`) that sets the active container per request
--  **Zero overhead context propagation** - O(1) ContextVar operations
--  **InjectFastAPI** as a FastAPI Depends marker for type-safe, async-safe dependency resolution
+1. makes `container` the current container (a `ContextVar`),
+2. enters `container.async_scope("request")`,
+3. runs the app,
+4. closes the scope (request-scoped resources are torn down) and restores the previous container.
+
+What this gives you:
+
+- `InjectFastAPI(Service)` resolves with `await container.aget(...)`, so async factories work.
+- `@scoped` services (and `@resource("request")`) are created once per request.
+- Inside a route, `InjectQ.get_instance()` and `@inject` use the container you passed to `setup_fastapi`, not the global one.
+- Other code running at the same time (other requests, other apps) never sees this container.
 
 ## Core API
 
 ### `setup_fastapi(container, app)`
 
-Registers the InjectQ integration with your FastAPI application. This adds middleware to propagate the container via ContextVars.
+Registers the InjectQ integration with your FastAPI application. It adds the middleware described above.
 
 ```python
 from injectq import InjectQ
@@ -58,13 +66,13 @@ from fastapi import FastAPI
 app = FastAPI()
 container = InjectQ.get_instance()
 
-# Register integration - must be called before defining routes
+# Register the integration once, at startup
 setup_fastapi(container, app)
 ```
 
-### `InjectFastAPI[ServiceType]`
+### `InjectFastAPI(ServiceType)`
 
-Type-safe dependency marker for FastAPI routes. Use with `Annotated` for clean type hints.
+Dependency marker for FastAPI routes (`Depends`). It works in HTTP routes, WebSocket handlers, and sync and async endpoints. Use with `Annotated` for clean type hints.
 
 ```python
 from typing import Annotated
@@ -78,16 +86,36 @@ def get_user(
     return service.get_user(user_id)
 ```
 
+### `get_container_fastapi(connection=None)`
+
+Returns the container for the current request: the current context container, or the one stored on the app (found through `connection`, a `Request`, `WebSocket` or ASGI scope). Raises `InjectionError` if none is found.
+
+```python
+from fastapi import Request
+from injectq.integrations.fastapi import get_container_fastapi
+
+
+@app.get("/debug")
+def debug(request: Request):
+    container = get_container_fastapi(request)
+    return {"services": len(container.get_dependency_graph())}
+```
+
 ### `InjectQRequestMiddleware`
 
-The lightweight middleware that handles context propagation. Automatically added by `setup_fastapi()`.
+The middleware that `setup_fastapi()` adds. You normally do not add it yourself. If you do, do not also call `setup_fastapi`.
 
 ```python
 from injectq.integrations.fastapi import InjectQRequestMiddleware
 
-# Already added by setup_fastapi(), but you can manually add it:
 app.add_middleware(InjectQRequestMiddleware, container=container)
 ```
+
+It is a plain ASGI middleware, not a `BaseHTTPMiddleware`, so the container and scope it sets are visible in your route.
+
+### Deprecated: `InjectAPI`
+
+`InjectAPI` is the old name of `InjectFastAPI`. It still works, warns with `DeprecationWarning`, and is removed in 0.7.
 
 ## Basic Example
 
@@ -417,26 +445,23 @@ container = InjectQ.get_instance()
 
 @app.get("/users")
 def get_users(service: Annotated[UserService, InjectFastAPI(UserService)]):
-    pass  # This will fail - no middleware!
+    pass  # Fails: InjectionError, no container found
 
-# ✅ Good - setup first
+# ✅ Good - set up the app
 app = FastAPI()
 container = InjectQ.get_instance()
-setup_fastapi(container, app)  # Must be called first
+setup_fastapi(container, app)  # Call it once at startup
 
 @app.get("/users")
 def get_users(service: Annotated[UserService, InjectFastAPI(UserService)]):
     pass  # Now it works!
 ```
 
-## Performance Notes
+## Errors and request scope
 
-The FastAPI integration uses ContextVars for per-request container propagation:
-
-- **O(1) overhead** - ContextVar set/reset is constant time
-- **No async complications** - ContextVars handle async context propagation automatically
-- **No per-request initialization** - Middleware just sets the container reference
-- **Suitable for high-throughput APIs** - Tested with thousands of requests per second
+- A request-scoped service resolved outside a request (for example at import time or in a startup hook) raises `ScopeError`. Use `with container.scope("request"):` there.
+- If your route, or a service it uses, raises, the request scope closes with that exception, and request-scoped resources see it in their teardown.
+- Errors from your own code reach FastAPI unchanged. Only failures to build a dependency are raised as `InjectionError`.
 
 ## Summary
 
@@ -444,19 +469,18 @@ FastAPI integration provides:
 
 - **Simple setup** - Just `setup_fastapi(container, app)` before defining routes
 - **Type-safe injection** - Use `Annotated[ServiceType, InjectFastAPI(ServiceType)]` in route parameters
-- **Request isolation** - Each request gets its own scoped container context via ContextVars
-- **Zero global state** - No singleton container pollution
-- **High performance** - O(1) ContextVar operations, async-safe
+- **Request isolation** - Each request gets its own `"request"` scope
+- **Right container** - `InjectQ.get_instance()` and `@inject` in a route use the app's container
 - **Easy testing** - Mock dependencies by rebinding in test container
 
 **Key components:**
 - `setup_fastapi(container, app)` - Register integration (call first!)
-- `InjectFastAPI[ServiceType]` - Inject dependencies with Annotated
-- `InjectQRequestMiddleware` - Automatic middleware for context propagation
+- `InjectFastAPI(ServiceType)` - Inject dependencies with Annotated
+- `InjectQRequestMiddleware` - Added by `setup_fastapi`: current container and request scope
 
 **Best practices:**
 - Use `Annotated[ServiceType, InjectFastAPI(ServiceType)]` for type safety
-- Call `setup_fastapi()` before defining any routes
+- Call `setup_fastapi()` once, at startup
 - Use singleton for shared resources
 - Use scoped for request-specific data
 - Test with mocked dependencies

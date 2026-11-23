@@ -6,24 +6,24 @@ Testing is critical for dependency-injected code. InjectQ provides utilities to 
 
 ```python
 from injectq.testing import (
-    test_container,           # Create isolated test containers
+    isolated_container,       # Create isolated test containers
     override_dependency,      # Temporarily override a binding
-    mock_factory,            # Create mock factory functions
-    pytest_container_fixture, # Pytest fixture for test containers
+    mock_factory,             # Create mock factory functions
+    container_fixture,        # Pytest fixture for test containers
 )
 ```
 
 ## Basic Testing Pattern
 
-### Using test_container()
+### Using isolated_container()
 
 ```python
 from injectq import InjectQ, inject
-from injectq.testing import test_container
+from injectq.testing import isolated_container
 
 # Create an isolated container for each test
 def test_user_service():
-    with test_container() as container:
+    with isolated_container() as container:
         # Bind dependencies
         container[str] = "test-database-url"
         container[UserService] = UserService
@@ -61,11 +61,11 @@ def test_with_mocked_dependency():
 Test services in isolation by mocking their dependencies:
 
 ```python
-from injectq.testing import test_container
+from injectq.testing import isolated_container
 
 def test_user_service_create_user():
     """Test UserService.create_user() with mock database."""
-    with test_container() as container:
+    with isolated_container() as container:
         # Create mock repository
         mock_repo = MockUserRepository()
         
@@ -118,7 +118,7 @@ from injectq.testing import mock_factory
 
 def test_with_factory():
     """Test using mock factories."""
-    with test_container() as container:
+    with isolated_container() as container:
         # Bind a mock factory
         container.bind_factory(
             "connection_id",
@@ -137,11 +137,11 @@ def test_with_factory():
 Test factories that accept arguments:
 
 ```python
-from injectq.testing import test_container
+from injectq.testing import isolated_container
 
 def test_parameterized_factory():
     """Test parameterized factory with different arguments."""
-    with test_container() as container:
+    with isolated_container() as container:
         # Bind a parameterized factory
         def create_pool(db_name: str, max_conn: int = 10):
             return ConnectionPool(db_name, max_conn=max_conn)
@@ -164,7 +164,7 @@ def test_parameterized_factory():
 
 def test_factory_with_mock_dependencies():
     """Test parameterized factory that uses DI."""
-    with test_container() as container:
+    with isolated_container() as container:
         # Mock a dependency
         mock_db = MockDatabase()
         container[Database] = mock_db
@@ -190,10 +190,10 @@ Use pytest fixtures for convenient test setup:
 
 ```python
 import pytest
-from injectq.testing import pytest_container_fixture
+from injectq.testing import container_fixture
 
 # Create a pytest fixture
-container = pytest_container_fixture()
+container = container_fixture()
 
 def test_with_fixture(container):
     """Test using pytest fixture."""
@@ -207,16 +207,16 @@ def test_with_fixture(container):
 
 # Or create a custom fixture
 @pytest.fixture
-def test_app_container():
-    from injectq.testing import test_container
-    with test_container() as container:
+def app_container():
+    from injectq.testing import isolated_container
+    with isolated_container() as container:
         # Setup common test bindings
         container[str] = "test-database-url"
         yield container
 
-def test_with_custom_fixture(test_app_container):
-    test_app_container[UserService] = UserService
-    service = test_app_container[UserService]
+def test_with_custom_fixture(app_container):
+    app_container[UserService] = UserService
+    service = app_container[UserService]
     assert service is not None
 ```
 
@@ -229,7 +229,7 @@ from injectq import singleton, scoped, transient
 
 def test_singleton_scope():
     """Verify singleton scope creates one instance."""
-    with test_container() as container:
+    with isolated_container() as container:
         @singleton
         class SingletonService:
             pass
@@ -244,7 +244,7 @@ def test_singleton_scope():
 
 def test_transient_scope():
     """Verify transient scope creates new instances."""
-    with test_container() as container:
+    with isolated_container() as container:
         @transient
         class TransientService:
             pass
@@ -258,12 +258,44 @@ def test_transient_scope():
         assert instance1 is not instance2
 ```
 
+Test a request scope:
+
+```python
+from injectq import scoped, ScopeError
+
+def test_request_scope():
+    with isolated_container() as container:
+        @scoped("request")
+        class RequestData:
+            pass
+
+        with container.scope("request"):
+            assert container[RequestData] is container[RequestData]
+
+        with pytest.raises(ScopeError):
+            container[RequestData]    # no active scope
+```
+
+## Overrides
+
+`container.override(key, value)` replaces one dependency inside a `with` block. It reaches everything that depends on the key, and other tests or tasks do not see it. See [Overrides](overrides.md).
+
+```python
+def test_with_fake_mailer(container):
+    container.bind(Mailer, Mailer)
+    container.bind(Notifier, Notifier)
+
+    with container.override(Mailer, FakeMailer()):
+        notifier = container.get(Notifier)
+        assert isinstance(notifier.mailer, FakeMailer)
+```
+
 ## Testing with Real vs Mock Dependencies
 
 ```python
 def test_mixed_real_and_mocked():
     """Use real services where possible, mock only external dependencies."""
-    with test_container() as container:
+    with isolated_container() as container:
         # Real internal services
         container[UserService] = UserService
         container[UserValidator] = UserValidator
@@ -290,7 +322,7 @@ import pytest
 
 def test_error_handling():
     """Test service error handling."""
-    with test_container() as container:
+    with isolated_container() as container:
         container[UserService] = UserService
         container[UserRepository] = MockUserRepository()
         
@@ -305,7 +337,7 @@ def test_error_handling():
 
 ### ✅ DO
 
-- **Use test_container()** for isolated test environments
+- **Use isolated_container()** for isolated test environments
 - **Mock external dependencies** (APIs, databases, email services)
 - **Keep tests focused** on one behavior per test
 - **Use fixtures** for common setup
@@ -314,7 +346,7 @@ def test_error_handling():
 ```python
 # ✅ Good
 def test_user_creation():
-    with test_container() as container:
+    with isolated_container() as container:
         mock_repo = MockUserRepository()
         container[UserRepository] = mock_repo
         container[UserService] = UserService
@@ -355,7 +387,7 @@ class TrackingMockService:
         return f"result_{arg}"
 
 def test_service_calls_dependency():
-    with test_container() as container:
+    with isolated_container() as container:
         tracking_mock = TrackingMockService()
         container[DependentService] = tracking_mock
         
@@ -380,7 +412,7 @@ class ConfigurableMockService:
         return self.return_values.get("get_data", None)
 
 def test_with_specific_return_values():
-    with test_container() as container:
+    with isolated_container() as container:
         mock_service = ConfigurableMockService()
         mock_service.set_return_value("get_data", {"id": 1, "name": "Test"})
         
@@ -439,7 +471,7 @@ pytest --cov=src --cov-report=html
 
 Key testing practices with InjectQ:
 
-- Use `test_container()` for isolated test environments
+- Use `isolated_container()` for isolated test environments
 - Use `override_dependency()` for temporary service replacement
 - Mock external dependencies, use real internal services
 - Test behavior, not implementation details

@@ -1,6 +1,5 @@
 """Resource decorator for InjectQ: lifecycles built on ExitStack/AsyncExitStack."""
 
-import asyncio
 import functools
 import inspect
 import itertools
@@ -16,12 +15,16 @@ from contextlib import (
     asynccontextmanager,
     contextmanager,
 )
-from typing import Any, TypeVar, overload
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 from injectq.core import InjectQ, ScopeType
 from injectq.utils import InjectQError
 
 from ._singleton import _register, _scope_str
+
+
+if TYPE_CHECKING:
+    import asyncio
 
 
 _logger = logging.getLogger("injectq.decorators")
@@ -227,6 +230,8 @@ class AsyncResourceLifecycle(ResourceLifecycle):
         if self._initialized:
             return self._resource
         if self._lock is None:
+            import asyncio  # noqa: PLC0415 - imported lazily (import time)
+
             self._lock = asyncio.Lock()
         async with self._lock:
             if self.initialized:
@@ -420,6 +425,7 @@ def _bind_resource(
     is_async = lifecycle.is_async
 
     if scope_name == ScopeType.SINGLETON.value:
+        target.track_resource(_resource_key(func), lifecycle)
         if is_async:
 
             @functools.wraps(func)
@@ -438,7 +444,7 @@ def _bind_resource(
 
         @functools.wraps(func)
         async def provide_scoped_async(*args: Any, **kwargs: Any) -> Any:
-            stack = target._scope_manager.current_exit_stack(scope_name)  # noqa: SLF001
+            stack = target.current_exit_stack(scope_name)
             if not isinstance(stack, AsyncExitStack):
                 msg = (
                     f"async resource '{lifecycle._name}' needs "  # noqa: SLF001
@@ -452,7 +458,7 @@ def _bind_resource(
 
         @functools.wraps(func)
         def provide_scoped(*args: Any, **kwargs: Any) -> Any:
-            stack = target._scope_manager.current_exit_stack(scope_name)  # noqa: SLF001
+            stack = target.current_exit_stack(scope_name)
             return enter_sync(func, args, kwargs, stack)
 
         provider = provide_scoped
@@ -493,8 +499,10 @@ def resource(
     without an annotation, the function itself) as a factory of ``scope``:
 
     - ``"singleton"`` (default): created once; torn down, last created first,
-      by ``get_resource_manager().shutdown_all()`` /
-      ``shutdown_all_async()`` (``shutdown_all_async`` for async resources).
+      by the container's ``shutdown()`` / ``ashutdown()`` (which also evict
+      it, so the next resolve creates it again), or for every container by
+      ``get_resource_manager().shutdown_all()`` / ``shutdown_all_async()``
+      (async resources need the async forms).
     - any other scope (e.g. ``"request"``): created per scope; torn down, LIFO,
       when that scope exits (async resources need ``async_scope``).
 

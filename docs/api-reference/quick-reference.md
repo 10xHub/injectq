@@ -16,9 +16,8 @@ container = InjectQ()
 # Create with specific options
 container = InjectQ(
     modules=[MyModule()],      # Pre-install modules
-    use_async_scopes=True,     # Enable async support
-    thread_safe=True,          # Thread-safe container
-    allow_override=True        # Allow re-binding
+    allow_override=True,       # Allow re-binding (default)
+    debug=False,               # True: plain closures, simpler tracebacks
 )
 ```
 
@@ -222,13 +221,13 @@ container.install_module(ServiceModule())
 
 ## Testing
 
-### test_container - Isolated Testing
+### isolated_container - Isolated Testing
 
 ```python
-from injectq.testing import test_container
+from injectq.testing import isolated_container
 
 def test_user_service():
-    with test_container() as container:
+    with isolated_container() as container:
         # Bind test doubles
         container[Database] = MockDatabase()
         container[UserService] = UserService
@@ -261,7 +260,7 @@ def test_with_override():
 from injectq.testing import mock_factory
 
 def test_factory():
-    with test_container() as container:
+    with isolated_container() as container:
         container.bind_factory(
             "request_id",
             mock_factory(lambda: "mock-123")
@@ -271,17 +270,13 @@ def test_factory():
         assert request_id == "mock-123"
 ```
 
-### pytest_container_fixture - Pytest Integration
+### container_fixture - Pytest Integration
 
 ```python
-from injectq.testing import pytest_container_fixture
-import pytest
+from injectq.testing import container_fixture
 
-@pytest.fixture
-def container():
-    from injectq.testing import test_container
-    with test_container() as c:
-        yield c
+# conftest.py: creates a fixture named "container" (pass name= to change it)
+container = container_fixture()
 
 def test_service(container):
     container[UserService] = UserService
@@ -310,17 +305,27 @@ except DependencyNotFoundError:
 ## Scopes
 
 ```python
-from injectq import Scope, ScopeType
+from injectq import ScopeType
 
 # Scope types
 ScopeType.SINGLETON   # Single instance for app
 ScopeType.TRANSIENT   # New instance each time
-ScopeType.SCOPED      # One per request/scope
+ScopeType.REQUEST     # One per `container.scope("request")` block
+ScopeType.ACTION      # One per `container.scope("action")` block
 
-# Getting scope information
-scope_manager = container._scope_manager
-current_scope = scope_manager.get_scope("request")
+# Enter a scope (sync or async). Instances live until the block exits.
+with container.scope("request"):
+    session = container[UserSession]
+
+async with container.async_scope("request"):
+    session = await container.aget(UserSession)
+
+# Register a custom scope name, then use it like "request"
+container.register_scope("job")
 ```
+
+Resolving a key bound to a scope with no active scope raises `ScopeError`.
+See [Scopes](../scopes/understanding-scopes.md).
 
 ## Providers
 
@@ -622,7 +627,7 @@ graph = visualizer.visualize()
 **Most Common API:**
 ```python
 from injectq import InjectQ, inject, singleton, transient, resource
-from injectq.testing import test_container, override_dependency
+from injectq.testing import isolated_container, override_dependency
 
 # Get container
 container = InjectQ.get_instance()
@@ -640,8 +645,8 @@ def my_function(service: Service):
     pass
 
 # Testing
-with test_container() as test_container:
-    test_container[Service] = MockService
+with isolated_container() as test_cont:
+    test_cont[Service] = MockService
 ```
 
 For more details, see the full documentation sections on [injection patterns](../injection-patterns/), [scopes](../scopes/), and [testing](../testing/).

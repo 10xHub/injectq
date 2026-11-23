@@ -316,7 +316,7 @@ Learn more in [Factory Methods](../injection-patterns/factory-methods.md).
 Use the built-in testing utilities:
 
 ```python
-from injectq.testing import test_container, override_dependency
+from injectq.testing import isolated_container, override_dependency
 from injectq import inject, singleton, InjectQ
 
 @singleton
@@ -336,7 +336,7 @@ class UserService:
 # Test with isolated container
 def test_user_service():
     """Test with isolated container."""
-    with test_container() as container:
+    with isolated_container() as container:
         # Create mock database
         class MockDatabase:
             def get_user(self, user_id: int):
@@ -365,7 +365,7 @@ def test_with_override():
 ```
 
 **Testing patterns:**
-- `test_container()` — Isolated container for each test
+- `isolated_container()` — Isolated container for each test
 - `override_dependency()` — Temporarily replace a service
 - `InjectQ.test_mode()` — Context manager for test instances
 
@@ -381,7 +381,7 @@ def test_with_override():
 - Use `@inject` decorator for automatic dependency resolution
 - Use `@singleton` for services shared across the app
 - Use `@transient` for fresh instances each time
-- Use `test_container()` for unit testing
+- Use `isolated_container()` for unit testing
 - Use `Module` for organizing complex apps
 - 🆕 Use `invoke()` when you need both DI and manual arguments in factories
 

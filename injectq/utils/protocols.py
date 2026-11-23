@@ -87,17 +87,6 @@ class AsyncResourceProvider(Protocol[T_co]):
 
 
 @runtime_checkable
-class Resolvable(Protocol):
-    """Protocol for types that can be resolved by the container."""
-
-    @classmethod
-    @abstractmethod
-    def __injectq_resolve__(cls, container: InjectQ) -> object:
-        """Custom resolution method for the container."""
-        ...
-
-
-@runtime_checkable
 class Configurable(Protocol):
     """Protocol for configurable dependencies."""
 
@@ -122,35 +111,8 @@ class ScopeAware(Protocol):
         ...
 
 
-class InjectableFunction(Protocol[T_co]):
-    """Protocol for functions that support dependency injection."""
-
-    def __call__(self, *args: object, **kwargs: object) -> T_co:
-        """Call the function with injected dependencies."""
-        ...
-
-    @property
-    def __injectq_dependencies__(self) -> dict[str, type[object]]:
-        """Get the dependencies required by this function."""
-        ...
-
-
-class InjectableAsyncFunction(Protocol[T_co]):
-    """Protocol for async functions that support dependency injection."""
-
-    async def __call__(self, *args: object, **kwargs: object) -> T_co:
-        """Call the async function with injected dependencies."""
-        ...
-
-    @property
-    def __injectq_dependencies__(self) -> dict[str, type[object]]:
-        """Get the dependencies required by this function."""
-        ...
-
-
 # Type aliases for common patterns
-InjectableCallable = Callable[..., T] | InjectableFunction[T]
-AsyncInjectableCallable = Callable[..., T] | InjectableAsyncFunction[T]
+InjectableCallable = Callable[..., T]
 AnyProvider = Provider[T] | AsyncProvider[T]
 AnyFactory = Factory[T] | AsyncFactory[T]
 AnyResourceProvider = ResourceProvider[T] | AsyncResourceProvider[T]

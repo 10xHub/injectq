@@ -7,7 +7,6 @@ from collections.abc import Callable
 from typing import Any, TypeVar, get_type_hints, overload
 
 from injectq.core import ModuleBinder, ScopeType
-from injectq.core.registry import ServiceBinding
 from injectq.utils import BindingError, ServiceKey
 
 
@@ -211,18 +210,7 @@ class ProviderModule(Module):
         # analyses its parameters like any factory's and awaits it if async.
         factory = getattr(self, name)
         scope = getattr(function, _PROVIDER_SCOPE_ATTR, ScopeType.TRANSIENT.value)
-        container = binder._container  # noqa: SLF001
-        if scope == ScopeType.TRANSIENT.value:
-            container.bind_factory(return_type, factory)
-            return
-        # Scoped factory: ModuleBinder / InjectQ.bind_factory have no scope
-        # parameter, so install the binding through the registry directly.
-        registry = container._registry  # noqa: SLF001
-        registry._check_override(return_type, container._allow_override)  # noqa: SLF001
-        registry.set_provider(
-            return_type,
-            ServiceBinding(return_type, factory, scope, is_factory=True),
-        )
+        binder.bind_factory(return_type, factory, scope=scope)
 
 
 class ConfigurationModule(Module):

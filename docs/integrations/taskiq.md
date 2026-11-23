@@ -41,16 +41,23 @@ await broker(send_welcome_email)(user_email="user@example.com")
 
 ## How It Works
 
-The Taskiq integration uses:
-1. **State-based container attachment** - The container is stored in `broker.state`
-2. **TaskiqDepends** for dependency resolution
-3. **InjectTaskiq** as a Taskiq dependency marker for type-safe injection
+`setup_taskiq(container, broker)` adds a Taskiq middleware (`InjectQTaskiqMiddleware`) and stores the container on `broker.state`. For every task the worker runs:
+
+1. `pre_execute` makes `container` the current container and enters a `"request"` scope.
+2. Taskiq resolves the task's `InjectTaskiq(...)` dependencies. They use `await container.aget(...)`, so async factories work.
+3. The task runs. In an `async def` task, `InjectQ.get_instance()` and `@inject` use `container`.
+4. `post_execute` (or `on_error`) closes the scope and restores the previous container. `@resource("request")` teardowns run here, and they see the task's exception if it failed.
+
+Each task gets its own request scope, so `@scoped` services are new for every task.
+
+!!! warning "Sync tasks"
+    Taskiq runs a plain `def` task with `loop.run_in_executor`, which does not copy the context. Inside the body of a sync task, `InjectQ.get_instance()` is not the broker's container. `InjectTaskiq(...)` parameters still work, because they are resolved before the task body runs. Use them, or make the task `async def`.
 
 ## Core API
 
 ### `setup_taskiq(container, broker)`
 
-Registers the InjectQ integration with your Taskiq broker. This attaches the container to the broker's state for task-level access.
+Registers the InjectQ integration with your Taskiq broker. It adds the middleware described above and stores the container on `broker.state`.
 
 ```python
 from injectq import InjectQ
@@ -60,11 +67,11 @@ from taskiq import InMemoryBroker
 container = InjectQ.get_instance()
 broker = InMemoryBroker()
 
-# Register integration - attaches container to broker.state
+# Register integration - adds the middleware and stores the container
 setup_taskiq(container, broker)
 ```
 
-### `InjectTaskiq[ServiceType]`
+### `InjectTaskiq(ServiceType)`
 
 Type-safe dependency marker for Taskiq tasks. Use with `Annotated` for clean type hints.
 
@@ -81,22 +88,22 @@ async def process_data(
     return service.process(data)
 ```
 
-### `InjectTask[ServiceType]` (Alias)
+### `get_container_taskiq(state=None)`
 
-Backwards compatibility alias for `InjectTaskiq`.
+Returns the container for the current task: the current context container, or the one on `state` (the broker's `TaskiqState`). Raises `InjectionError` if there is none.
 
-```python
-from typing import Annotated
-from injectq.integrations.taskiq import InjectTask
+### `InjectQTaskiqMiddleware`
 
-# Works the same as InjectTaskiq
-@broker.task
-async def process(
-    data: dict,
-    service: Annotated[DataService, InjectTask(DataService)]
-):
-    return service.process(data)
-```
+The middleware that `setup_taskiq` adds. You normally do not use it directly.
+
+### Deprecated names
+
+| Old | New |
+|---|---|
+| `InjectTask` | `InjectTaskiq` |
+| `get_injector_instance_taskiq` | `get_container_taskiq` |
+
+The old names work but warn with `DeprecationWarning`, and are removed in 0.7.
 
 ## Basic Example
 
@@ -254,7 +261,7 @@ from typing import Annotated
 from uuid import uuid4
 from injectq import scoped
 
-@scoped
+@scoped  # bare @scoped is the "request" scope: one per task
 class TaskContext:
     def __init__(self):
         self.task_id = str(uuid4())
@@ -366,7 +373,7 @@ async def my_task(
 
 **3. Use scoped for task-specific data**
 ```python
-@scoped
+@scoped  # bare @scoped is the "request" scope: one per task
 class TaskContext:
     def __init__(self):
         from uuid import uuid4
@@ -400,7 +407,7 @@ class TaskContext:
         self.data = {}
 
 # ✅ Good - isolated per task
-@scoped
+@scoped  # bare @scoped is the "request" scope: one per task
 class TaskContext:
     def __init__(self):
         self.data = {}
@@ -412,14 +419,14 @@ Taskiq integration provides:
 
 - **Simple setup** - Just `setup_taskiq(container, broker)` once at startup
 - **Type-safe injection** - Use `Annotated[ServiceType, InjectTaskiq(ServiceType)]` in tasks
-- **Task isolation** - Each task gets its own container context via Taskiq's dependency system
-- **Zero global state** - No singleton container pollution
+- **Task isolation** - Each task gets its own request scope
+- **Right container** - `get_instance()` and `@inject` in async tasks use the broker's container
 - **Easy testing** - Mock dependencies by rebinding in test container
 
 **Key components:**
 
 - `setup_taskiq(container, broker)` - Register integration
-- `InjectTaskiq[ServiceType]` or `InjectTask[ServiceType]` - Inject dependencies in tasks
+- `InjectTaskiq(ServiceType)` - Inject dependencies in tasks
 - Singleton, scoped, and transient scopes all supported
 
 **Best practices:**

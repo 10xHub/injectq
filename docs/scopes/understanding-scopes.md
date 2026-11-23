@@ -60,16 +60,19 @@ class UserSession:
     def __init__(self):
         self.user_id = None
 
-# One instance within a scope
-async with container.scope("request"):
+# One instance within a scope block
+with container.scope("request"):
     session1 = container[UserSession]
     session2 = container[UserSession]
     assert session1 is session2  # True
 
-# New scope = new instance
-async with container.scope("request"):
+# New block = new instance
+with container.scope("request"):
     session3 = container[UserSession]
     assert session1 is not session3  # True
+
+# Outside any block, resolving raises ScopeError
+container[UserSession]  # ScopeError: No active 'request' scope
 ```
 
 **Use for:** Request context, user sessions, transaction data
@@ -96,19 +99,24 @@ with container.scope("request"):
     service = container[RequestService]
 
 # Async scope
-async with container.scope("request"):
+async with container.async_scope("request"):
     service = await container.aget(AsyncService)
+
+# Custom scope names must be registered first
+container.register_scope("job")
+with container.scope("job"):
+    ...
 ```
 
-### Clearing Scopes
+Frameworks enter the `"request"` scope for you: once per HTTP request (FastAPI), MCP message (FastMCP) or task (Taskiq).
 
-```python
-# Clear specific scope
-container.clear_scope("request")
+### Cleanup
 
-# Clear all scopes
-container.clear_all_scopes()
-```
+When a scope block exits, its exit stack runs (last pushed, first run). `@resource("request")` services are closed there. See [Resources and cleanup](resources.md).
+
+### Scopes and concurrency
+
+A scope lives in a `ContextVar`. Tasks and `asyncio.to_thread` calls started inside a block see it. `run_in_executor` and plain threads do not. See [Context and concurrency](../core-concepts/context-and-concurrency.md).
 
 ## Common Mistakes
 
@@ -157,6 +165,6 @@ class DatabaseConnection:
 Choose based on:
 - Data sharing needs
 - Resource costs
-- Thread safety requirements
+- Concurrency: a singleton is shared by every task and thread, so it must be safe to share
 
-Next: [Singleton Scope](singleton-scope.md) | [Transient Scope](transient-scope.md) | [Scoped Services](scoped-services.md)
+Next: [Singleton Scope](singleton-scope.md) | [Transient Scope](transient-scope.md) | [Scoped Services](scoped-services.md) | [Resources and cleanup](resources.md)

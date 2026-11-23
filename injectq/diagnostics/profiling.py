@@ -141,16 +141,33 @@ class DependencyProfiler:
         self._lock = threading.RLock()
 
     def __enter__(self) -> "DependencyProfiler":
-        """Enter profiling context."""
+        """Start profiling every container for the ``with`` block.
+
+        Containers without a profiler attached with
+        ``InjectQ.attach_profiler()`` report to this one until the block
+        exits (process-wide; the innermost active block wins).
+        """
+        from injectq.core.container import profiler_started  # noqa: PLC0415
+
         self.start()
+        profiler_started(self)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
         """Exit profiling context."""
-        self.stop()
+        from injectq.core.container import profiler_stopped  # noqa: PLC0415
+
+        try:
+            profiler_stopped(self)
+        finally:
+            self.stop()
 
     def start(self) -> None:
-        """Start profiling. Existing data is kept; call ``reset()`` to clear."""
+        """Start profiling. Existing data is kept; call ``reset()`` to clear.
+
+        Only containers given this profiler with ``attach_profiler()`` report
+        to it; ``with profiler:`` also covers every other container.
+        """
         with self._lock:
             self._is_active = True
             _logger.info("DependencyProfiler started")

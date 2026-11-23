@@ -19,7 +19,7 @@ from injectq import (
     singleton,
     transient,
 )
-from injectq.testing import TestModule, override_dependency, test_container
+from injectq.testing import TestModule, isolated_container, override_dependency
 
 
 # === Domain Model ===
@@ -188,7 +188,7 @@ def main():
 
     # === Testing Usage ===
     print("\n🧪 Testing Demo:")
-    with test_container() as test_cont:
+    with isolated_container() as test_cont:
         # Setup test dependencies
         test_module = (
             TestModule()

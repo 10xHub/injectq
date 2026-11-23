@@ -282,7 +282,7 @@ class InfrastructureModule(ProviderModule):
 ### Testing Modules
 
 ```python
-class TestModule(ProviderModule):
+class FakeServicesModule(ProviderModule):
     @provider
     def provide_database(self) -> Database:
         return InMemoryDatabase()
@@ -294,7 +294,7 @@ class TestModule(ProviderModule):
 # Test setup
 def test_user_service():
     container = InjectQ.get_instance()
-    container.install_module(TestModule())
+    container.install_module(FakeServicesModule())
     
     service = container[UserService]
     # Uses mocked dependencies

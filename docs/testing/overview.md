@@ -16,17 +16,18 @@ InjectQ's testing utilities help you:
 This section covers:
 
 - **[Testing Patterns](testing-patterns.md)** - How to test with InjectQ
+- **[Overrides](overrides.md)** - Replace one dependency inside a `with` block
 
 ## 🚀 Quick Start
 
 ### Basic Test Setup
 
 ```python
-from injectq.testing import test_container
+from injectq.testing import isolated_container
 
 def test_user_service():
     """Test UserService with mocked dependencies."""
-    with test_container() as container:
+    with isolated_container() as container:
         # Bind dependencies
         container[Database] = MockDatabase()
         container[UserService] = UserService
@@ -40,6 +41,8 @@ def test_user_service():
 ```
 
 ### Override Dependencies
+
+`container.override(key, value)` is the main tool. It is [context-local and transitive](overrides.md). `override_dependency` is the same thing as a function.
 
 ```python
 from injectq.testing import override_dependency
@@ -63,11 +66,11 @@ def test_with_override():
 ### Unit Testing
 
 ```python
-from injectq.testing import test_container
+from injectq.testing import isolated_container
 
 def test_service_with_mocks():
     """Test service with mocked external dependencies."""
-    with test_container() as container:
+    with isolated_container() as container:
         # Mock external services
         container[EmailService] = MockEmailService()
         container[Database] = MockDatabase()
@@ -86,11 +89,11 @@ def test_service_with_mocks():
 
 ```python
 import pytest
-from injectq.testing import test_container
+from injectq.testing import isolated_container
 
 def test_error_handling():
     """Test that services handle errors correctly."""
-    with test_container() as container:
+    with isolated_container() as container:
         container[UserService] = UserService
         container[UserRepository] = MockUserRepository()
         
@@ -104,14 +107,14 @@ def test_error_handling():
 
 ### ✅ DO
 
-- **Use test_container()** for isolated tests
+- **Use isolated_container()** for isolated tests
 - **Mock external dependencies** only (APIs, databases, email)
 - **Keep tests focused** - one behavior per test
 - **Use mocks with tracking** - verify calls were made
 
 ```python
 # ✅ Good
-with test_container() as container:
+with isolated_container() as container:
     mock_db = MockDatabase()
     container[Database] = mock_db
     container[UserService] = UserService
@@ -139,10 +142,10 @@ container[Database] = mock_db  # Persists across tests
 
 ```python
 from injectq.testing import (
-    test_container,            # Create isolated containers
-    override_dependency,       # Temporarily override a service
+    isolated_container,       # Create isolated containers
+    override_dependency,      # Temporarily override a service
     mock_factory,             # Mock factory functions
-    pytest_container_fixture, # Pytest fixture
+    container_fixture,        # Pytest fixture
 )
 ```
 
@@ -150,8 +153,8 @@ from injectq.testing import (
 
 Effective testing with InjectQ:
 
-- Use `test_container()` for test isolation
-- Use `override_dependency()` for temporary overrides
+- Use `isolated_container()` for test isolation
+- Use `container.override()` or `override_dependency()` for temporary overrides
 - Mock external dependencies, use real internal services
 - Keep tests focused and independent
 - Verify behavior, not implementation

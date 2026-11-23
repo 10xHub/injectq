@@ -116,10 +116,10 @@ assert Database not in container
 Use the testing utilities to create test containers:
 
 ```python
-from injectq.testing import test_container
+from injectq.testing import isolated_container
 
 def test_user_service():
-    with test_container() as container:
+    with isolated_container() as container:
         container[Database] = MockDatabase()
         container[UserService] = UserService
 

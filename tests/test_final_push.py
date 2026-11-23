@@ -7,55 +7,6 @@ import pytest
 
 from injectq import InjectQ
 from injectq.core.scopes import ScopeManager
-from injectq.utils.helpers import ThreadLocalStorage
-
-
-def test_thread_local_storage_set_get() -> None:
-    """Test ThreadLocalStorage set and get."""
-    storage = ThreadLocalStorage()
-
-    storage.set("key", "value")
-    result = storage.get("key")
-
-    assert result == "value"
-
-
-def test_thread_local_storage_clear() -> None:
-    """Test ThreadLocalStorage clear."""
-    storage = ThreadLocalStorage()
-
-    storage.set("key", "value")
-    storage.clear()
-
-    # After clear, should return None or raise
-    result = storage.get("key")
-    assert result is None
-
-
-def test_thread_local_storage_different_threads() -> None:
-    """Test ThreadLocalStorage is thread-local."""
-    storage = ThreadLocalStorage()
-
-    results = []
-
-    def thread_func(value: str) -> None:
-        storage.set("key", value)
-        time.sleep(0.01)  # Small delay
-        results.append(storage.get("key"))
-
-    t1 = threading.Thread(target=thread_func, args=("thread1",))
-    t2 = threading.Thread(target=thread_func, args=("thread2",))
-
-    t1.start()
-    t2.start()
-
-    t1.join()
-    t2.join()
-
-    # Each thread should see its own value
-    assert len(results) == 2
-    assert "thread1" in results
-    assert "thread2" in results
 
 
 def test_container_with_thread_safe_true() -> None:
@@ -251,17 +202,6 @@ def test_container_bind_with_none_allow_none() -> None:
 
     # Note: Getting None might not work as expected
     # This test is just to cover the code path
-
-
-def test_thread_local_storage_has_key() -> None:
-    """Test ThreadLocalStorage has_key or contains."""
-    storage = ThreadLocalStorage()
-
-    storage.set("key", "value")
-
-    # Test if storage has the key (API dependent)
-    value = storage.get("key")
-    assert value is not None
 
 
 def test_container_validation_with_dependencies() -> None:

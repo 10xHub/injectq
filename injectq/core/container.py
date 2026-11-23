@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+import contextvars
 import inspect
 import logging
 import threading
+import weakref
 from contextlib import (
     AbstractAsyncContextManager,
     AbstractContextManager,
+    AsyncExitStack,
+    ExitStack,
     contextmanager,
 )
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from injectq.utils import (
@@ -20,21 +25,60 @@ from injectq.utils import (
     ServiceKey,
 )
 
-from .registry import _UNSET, ALL_KEYS, ServiceRegistry
-from .resolver import _MISSING, DependencyResolver, is_async_callable
-from .scopes import ScopeManager, ScopeType
+from .context import ContainerContext
+from .registry import _UNSET, ALL_KEYS, ServiceBinding, ServiceRegistry
+from .resolver import (
+    _MISSING,
+    DependencyResolver,
+    OverrideLayer,
+    is_async_callable,
+)
+from .scopes import ScopeManager, ScopeType, _AsyncFrame, _Frame
 
 
 if TYPE_CHECKING:
-    import contextvars
     from collections.abc import Callable, Iterator
 
     from injectq.diagnostics import DependencyVisualizer
 
-    from .registry import ServiceBinding
-
 
 _logger = logging.getLogger("injectq.core")
+
+# Seen by @inject plans (``container._singletons``) while an override is
+# active, so they never take the shared singleton cache over an override.
+_NO_CACHE: Any = MappingProxyType({})
+
+# Profilers active as ``with DependencyProfiler() as p:`` report every live
+# container that has no profiler attached explicitly (innermost wins).
+_live_containers: weakref.WeakSet[InjectQ] = weakref.WeakSet()
+_auto_profilers: list[Any] = []
+_auto_lock = threading.Lock()
+
+
+def profiler_started(profiler: Any) -> None:
+    """Called on ``with DependencyProfiler():`` entry: report every container."""
+    with _auto_lock:
+        if any(p is profiler for p in _auto_profilers):
+            return
+        _auto_profilers.append(profiler)
+        containers = list(_live_containers)
+    for container in containers:
+        container._apply_profiler()  # noqa: SLF001
+
+
+def profiler_stopped(profiler: Any) -> None:
+    """Called on ``with DependencyProfiler():`` exit."""
+    with _auto_lock:
+        for i, p in enumerate(_auto_profilers):
+            if p is profiler:
+                del _auto_profilers[i]
+                break
+        else:
+            return
+        containers = list(_live_containers)
+    for container in containers:
+        container._apply_profiler()  # noqa: SLF001
+
 
 # Annotations invoke()/ainvoke() never inject by type (too ambiguous).
 _PRIMITIVES = (str, int, float, bool, bytes, type(None))
@@ -117,14 +161,29 @@ class InjectQ:
         self._allow_override = allow_override
         self._registry = ServiceRegistry()
         self._scope_manager = ScopeManager()
-        # Same dict object as the scope manager's (never replaced): the
-        # singleton fast path of get()/aget() reads it directly.
-        self._singletons = self._scope_manager._singletons  # noqa: SLF001
+        # The singleton cache: the scope manager's dict (never replaced).
+        self._cache = self._scope_manager._singletons  # noqa: SLF001
+        # What the get()/aget()/@inject singleton fast paths read: the cache,
+        # or an empty mapping while overrides / a profiler are active (see
+        # _install_accessors).
+        self._singletons: Any = self._cache
         self._resolver = DependencyResolver(
             self._registry, self._scope_manager, codegen=not debug
         )
         self._registry.add_listener(self._on_registry_change)
         self._factories = FactoryProxy(self)
+        # Overrides: per-context layer, created on first override().
+        self._override_var: contextvars.ContextVar[OverrideLayer | None] | None = None
+        self._override_counts: dict[Any, int] = {}
+        self._override_lock = threading.Lock()
+        # Profiler attached with attach_profiler() (None: follow started ones).
+        self._explicit_profiler: Any = None
+        # Resources whose lifetime this container owns (see track_resource).
+        self._resources: list[tuple[Any, Any]] = []
+        self._resources_lock = threading.Lock()
+        _live_containers.add(self)
+        if _auto_profilers:
+            self._apply_profiler()
 
         # Install modules if provided
         if modules:
@@ -144,8 +203,6 @@ class InjectQ:
             InjectQ: The current container instance, either from the context
             or as a singleton.
         """
-        from .context import ContainerContext
-
         ctx = ContainerContext.get_current()
         if ctx is not None:
             return ctx
@@ -165,21 +222,29 @@ class InjectQ:
 
     # Registry changes
     def _on_registry_change(self, key: Any, binding: ServiceBinding | None) -> None:
-        """Drop compiled resolvers; keep the singleton cache in step with ``key``."""
-        resolver = self._resolver
-        if resolver._dirty:  # noqa: SLF001
-            resolver.invalidate()
-        if key is ALL_KEYS:
-            self._singletons.clear()
-        elif (
+        """Keep the singleton cache in step with ``key``; drop compiled code.
+
+        The cache is updated first, so code compiled after the drop can never
+        bake in the key's previous singleton.
+        """
+        cache = self._cache
+        if cache:
+            sm = self._scope_manager
+            if key is ALL_KEYS:
+                cache.clear()
+                sm.singleton_generation[0] += 1
+            else:
+                sm.evict_singleton(key)
+        if (
             binding is not None
             and not binding.is_factory
             and not isinstance(binding.implementation, type)
         ):
             # Instance bindings are served straight from the singleton cache.
-            self._singletons[key] = binding.implementation
-        else:
-            self._singletons.pop(key, None)
+            cache[key] = binding.implementation
+        resolver = self._resolver
+        if resolver._dirty:  # noqa: SLF001
+            resolver.invalidate()
 
     @property
     def _version(self) -> int:
@@ -193,8 +258,115 @@ class InjectQ:
 
     @_profiler.setter
     def _profiler(self, profiler: Any) -> None:
-        self._resolver.profiler = profiler
-        self._resolver.invalidate()
+        if profiler is None:
+            self.detach_profiler()
+        else:
+            self.attach_profiler(profiler)
+
+    # Profiling
+    def attach_profiler(self, profiler: Any) -> None:
+        """Report every resolution of this container to ``profiler``.
+
+        ``profiler`` follows the engine hook protocol of
+        ``injectq.diagnostics.DependencyProfiler``
+        (``on_resolve_start(key) -> token``,
+        ``on_resolve_end(token, cache_hit=...)``); it records only while
+        started. Compiled resolvers are rebuilt instrumented; singleton cache
+        hits of ``get()``/``aget()`` are reported with ``cache_hit=True``.
+        Without an attached profiler, a ``with DependencyProfiler():`` block
+        covers every container. Costs nothing once detached.
+        """
+        self._explicit_profiler = profiler
+        self._apply_profiler()
+
+    def detach_profiler(self) -> None:
+        """Stop reporting to the attached profiler (see ``attach_profiler``)."""
+        self._explicit_profiler = None
+        self._apply_profiler()
+
+    def _apply_profiler(self) -> None:
+        profiler = self._explicit_profiler
+        if profiler is None and _auto_profilers:
+            profiler = _auto_profilers[-1]
+        resolver = self._resolver
+        with resolver._lock:  # noqa: SLF001
+            if resolver.profiler is profiler:
+                return
+            resolver.profiler = profiler
+            resolver._dirty = True  # noqa: SLF001
+            resolver.invalidate()
+            self._registry.touch()  # @inject plans pick up the new resolvers
+            self._install_accessors()
+
+    def _install_accessors(self) -> None:
+        """Pick the get()/aget() variant for the current override/profiler state.
+
+        The plain methods (class attributes) are used when neither is active,
+        so they never pay for either.
+        """
+        resolver = self._resolver
+        attrs = self.__dict__
+        if resolver.override_var is not None:
+            attrs["get"] = self._get_overridable
+            attrs["aget"] = self._aget_overridable
+        elif resolver.profiler is not None:
+            attrs["get"] = self._get_profiled
+            attrs["aget"] = self._aget_profiled
+        else:
+            attrs.pop("get", None)
+            attrs.pop("aget", None)
+        # @inject plans read this mapping before calling resolvers: hide the
+        # cache so they go through the guarded / instrumented resolvers.
+        plain = resolver.override_var is None and resolver.profiler is None
+        self._singletons = self._cache if plain else _NO_CACHE
+
+    def _get_profiled(self, service_type: ServiceKey) -> Any:
+        value = self._cache.get(service_type, _MISSING)
+        if value is not _MISSING:
+            profiler = self._resolver.profiler
+            if profiler is not None:
+                profiler.on_resolve_end(
+                    profiler.on_resolve_start(service_type), cache_hit=True
+                )
+            return value
+        fn = self._resolver.sync.get(service_type)
+        if fn is None:
+            fn = self._resolver.compile_sync(service_type)
+        return fn()
+
+    async def _aget_profiled(self, service_type: ServiceKey) -> Any:
+        if service_type in self._cache:
+            return self._get_profiled(service_type)
+        return await InjectQ.aget(self, service_type)
+
+    def _get_overridable(self, service_type: ServiceKey) -> Any:
+        var = self._override_var
+        layer = var.get() if var is not None else None
+        if layer is None:
+            if self._resolver.profiler is not None:
+                return self._get_profiled(service_type)
+            return InjectQ.get(self, service_type)
+        value = layer.values.get(service_type, _MISSING)
+        if value is not _MISSING:
+            return value
+        return self._resolver.world(layer.keys).compile_sync(service_type)()
+
+    async def _aget_overridable(self, service_type: ServiceKey) -> Any:
+        var = self._override_var
+        layer = var.get() if var is not None else None
+        if layer is None:
+            if self._resolver.profiler is not None:
+                return await self._aget_profiled(service_type)
+            return await InjectQ.aget(self, service_type)
+        value = layer.values.get(service_type, _MISSING)
+        if value is not _MISSING:
+            return value
+        fn, is_coroutine = self._resolver.world(layer.keys).compile_async(
+            service_type
+        )
+        if is_coroutine:
+            return await fn()
+        return fn()
 
     # Dict-like interface
     def __setitem__(self, service_type: ServiceKey, implementation: Any) -> None:
@@ -296,18 +468,25 @@ class InjectQ:
         self,
         service_type: ServiceKey,
         factory: ServiceFactory,
+        scope: str | ScopeType = ScopeType.TRANSIENT,
     ) -> None:
         """Bind a service type to a factory function.
 
-        The factory is called on every resolve (transient); its parameters
-        are injected like a constructor's. An ``async def`` factory can only
-        be resolved with ``aget()``.
+        By default the factory is called on every resolve (transient); with
+        ``scope="singleton"`` (or a named scope such as ``"request"``) its
+        result is cached like a class binding's. Its parameters are injected
+        like a constructor's. An ``async def`` factory can only be resolved
+        with ``aget()``. Like ``bind``, a later registration of the key
+        replaces an earlier one unless ``allow_override=False``.
 
         Args:
             service_type: The service type or key to bind
             factory: The factory function
+            scope: The scope of the created values (default: transient)
         """
-        self._registry.bind_factory(service_type, factory, self._allow_override)
+        self._registry.bind_factory(
+            service_type, factory, self._allow_override, scope=scope
+        )
 
     @property
     def factories(self) -> FactoryProxy:
@@ -619,7 +798,7 @@ class InjectQ:
         scope's exit stack is then closed. Nested scopes of the same name
         restore the outer one on exit.
         """
-        return self._scope_manager.scope_context(scope_name)
+        return _Frame(self._scope_manager, scope_name)
 
     def async_scope(
         self, scope_name: str | ScopeType
@@ -629,7 +808,20 @@ class InjectQ:
         Same as ``scope()``, but the scope's exit stack is an
         ``AsyncExitStack`` that is awaited on exit.
         """
-        return self._scope_manager.async_scope_context(scope_name)
+        return _AsyncFrame(self._scope_manager, scope_name)
+
+    def current_exit_stack(
+        self, scope_name: str | ScopeType
+    ) -> ExitStack | AsyncExitStack:
+        """Exit stack of the innermost active ``scope_name`` scope.
+
+        Context managers and callbacks pushed onto it are closed (LIFO, with
+        the exception the scope exits with, if any) when that scope exits.
+
+        Raises:
+            ScopeError: If no such scope is active.
+        """
+        return self._scope_manager.current_exit_stack(scope_name)
 
     def register_scope(self, scope_name: str) -> None:
         """Register a custom named context scope (like ``"request"``)."""
@@ -657,8 +849,6 @@ class InjectQ:
                 # Dependencies resolved using this container
                 my_function()
         """
-        from .context import ContainerContext
-
         return ContainerContext.use(self)
 
     def activate(self) -> contextvars.Token[InjectQ | None]:
@@ -675,8 +865,6 @@ class InjectQ:
             A token; pass it to ``ContainerContext.reset_current`` to restore
             the previously active container.
         """
-        from .context import ContainerContext
-
         return ContainerContext.set_current(self)
 
     # Module installation
@@ -715,7 +903,7 @@ class InjectQ:
 
     def visualize_dependencies(self) -> DependencyVisualizer:
         """Get a dependency visualizer for this container."""
-        from injectq.diagnostics import DependencyVisualizer
+        from injectq.diagnostics import DependencyVisualizer  # noqa: PLC0415
 
         return DependencyVisualizer(self)
 
@@ -743,31 +931,169 @@ class InjectQ:
             f"InjectQ(services={len(self._registry)}, thread_safe={self._thread_safe})"
         )
 
+    # Resources
+    def track_resource(self, key: ServiceKey, lifecycle: Any) -> None:
+        """Make this container own a singleton resource's lifetime.
+
+        ``lifecycle`` is a ``ResourceLifecycle`` (what ``@resource`` creates);
+        ``shutdown()`` / ``ashutdown()`` tear it down and evict ``key``'s
+        cached instance.
+        """
+        with self._resources_lock:
+            self._resources.append((key, lifecycle))
+
+    def _live_resources(self, *, include_async: bool) -> list[tuple[Any, Any]]:
+        with self._resources_lock:
+            live = [
+                (key, lc)
+                for key, lc in self._resources
+                if lc.initialized and (include_async or not lc.is_async)
+            ]
+        live.sort(key=lambda item: item[1]._seq, reverse=True)  # noqa: SLF001
+        return live
+
+    def _evict(self, key: Any, value: Any) -> None:
+        self._scope_manager.evict_singleton(key, value)
+
+    def shutdown(self, exc: BaseException | None = None) -> None:
+        """Tear down the sync resources this container owns, last created first.
+
+        Each teardown receives ``exc`` (if given); the closed instance is
+        evicted from the singleton cache, so a later resolve creates a new
+        one. All teardowns run even if one fails; failures are raised
+        together afterwards (``ExceptionGroup`` on 3.11+). Async resources
+        are skipped: use ``ashutdown()``.
+        """
+        from injectq.decorators._resource import _raise_errors  # noqa: PLC0415
+
+        errors: list[BaseException] = []
+        for key, lifecycle in self._live_resources(include_async=False):
+            value = lifecycle.resource
+            try:
+                lifecycle.shutdown(exc)
+            except Exception as e:
+                _logger.exception("Resource shutdown failed")
+                errors.append(e)
+            finally:
+                self._evict(key, value)
+        _raise_errors("Error during resource shutdown", errors)
+
+    async def ashutdown(self, exc: BaseException | None = None) -> None:
+        """Tear down every resource this container owns (sync and async), LIFO.
+
+        Same rules as ``shutdown()``.
+        """
+        from injectq.decorators._resource import _raise_errors  # noqa: PLC0415
+
+        errors: list[BaseException] = []
+        for key, lifecycle in self._live_resources(include_async=True):
+            value = lifecycle.resource
+            try:
+                if lifecycle.is_async:
+                    await lifecycle.shutdown_async(exc)
+                else:
+                    lifecycle.shutdown(exc)
+            except Exception as e:
+                _logger.exception("Resource shutdown failed")
+                errors.append(e)
+            finally:
+                self._evict(key, value)
+        _raise_errors("Error during resource shutdown", errors)
+
     # Testing support
     @contextmanager
     def override(self, service_type: ServiceKey, override_value: Any) -> Iterator[None]:
-        """Temporarily override a service binding for testing."""
-        original = self._registry.get_provider(service_type)
+        """Resolve ``service_type`` to ``override_value`` inside the block.
+
+        - Applies to the current context only: this thread / task and what
+          it starts afterwards (``create_task``, ``to_thread``), never to
+          other threads or tasks.
+        - The value is returned as-is (a class is not instantiated). It also
+          reaches every service that depends on the key, directly or not:
+          those are built afresh inside the block (singletons and scoped
+          instances that depend on it are cached for the block only).
+        - Nothing is registered: no bindings change, no ``allow_concrete``
+          registration is added, it works with ``allow_override=False`` and
+          on factory-bound or unregistered keys. Cached singletons are kept:
+          after the block the key resolves exactly as before.
+        - Objects created before the block keep what they were given.
+        - Overrides nest; the innermost value of a key wins.
+
+        While any override is active (in any context), resolution runs on
+        slower guarded resolvers; the normal fast paths come back when the
+        last one exits.
+        """
+        var = self._enter_override(service_type)
+        parent = var.get()
+        values = dict(parent.values) if parent is not None else {}
+        values[service_type] = override_value
+        token = var.set(OverrideLayer(values))
         try:
-            self._scope_manager.clear_scope("singleton")
-            self.bind_instance(service_type, override_value)
             yield
         finally:
-            self._scope_manager.clear_scope("singleton")
-            self._registry.set_provider(service_type, original)
+            try:
+                var.reset(token)
+            except (ValueError, RuntimeError) as exc:
+                # Exited from another context: the layer lapses with its own.
+                _logger.debug("Override token not reset: %s", exc)
+            self._exit_override(service_type)
+
+    def _enter_override(self, key: Any) -> contextvars.ContextVar[OverrideLayer | None]:
+        with self._override_lock:
+            var = self._override_var
+            if var is None:
+                var = self._override_var = contextvars.ContextVar(
+                    f"injectq_overrides_{id(self):x}", default=None
+                )
+            counts = self._override_counts
+            n = counts.get(key, 0)
+            counts[key] = n + 1
+            if n == 0:
+                self._sync_overrides()
+            return var
+
+    def _exit_override(self, key: Any) -> None:
+        with self._override_lock:
+            counts = self._override_counts
+            n = counts.get(key, 0) - 1
+            if n > 0:
+                counts[key] = n
+                return
+            counts.pop(key, None)
+            self._sync_overrides()
+
+    def _sync_overrides(self) -> None:
+        """Recompile for the current set of overridden keys (lock held)."""
+        keys = frozenset(self._override_counts)
+        resolver = self._resolver
+        if keys:
+            resolver.set_override_state(self._override_var, keys)
+        else:
+            resolver.set_override_state(None, frozenset())
+        self._registry.touch()  # @inject plans rebuild
+        self._install_accessors()
 
     @classmethod
     @contextmanager
     def test_mode(cls) -> Iterator[InjectQ]:
-        """Create a temporary container for testing."""
-        original_instance = cls._instance
-        try:
-            cls._instance = None  # Force new instance
+        """Use a fresh container for the duration of the block.
+
+        It becomes both the global instance and the current context
+        container, so ``get_instance()``, ``@inject`` and the decorators see
+        it even inside an outer ``ContainerContext``. Both are restored on
+        exit.
+        """
+        with cls._instance_lock:
+            original_instance = cls._instance
             test_container = cls()
             cls._instance = test_container
+        token = ContainerContext.set_current(test_container)
+        try:
             yield test_container
         finally:
-            cls._instance = original_instance
+            ContainerContext.reset_current(token)
+            with cls._instance_lock:
+                cls._instance = original_instance
 
 
 class ModuleBinder:
@@ -799,6 +1125,11 @@ class ModuleBinder:
         """Bind a service type to a specific instance."""
         self._container.bind_instance(service_type, instance)
 
-    def bind_factory(self, service_type: ServiceKey, factory: ServiceFactory) -> None:
-        """Bind a service type to a factory function."""
-        self._container.bind_factory(service_type, factory)
+    def bind_factory(
+        self,
+        service_type: ServiceKey,
+        factory: ServiceFactory,
+        scope: str | ScopeType = ScopeType.TRANSIENT,
+    ) -> None:
+        """Bind a service type to a factory function (see ``InjectQ.bind_factory``)."""
+        self._container.bind_factory(service_type, factory, scope=scope)

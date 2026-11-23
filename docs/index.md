@@ -36,13 +36,14 @@ if __name__ == "__main__":
 - Simple dict-like API and binding methods
 - Decorator- and type-based injection (`@inject`, `Inject[T]`)
 - Factories: dict-like factories, `call_factory()`, and 🆕 hybrid `invoke()` / `ainvoke()` for parameterized factories
-- Scopes and lifetimes: `@singleton`, `@transient`, `@scoped("request")`, async scope contexts
+- Scopes and lifetimes: `@singleton`, `@transient`, `@scoped("request")`; one request scope per `with` block, sync or async, with exit stacks for cleanup
+- A resolver compiled per service (generated code, or plain closures with `debug=True`)
 - Modules and providers: `Module`, `SimpleModule`, `ProviderModule`, `@provider`
-- Integrations: FastAPI (`InjectFastAPI`), FastMCP (`InjectMCP`), and Taskiq (`InjectTaskiq`) as optional extras
+- Integrations: FastAPI (`InjectFastAPI`), FastMCP (`InjectFastMCP`), and Taskiq (`InjectTaskiq`) as optional extras
 - Async-first APIs: `aget()`, `acall_factory()`, `ainvoke()`
-- Thread-safe by default with minimal overhead
+- Safe under threads and asyncio tasks: the current container and scopes live in `ContextVar`s, and reads take no lock
 - Diagnostics & visualization: dependency graph and visualizer
-- Testing utilities: `override_dependency`, `test_container`, `InjectQ.test_mode()`
+- Testing utilities: context-local `container.override(...)`, `override_dependency`, `isolated_container`, `InjectQ.test_mode()`
 - Benchmarks: comprehensive reports and quick guide
 
 ## Core patterns
@@ -104,12 +105,11 @@ class Validator: ...  # New instance every resolution
 class RequestContext: ...  # One per request scope
 
 # Working with scopes
-async with container.scope("request"):
+with container.scope("request"):          # async: `async with container.async_scope("request"):`
     ctx1 = container.get(RequestContext)
     ctx2 = container.get(RequestContext)
     assert ctx1 is ctx2
-
-container.clear_scope("request")
+# Outside the block, container.get(RequestContext) raises ScopeError
 ```
 
 ### FastAPI integration (example)
@@ -183,7 +183,7 @@ container = InjectQ(modules=[AppModule(), Services(), Providers()])
 
 ```python
 from injectq import InjectQ
-from injectq.testing import override_dependency, test_container
+from injectq.testing import override_dependency, isolated_container
 
 container = InjectQ.get_instance()
 
@@ -192,7 +192,7 @@ with override_dependency(Database, MockDatabase()):
     service = container.get(UserService)
 
 # Isolated test container
-with test_container() as test_cont:
+with isolated_container() as test_cont:
     test_cont.bind(Database, MockDatabase)
     ...
 ```
@@ -201,12 +201,13 @@ with test_container() as test_cont:
 
 - Getting started (installation & quick-start)
 - Injection patterns (dict-style, decorator, Inject[T])
-- Scopes and lifecycle (singleton, transient, request)
+- Scopes and lifecycle (singleton, transient, request), resources and cleanup
+- Context and concurrency (tasks, threads, `to_thread`)
 - Modules and providers
 - Integrations (FastAPI, FastMCP, Taskiq)
 - Testing utilities and examples
 - **Performance benchmarks** - Comprehensive benchmark reports and quick guide
-- API reference and migration guides
+- API reference and the [0.6 migration guide](migration-0.6.md)
 
 ## Performance
 

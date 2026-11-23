@@ -9,7 +9,6 @@ registered listeners (the container uses this to drop compiled resolvers).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from injectq.utils import (
@@ -35,21 +34,53 @@ _TPFLAGS_IS_ABSTRACT = 1 << 20  # what inspect.isabstract checks
 ALL_KEYS: Any = object()
 
 
-@dataclass(slots=True)
 class ServiceBinding:
     """One provider: a class, an instance, or (``is_factory``) a factory."""
 
-    service_type: ServiceKey
-    implementation: Any  # Can be class, instance, or factory function
-    scope: str = ScopeType.SINGLETON.value
-    is_factory: bool = False
-    allow_none: bool = False
+    __slots__ = ("allow_none", "implementation", "is_factory", "scope", "service_type")
 
-    def __post_init__(self) -> None:
-        """Validate the binding after initialization."""
-        if self.implementation is None and not self.allow_none:
-            msg = f"Implementation cannot be None for {self.service_type}"
+    def __init__(
+        self,
+        service_type: ServiceKey,
+        implementation: Any,  # class, instance, or factory function
+        scope: str = "singleton",
+        is_factory: bool = False,
+        allow_none: bool = False,
+    ) -> None:
+        if implementation is None and not allow_none:
+            msg = f"Implementation cannot be None for {service_type}"
             raise BindingError(msg)
+        self.service_type = service_type
+        self.implementation = implementation
+        self.scope = scope
+        self.is_factory = is_factory
+        self.allow_none = allow_none
+
+    def _fields(self) -> tuple[Any, ...]:
+        return (
+            self.service_type,
+            self.implementation,
+            self.scope,
+            self.is_factory,
+            self.allow_none,
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if other.__class__ is not self.__class__:
+            return NotImplemented
+        return self._fields() == other._fields()  # type: ignore[attr-defined]
+
+    __hash__ = None  # type: ignore[assignment]  # mutable, compared by value
+
+    def __repr__(self) -> str:
+        return (
+            f"ServiceBinding(service_type={self.service_type!r}, "
+            f"implementation={self.implementation!r}, scope={self.scope!r}, "
+            f"is_factory={self.is_factory!r}, allow_none={self.allow_none!r})"
+        )
+
+
+_new_binding = object.__new__
 
 
 def _scope_name(scope: Any) -> str:
@@ -84,6 +115,14 @@ class ServiceRegistry:
         self._version += 1
         for listener in self._listeners:
             listener(key, binding)
+
+    def touch(self) -> None:
+        """Bump ``version`` without a binding change (overrides, profiler).
+
+        Listeners are not called; holders of compiled plans keyed on the
+        version (``@inject``) rebuild them.
+        """
+        self._version += 1
 
     def _check_override(self, key: ServiceKey, allow_override: bool) -> None:
         if not allow_override and key in self._providers:
@@ -161,12 +200,18 @@ class ServiceRegistry:
             )
         scope_name = scope if type(scope) is str else _scope_name(scope)
 
-        # Inlined _store(): bind() is the hot path of container setup.
-        binding = ServiceBinding(
-            service_type, implementation, scope_name, allow_none=allow_none
-        )
+        # Inlined _store() / _changed(): bind() is the hot path of setup.
+        # ServiceBinding(...) without the __init__ call (checked above).
+        binding = _new_binding(ServiceBinding)
+        binding.service_type = service_type
+        binding.implementation = implementation
+        binding.scope = scope_name
+        binding.is_factory = False
+        binding.allow_none = allow_none
         providers[service_type] = binding
-        self._changed(service_type, binding)
+        self._version += 1
+        for listener in self._listeners:
+            listener(service_type, binding)
         if concrete is not None:
             self._store(
                 ServiceBinding(
@@ -192,14 +237,17 @@ class ServiceRegistry:
         service_type: ServiceKey,
         factory: ServiceFactory,
         allow_override: bool = True,
+        scope: str | ScopeType = ScopeType.TRANSIENT,
     ) -> None:
-        """Bind a service type to a factory function (transient).
+        """Bind a service type to a factory function.
 
         Args:
             service_type: The service type or key to bind
             factory: The factory function
             allow_override: Whether to allow overriding existing registrations
                           (default: True)
+            scope: How long a created value lives (default: transient, a
+                new call per resolve; ``singleton``, ``request``...).
         """
         if not callable(factory):
             msg = f"Factory must be callable for {service_type}"
@@ -209,7 +257,7 @@ class ServiceRegistry:
             ServiceBinding(
                 service_type=service_type,
                 implementation=factory,
-                scope=ScopeType.TRANSIENT.value,
+                scope=_scope_name(scope),
                 is_factory=True,
             )
         )

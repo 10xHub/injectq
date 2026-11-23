@@ -12,7 +12,7 @@ See the **[Quick Reference Guide](quick-reference.md)** for common API patterns 
 - Binding services (dict interface and bind methods)
 - Decorators (@inject, @singleton, @transient, @scoped, @resource)
 - Module system and providers
-- Testing utilities (test_container, override_dependency)
+- Testing utilities (isolated_container, override_dependency)
 - Exception handling
 - Scope management
 - Type-safe injection

@@ -440,7 +440,7 @@ async def create_user(self, request: CreateUserRequest) -> User:
 ```python
 # tests/test_user_service.py
 import pytest
-from injectq.testing import test_container
+from injectq.testing import isolated_container
 
 from ..service import UserService
 from ..models import CreateUserRequest
@@ -467,7 +467,7 @@ class MockRepository:
 
 @pytest.mark.asyncio
 async def test_create_user():
-    with test_container() as container:
+    with isolated_container() as container:
         # Bind mock repository
         mock_repo = MockRepository()
         container[UserRepository] = mock_repo
@@ -486,7 +486,7 @@ async def test_create_user():
 
 @pytest.mark.asyncio
 async def test_get_user_not_found():
-    with test_container() as container:
+    with isolated_container() as container:
         mock_repo = MockRepository()
         container[UserRepository] = mock_repo
         container[UserService] = UserService

@@ -107,7 +107,7 @@ class RequestContext:
 # Usage
 container = InjectQ()
 
-async with container.scope("request"):
+with container.scope("request"):
     ctx1 = container.get(RequestContext)
     # Do work...
     ctx1.user_id = 123
@@ -118,10 +118,15 @@ async with container.scope("request"):
     print(f"User ID: {ctx2.user_id}")  # 123
 
 # New scope = new instance
-async with container.scope("request"):
+with container.scope("request"):
     ctx3 = container.get(RequestContext)
     print(f"New context? {ctx1 is not ctx3}")  # True
+
+# No scope: ScopeError
+container.get(RequestContext)
 ```
+
+In async code use `async with container.async_scope("request"):`.
 
 **When to use:**
 - Request context data
@@ -131,7 +136,7 @@ async with container.scope("request"):
 
 **Pros:**
 - Shared within logical unit
-- Automatic cleanup
+- Cleanup when the scope exits (exit stacks and `@resource("request")`, see [Resources and cleanup](../scopes/resources.md))
 - Request-scoped caching
 
 **Cons:**
@@ -158,8 +163,8 @@ container.bind(Database, scope=ScopeType.SINGLETON)
 Lives for the duration of a request:
 
 ```python
-container.bind(RequestContext, scope=Scope.REQUEST)
-container.bind(UserSession, scope=Scope.REQUEST)
+container.bind(RequestContext, scope=ScopeType.REQUEST)
+container.bind(UserSession, scope=ScopeType.REQUEST)
 ```
 
 ### Action Scope
@@ -167,8 +172,8 @@ container.bind(UserSession, scope=Scope.REQUEST)
 Lives for the duration of an action/method:
 
 ```python
-container.bind(ActionContext, scope=Scope.ACTION)
-container.bind(ValidationContext, scope=Scope.ACTION)
+container.bind(ActionContext, scope=ScopeType.ACTION)
+container.bind(ValidationContext, scope=ScopeType.ACTION)
 ```
 
 ### Transient Scope
@@ -176,54 +181,43 @@ container.bind(ValidationContext, scope=Scope.ACTION)
 Always creates new instances (same as `@transient`):
 
 ```python
-container.bind(CommandHandler, scope=Scope.TRANSIENT)
-container.bind(Validator, scope=Scope.TRANSIENT)
+container.bind(CommandHandler, scope=ScopeType.TRANSIENT)
+container.bind(Validator, scope=ScopeType.TRANSIENT)
 ```
 
 ## 🎨 Custom Scopes
 
-You can create custom scopes for specific needs:
+A custom scope is just a name. Register it, bind services to it, and enter it with `container.scope(...)`:
 
 ```python
-from injectq import Scope, ScopeManager
+from injectq import InjectQ, scoped
 
-class TaskScope(Scope):
-    """Scope that lives for the duration of a background task."""
+container = InjectQ()
+container.activate()
+container.register_scope("task")
 
-    def __init__(self):
-        self.task_id = None
-        self.start_time = None
 
-    def enter(self):
-        """Called when entering the scope."""
-        self.task_id = f"task_{uuid.uuid4().hex[:8]}"
-        self.start_time = time.time()
-        print(f"Starting task: {self.task_id}")
-
-    def exit(self):
-        """Called when exiting the scope."""
-        duration = time.time() - self.start_time
-        print(f"Task {self.task_id} completed in {duration:.2f}s")
-
-# Register custom scope
-scope_manager = container._scope_manager
-scope_manager.register_scope("task", TaskScope())
-
-# Use custom scope
 @scoped("task")
 class TaskProcessor:
-    def __init__(self):
-        self.task_id = None
+    def __init__(self) -> None:
+        self.task_id: str | None = None
 
-    def set_task_id(self, task_id: str):
-        self.task_id = task_id
 
-# Usage
-async with container.scope("task"):
+with container.scope("task"):
     processor = container.get(TaskProcessor)
-    processor.set_task_id("process_data")
+    processor.task_id = "process_data"
     # Do task work...
 ```
+
+Do something when the scope ends by pushing a callback onto its exit stack:
+
+```python
+with container.scope("task"):
+    stack = container.current_exit_stack("task")
+    stack.callback(print, "task finished")
+```
+
+Entering a scope name that was never registered raises `ScopeError`. See [Scoped Services](../scopes/scoped-services.md).
 
 ## 🔄 Lifetime Examples
 
@@ -386,7 +380,7 @@ class RequestHandler:
 
 ```python
 def test_singleton_behavior():
-    with test_container() as container:
+    with isolated_container() as container:
         container.bind(Database, MockDatabase)
 
         # Should be same instance
@@ -403,7 +397,7 @@ def test_singleton_behavior():
 
 ```python
 def test_scoped_behavior():
-    with test_container() as container:
+    with isolated_container() as container:
         container.bind(RequestContext, RequestContext, scope="request")
 
         # Outside scope - should fail
@@ -426,7 +420,7 @@ def test_scoped_behavior():
 
 ```python
 def test_transient_behavior():
-    with test_container() as container:
+    with isolated_container() as container:
         container.bind(Processor, Processor, scope="transient")
 
         proc1 = container.get(Processor)
@@ -535,8 +529,8 @@ class SharedService:
 
 ```python
 # Web application scopes
-container.bind(UserSession, scope=Scope.REQUEST)
-container.bind(Transaction, scope=Scope.REQUEST)
+container.bind(UserSession, scope=ScopeType.REQUEST)
+container.bind(Transaction, scope=ScopeType.REQUEST)
 
 # Background job scopes
 container.bind(JobContext, scope="job")
