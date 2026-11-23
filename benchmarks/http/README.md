@@ -1,8 +1,8 @@
 # HTTP benchmark
 
 The same small FastAPI app implemented with each DI library (`apps/app_*.py`): injectq, wireup,
-dishka, that-depends, dependency-injector, svcs, plain FastAPI `Depends`, and `manual` (no DI at
-all, the upper bound for the framework). The method follows wireup's published HTTP benchmark
+dishka, that-depends, dependency-injector, svcs, aioinject, diwire, injector, rodi, punq, kink, plain
+FastAPI `Depends`, and `manual` (no DI at all, the upper bound for the framework). The method follows wireup's published HTTP benchmark
 (same graph shape, one worker, warm-up, median of N rounds), so results are comparable in shape.
 
 ## The app
@@ -23,6 +23,20 @@ objects identical across requests, after 57 `/scoped` requests (7 sequential + 5
 exactly 57 creations of `C..I` and 57 enter/exit pairs for `H` and `I`, no singleton built more than
 once. A library that fails is not measured (the run aborts, or skips it with `--skip-failed`).
 
+How each library is wired:
+
+| app | wiring |
+|---|---|
+| wireup, dishka, that-depends, svcs, dependency-injector, injectq | the library's own FastAPI integration (see each file) |
+| aioinject | `aioinject.ext.fastapi`: `AioInjectMiddleware` + `inject`; generator resources via `contextmanager`-wrapped factories |
+| diwire | `resolver_context.inject(scope=Scope.REQUEST)` on the handlers, `Injected[T]` parameters, generator providers |
+| injector | community `fastapi-injector` (`Injected(Cls)`, `InjectorMiddleware`, `request_scope`) |
+| rodi | no integration: a `Depends` generator opens `provider.create_scope()`, each parameter is a non-cached `Depends` calling `scope.get` |
+| punq, kink | no scopes, no integration: `/singleton` goes through the library via `Depends` wrappers, `/scoped` is the plain FastAPI `Depends` graph (measures FastAPI, not the library) |
+
+python-inject (`inject`) is not included: it has one global injector and no request scope, the same
+situation as punq and kink.
+
 Documented deviations (`CAVEATS` in `run_http.py`, printed under the table):
 
 - dependency-injector has no per-request generator resources, so `H` and `I` are context-local
@@ -37,7 +51,7 @@ Documented deviations (`CAVEATS` in `run_http.py`, printed under the table):
 
     pip install -r benchmarks/http/requirements.txt -e .     # in a clean venv
     cargo install oha          # or: go install github.com/rakyll/hey@latest
-    python benchmarks/http/run_http.py                       # full run, writes benchmarks/results/http.json
+    python benchmarks/http/run_http.py                       # full run, writes benchmarks/results/latest/http.json
     python benchmarks/http/run_http.py --verify-only         # just check the apps, no load
     python benchmarks/http/run_http.py --libs injectq manual --rounds 3 --requests 5000
 

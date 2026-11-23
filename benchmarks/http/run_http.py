@@ -44,6 +44,12 @@ LIBS = {  # id -> (module, pip package or None)
     "that-depends": ("app_that_depends", "that-depends"),
     "dependency-injector": ("app_dependency_injector", "dependency-injector"),
     "svcs": ("app_svcs", "svcs"),
+    "aioinject": ("app_aioinject", "aioinject"),
+    "diwire": ("app_diwire", "diwire"),
+    "injector": ("app_injector", "injector"),
+    "rodi": ("app_rodi", "rodi"),
+    "punq": ("app_punq", "punq"),
+    "kink": ("app_kink", "kink"),
     "fastapi-depends": ("app_fastapi_depends", "fastapi"),
     "manual": ("app_manual", None),
 }
@@ -52,6 +58,10 @@ TESTS = ["singleton", "scoped"]
 # teardown counters are not checked for libraries listed here.
 CAVEATS = {
     "dependency-injector": ["no per-request generator resources with teardown: H and I are context-local singletons without teardown"],
+    "injector": ["wired with fastapi-injector (community integration, `Injected(Cls)` + `request_scope`); no generator resources, so H and I are plain request-scoped classes without teardown; A is an eager instance"],
+    "rodi": ["no FastAPI integration: wired by hand (a `Depends` generator opens `provider.create_scope()`, each parameter is a non-cached `Depends` calling `scope.get`); no generator resources, so H and I are plain scoped classes without teardown; singletons are eager instances"],
+    "punq": ["no scopes: only /singleton goes through punq (via `Depends` wrappers); /scoped is the plain FastAPI `Depends` graph, so it measures FastAPI, not punq"],
+    "kink": ["no scopes: only /singleton goes through kink (via `Depends` wrappers); /scoped is the plain FastAPI `Depends` graph, so it measures FastAPI, not kink"],
     "injectq": ["TODO(final run): H and I are plain request-scoped classes until generator resources with teardown bind with a scope (plan step 9); singletons are built eagerly"],
 }
 
@@ -220,7 +230,7 @@ def main():
     ap.add_argument("--concurrency", type=int, default=50)
     ap.add_argument("--tool", choices=list(TOOLS))
     ap.add_argument("--python", default=sys.executable, help="interpreter that has the apps' dependencies")
-    ap.add_argument("--out", default=os.path.join(HERE, "..", "results", "http.json"))
+    ap.add_argument("--out", default=os.path.join(HERE, "..", "results", "latest", "http.json"))
     ap.add_argument("--no-pin", action="store_true", help="do not pin server/load generator to separate CPUs")
     ap.add_argument("--server-cpu", type=int, default=2)
     ap.add_argument("--loadgen-cpu", type=int, default=1)

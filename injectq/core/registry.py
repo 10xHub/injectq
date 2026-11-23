@@ -198,9 +198,9 @@ class ServiceRegistry:
             service_type in providers
             or (concrete is not None and concrete in providers)
         ):
-            raise AlreadyRegisteredError(
-                service_type if service_type in providers else concrete
-            )
+            dup = service_type if service_type in providers else concrete
+            assert dup is not None
+            raise AlreadyRegisteredError(dup)
         scope_name = scope if type(scope) is str else _scope_name(scope)
 
         # Inlined _store() / _changed(): bind() is the hot path of setup.

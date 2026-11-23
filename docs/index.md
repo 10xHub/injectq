@@ -9,7 +9,7 @@
 InjectQ is a lightweight, type-friendly dependency injection library for Python focused on clarity, performance, and pragmatic integrations.
 
 !!! tip "Using an AI coding agent?"
-    Give your agent the injectq skill: [`SKILL.md` (raw)](https://raw.githubusercontent.com/10xhub/injectq/main/skills/injectq/SKILL.md) and its [folder](https://github.com/10xhub/injectq/tree/main/skills/injectq). In Claude Code, copy `skills/injectq` into `.claude/skills/`. For other agents, point them at the raw URL or paste it into their instructions. See [AI agents](ai-agents.md).
+    Using an AI coding agent (Claude Code, Cursor, Copilot, ...)? Give it [skill.md](https://raw.githubusercontent.com/10xhub/injectq/main/docs/skill.md): one file with everything it needs to use injectq correctly: recommended approach, API, pitfalls, limitations and benchmarks. Rendered page: [AI Agent Skill](skill.md).
 
 ## Quick example (recommended)
 

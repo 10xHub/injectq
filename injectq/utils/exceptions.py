@@ -1,7 +1,5 @@
 """Custom exceptions for InjectQ dependency injection library."""
 
-from typing import Any
-
 from .types import ServiceKey
 
 

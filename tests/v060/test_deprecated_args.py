@@ -24,6 +24,6 @@ def test_warns_when_passed(name, value):
 
 
 def test_warning_points_at_caller():
-    with pytest.warns(DeprecationWarning) as rec:
+    with pytest.warns(DeprecationWarning, match="thread_safe") as rec:
         InjectQ(thread_safe=True)
     assert rec[0].filename == __file__

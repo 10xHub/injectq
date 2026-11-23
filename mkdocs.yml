@@ -101,7 +101,7 @@ nav:
       - Quick Start: getting-started/quick-start.md
       - Your First App: getting-started/first-app.md
       - Python 3.15 Lazy Imports: getting-started/lazy-imports.md
-      - Using AI Coding Agents: ai-agents.md
+      - AI Agent Skill: skill.md
   - Core Concepts:
       - What is Dependency Injection?: core-concepts/what-is-di.md
       - The Container Pattern: core-concepts/container-pattern.md

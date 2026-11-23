@@ -45,8 +45,7 @@ if TYPE_CHECKING:
 _T = TypeVar("_T")
 _D = TypeVar("_D")
 
-# Seen by @inject plans (``container._singletons``) while an override is
-# active, so they never take the shared singleton cache over an override.
+
 def _warn_deprecated_arg(name: str) -> None:
     warnings.warn(
         f"InjectQ({name}=...) is deprecated: accepted and ignored since 0.6, "
@@ -56,6 +55,8 @@ def _warn_deprecated_arg(name: str) -> None:
     )
 
 
+# Seen by @inject plans (``container._singletons``) while an override is
+# active, so they never take the shared singleton cache over an override.
 _NO_CACHE: Any = MappingProxyType({})
 
 # Profilers active as ``with DependencyProfiler() as p:`` report every live
@@ -155,12 +156,13 @@ class InjectQ:
 
         Args:
             modules: List of modules to register
-            use_async_scopes: Deprecated and ignored (warns when passed). There is one scope
-                manager (ContextVar-based) that serves both ``scope()`` and
-                ``async_scope()``.
-            thread_safe: Deprecated and ignored (warns when passed). Resolution never takes a
-                lock; singleton and scoped creation is always serialised per
-                key, and the container lock is never held while factories run.
+            use_async_scopes: Deprecated and ignored (warns when passed).
+                There is one scope manager (ContextVar-based) that serves
+                both ``scope()`` and ``async_scope()``.
+            thread_safe: Deprecated and ignored (warns when passed).
+                Resolution never takes a lock; singleton and scoped creation is always
+                serialised per key, and the container lock is never held
+                while factories run.
             allow_override: Whether to allow overriding existing registrations
                           (default: True)
             debug: Resolve with plain linked closures instead of generated

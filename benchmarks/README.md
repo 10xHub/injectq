@@ -5,7 +5,7 @@ Excluded from the wheel. Three layers, from narrow to broad:
 | What | Where | Answers |
 |---|---|---|
 | Micro-benchmarks, injectq only (S1-S7) | `run.py`, `check.py`, `common.py` | How fast is the container, and did it regress? |
-| Cross-library comparison | `compare/` | How does that compare with wireup, dishka, that-depends, dependency-injector, lagom, svcs and hand-written code? |
+| Cross-library comparison | `compare/` | How does that compare with 13 other DI libraries (aioinject, dependency-injector, dishka, diwire, inject, injector, kink, lagom, punq, rodi, svcs, that-depends, wireup) and hand-written code? |
 | HTTP benchmark | `http/` | What does it mean inside a FastAPI request? |
 
 The reader-facing explanation (each scenario in plain words with the equivalent hand-written
@@ -38,18 +38,55 @@ before timing, and `common.run()` refuses to time an unverified scenario. A fail
     pip install -r benchmarks/http/requirements.txt -e .
     python benchmarks/http/run_http.py
     python benchmarks/compare/report.py --update-docs docs/benchmarks.md
+    python benchmarks/compare/report.py --update-readme README.md --update-skill docs/skill.md
 
     # quick smoke test, meaningless numbers
     BENCH_REPEATS=3 BENCH_TARGET=0.001 python benchmarks/run.py --out /tmp/x.json
 
 Environment: `BENCH_REPEATS` (default 25), `BENCH_TARGET` (seconds per repeat, default 0.02).
 
-## Results
+## Results layout
 
-`results/` holds the raw JSON: `injectq.json`, `compare.jsonl`, `http.json`. Each record carries
-the CPU model, OS, CPython version and build, library versions, date and repeat counts, so a
-number can always be traced to a machine and a version. `latest.json` / `baseline.json` are the
-injectq-only regression pair used by `check.py`.
+    benchmarks/results/
+      2026-11-23-py3.13.13/      one directory per run (<date>-py<python version>)
+        injectq.json             one file per library, same shape (below)
+        wireup.json  dishka.json  ...  baseline.json
+        results.json             every library's numbers in one file
+        environment.json         machine, Python build, library versions, repeats
+      latest/                    copy of the most recent run, plus http.json, the rendered
+                                 *_table.md files; report.py reads this directory
+
+`run_all.sh` writes the run directory (only if every library verified) and replaces `latest/`.
+`run_http.py` writes `latest/http.json`.
+
+What each JSON field means:
+
+| File | Field | Meaning |
+|---|---|---|
+| `<library>.json` | `lib` | library id (`baseline` = hand-written code) |
+| | `results.S1` ... `S7r` | median over the repeats, in microseconds per operation (S7, S7r: per container build); `null` = the library has no equivalent feature (n/a); a string `ERR ...` = the timing raised |
+| | `verified` | scenarios whose `common.Verifier` contract passed before timing |
+| | `meta` | the environment block below, as seen by that process |
+| | `python` | CPython version that ran it |
+| `results.json` | `run_id` | run directory name |
+| | `unit` | unit of every number |
+| | `scenarios` | column order |
+| | `results` | `{library: {scenario: number or null}}` |
+| | `verified` | `{library: [scenarios verified]}` |
+| `environment.json` | `date` | UTC time of the injectq run |
+| | `cpu`, `cpu_count` | CPU model and logical CPUs |
+| | `os` | `platform.platform()` |
+| | `python` | version, full version string, implementation, build date, compiler, `gil_enabled`, `optimized_build` (PGO flag), `lto` |
+| | `libraries` | installed version of every benchmarked package |
+| | `repeats` | timed repeats per scenario (`BENCH_REPEATS`) |
+| | `target_seconds_per_repeat` | calibrated loop length of one repeat (`BENCH_TARGET`) |
+| | `statistic` | how a number is derived (median of repeats) |
+| `http.json` | `tool`, `fallback` | load generator (`oha`, `hey`, or the lower-fidelity httpx fallback) |
+| | `concurrency`, `rounds`, `requests`, `warmup`, `workers`, `pinned` | load profile; `pinned` = server and load generator on separate CPUs |
+| | `results.<lib>.<test>` | `median_rps`, `min_rps`, `max_rps`, and every round's `rps` |
+| | `verification` | per library: `"ok"` or the problems found by the counters check |
+| | `caveats` | documented deviations per library |
+| `injectq.json` (legacy `latest.json`/`baseline.json`) | | injectq-only regression pair for `check.py`, same shape as a `<library>.json` |
 
 ## Method in one paragraph
 

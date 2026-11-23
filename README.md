@@ -24,16 +24,24 @@ Full documentation is hosted at [Documentation](https://10xhub.github.io/injectq
 - Modules and providers, validation (`validate()`, `compile()`), a dependency graph and a profiler
 - Supports Python 3.10 through 3.15, including Python 3.15 lazy imports (PEP 810)
 
+## Benchmarks
+
+injectq compared with 13 other Python dependency injection libraries on the same object graphs. Every library first passes the same correctness checks (types, singleton identity, fresh transients, request-scope isolation), then is timed in its own process. Lower is better.
+
+<!-- BENCH:README_TABLE -->
+Numbers are added at release.
+<!-- /BENCH:README_TABLE -->
+
+Scenarios: **S1** resolve a cached singleton, **S2** a 3-level transient chain, **S3** a wide graph (5 transients sharing a singleton), **S4** enter a request scope, resolve, exit, **S5** call an `@inject` function with 3 dependencies, **S6** S2 through the async API.
+Full results, the chart, method and per-library notes: [Benchmarks](https://10xhub.github.io/injectq/benchmarks/) ([source](docs/benchmarks.md)). Raw JSON for every run: [`benchmarks/results/`](benchmarks/results/). Reproduce with `make bench-compare`.
+
 ## Upgrading from 0.5
 
 0.6 changes how the current container, scopes, overrides and `get()` on async factories behave, and it renames or removes some names. Read the [0.6 migration guide](docs/migration-0.6.md) ([online](https://10xhub.github.io/injectq/migration-0.6/)). It lists every change with before and after code. To find old names in your code, run your tests with `pytest -W error::DeprecationWarning`.
 
 ## Using an AI coding agent?
 
-Give your agent [`skills/injectq/SKILL.md`](skills/injectq/SKILL.md) ([raw file](https://raw.githubusercontent.com/10xhub/injectq/main/skills/injectq/SKILL.md), [skill folder](https://github.com/10xhub/injectq/tree/main/skills/injectq)). It teaches the injectq 0.6 API, scopes, integrations, testing and the common traps, so the agent writes correct code the first time.
-
-- Claude Code: copy the `skills/injectq` folder into `.claude/skills/` (project) or `~/.claude/skills/` (all projects).
-- Other agents (Cursor, Copilot, ...): point them at the raw URL, or paste the file into your rules or instructions. See the [AI agents guide](https://10xhub.github.io/injectq/ai-agents/).
+Using an AI coding agent (Claude Code, Cursor, Copilot, ...)? Give it [docs/skill.md](https://raw.githubusercontent.com/10xhub/injectq/main/docs/skill.md): one file with everything it needs to use injectq correctly: recommended approach, API, pitfalls, limitations and benchmarks. Rendered page: [AI Agent Skill](https://10xhub.github.io/injectq/skill/).
 
 ## Quick Start (recommended pattern)
 
@@ -282,30 +290,11 @@ python -m pytest
 
 Coverage reports are written to `htmlcov/` and `coverage.xml`.
 
-## Performance Benchmarks
-
-InjectQ includes comprehensive performance benchmarks to ensure production-ready performance:
+## Running the benchmarks
 
 ```bash
-# Run all benchmarks
-pytest tests/test_benchmarks.py --benchmark-only
-
-# Run with verbose statistics
-pytest tests/test_benchmarks.py --benchmark-only --benchmark-verbose
-
-# Save results for comparison
-pytest tests/test_benchmarks.py --benchmark-only --benchmark-autosave
+make bench          # injectq only, checked against benchmarks/baseline.json
+make bench-compare  # injectq vs the other DI libraries, in an isolated venv
 ```
 
-### Cross-library benchmarks
-
-`benchmarks/` holds the reproducible micro-benchmark suite (scenarios S1–S7:
-cached singleton, transient chain, wide graph, request scope, `@inject` call,
-async resolution, container build). Run it with:
-
-```bash
-make bench          # injectq only, compared against benchmarks/baseline.json
-make bench-compare  # injectq vs other DI libraries, in an isolated venv
-```
-
-Published numbers will be added here with the 0.6.0 release.
+See [`benchmarks/README.md`](benchmarks/README.md) for the scenarios, the result files and how to add a library.

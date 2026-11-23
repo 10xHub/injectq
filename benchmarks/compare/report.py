@@ -1,15 +1,16 @@
 """Render benchmark results: README table, full docs table, SVG chart.
 
-Reads  <results-dir>/compare.jsonl   (one JSON line per comparison library)
-       <results-dir>/injectq.json    (benchmarks/run.py)
+Reads  <results-dir>/<library>.json  (one per library; default dir benchmarks/results/latest)
        <results-dir>/http.json       (benchmarks/http/run_http.py, optional)
 
-Writes <results-dir>/readme_table.md, full_table.md, not_fastest.md, meta.md
-and prints the README table. Optional:
+Writes <results-dir>/results.json + environment.json (--aggregate, also done on every run),
+readme_table.md, full_table.md, not_fastest.md, meta.md, and prints the README table. Optional:
   --svg PATH            dependency-free SVG bar chart (log scale)
   --update-docs PATH    fill every <!-- BENCH:NAME --> ... <!-- /BENCH:NAME -->
                         block in that markdown file (README_TABLE, FULL_TABLE,
                         CHART, META, NOT_FASTEST, NOTES, HTTP_TABLE)
+  --update-readme PATH  fill <!-- BENCH:README_TABLE --> only (compact table, libraries as rows)
+  --update-skill PATH   fill <!-- BENCH:SKILL_TABLE --> only (docs/skill.md: same compact table)
 
 Dependency-free (standard library only). Usage:
   python benchmarks/compare/report.py [--results-dir benchmarks/results]
@@ -22,11 +23,10 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_DIR = os.path.join(HERE, "..", "results")
+DEFAULT_DIR = os.path.join(HERE, "..", "results", "latest")
 
 BASE = "baseline"
 DISPLAY = {BASE: "hand-written"}
-ORDER = ["injectq", "wireup", "dishka", "that-depends", "dependency-injector", "lagom", "svcs", BASE]
 README_SCEN = ["S1", "S2", "S3", "S4", "S5", "S6", "S7"]
 FULL_SCEN = README_SCEN + ["S7r"]
 WHAT = {
@@ -45,6 +45,32 @@ NA_REASON = {
     ("lagom", "S4"): "no request scope",
     ("lagom", "S6"): "no async resolution",
     ("svcs", "S5"): "no generic injection decorator (framework integrations only)",
+    ("injector", "S6"): "no async API",
+    ("punq", "S4"): "no request scope (only transient and singleton)",
+    ("punq", "S5"): "no injection decorator",
+    ("punq", "S6"): "no async API",
+    ("kink", "S4"): "no request scope",
+    ("kink", "S6"): "no async resolution",
+    ("rodi", "S6"): "no async resolution (sync only)",
+    ("inject", "S4"): "no request scope",
+    ("inject", "S6"): "no async resolution",
+    ("aioinject", "S5"): "no generic injection decorator (per-framework `inject` only)",
+}
+# One-line description of a non-1:1 setup, appended to the library's footnote in the compact table.
+SETUP = {
+    "wireup": "transients and scoped services resolve from a scope: S2, S3, S6 use one long-lived scope, S4/S5 enter one per operation",
+    "dishka": "no transient lifetime; `cache=False` is its equivalent",
+    "svcs": "caches per `Container`, so transient = a new `Container` per operation (its construction is timed)",
+    "that-depends": "S5 with `@inject(scope=None)`; S4 via a `ContextResource` in `ContextScopes.REQUEST`",
+    "lagom": "unregistered classes are autowired as transient",
+    "dependency-injector": "S6 uses providers in async mode",
+    "injector": "request scope is a custom `Scope` subclass (cache swapped on enter/exit); constructors need `@inject` (applied to the benchmark classes)",
+    "punq": "transient is the default scope",
+    "kink": "`@inject` on a class registers it (singleton; `use_factory=True` = transient) and mutates `__init__`; S7 restores `__init__` before re-decorating",
+    "rodi": "resolved with `provider.get` / `provider.exec` (each call creates an activation scope); S7 includes `build_provider()`, which validates and wires eagerly",
+    "inject": "one global injector; singletons via `bind_to_constructor`, transients via `bind_to_provider`, constructors wired with `autoparams`",
+    "aioinject": "sync `SyncContainer` for S1-S5/S7, async `Container` for S6; transients registered in the lifetime scope to resolve from the root context",
+    "diwire": "default `SCOPED` lifetime at the root scope = singleton; transient via `Lifetime.TRANSIENT`; S5 passes `diwire_resolver=` explicitly",
 }
 NOTES = [
     "**hand-written** is plain constructor calls with module-level singletons (S4 uses a minimal dict-backed per-request cache). It is the floor: no container, no resolution.",
@@ -52,29 +78,69 @@ NOTES = [
     "**dishka** has no transient lifetime: `cache=False` is its documented equivalent. All services except the request-scoped one are registered in `Scope.APP`.",
     "**svcs** caches every service per `Container`, so \"transient\" is a fresh `Container` per operation (the container construction is part of the measured cost).",
     "**that-depends**: S5 uses `@inject(scope=None)` (skips entering an inject scope on every call; the cheapest idiomatic form). S4 uses a `ContextResource` in `ContextScopes.REQUEST`.",
+    "**injector**: request scope is a custom `Scope` (the documented extension point), not a built-in. **punq**, **kink** and **inject** have no request scope (n/a). **kink** and **inject** wire classes by mutating `__init__` / a global injector.",
+    "**rodi**: S7 includes `build_provider()` (eager validation and wiring), so S7 and S7r are the same cost. **aioinject**: `SyncContainer` for S1-S5/S7, async `Container` for S6. **diwire**: S5 passes `diwire_resolver=` explicitly because creating any other `Container` clears its global fallback.",
     "**lagom** autowires unregistered classes as transients; the singletons and the 50-class chain are registered explicitly.",
     "**dependency-injector**: S6 uses providers in async mode; Factory/Singleton providers are declared once, as in its docs.",
     "S7 measures building the container; S7r additionally resolves the 50th service (a 50-deep chain), because some libraries defer work (graph analysis, code generation) to the first resolve.",
 ]
 
 
+NON_LIB_JSON = {"results.json", "environment.json", "http.json"}
+
+
 def load(results_dir):
+    """One record per library from <results-dir>/<library>.json."""
     rows = {}
-    path = os.path.join(results_dir, "compare.jsonl")
-    if os.path.exists(path):
-        with open(path) as fh:
-            for line in fh:
-                if line.strip():
-                    r = json.loads(line)
-                    rows[r["lib"]] = r
-    path = os.path.join(results_dir, "injectq.json")
-    if os.path.exists(path):
-        with open(path) as fh:
-            r = json.load(fh)
-        rows["injectq"] = r
+    if os.path.isdir(results_dir):
+        for fn in sorted(os.listdir(results_dir)):
+            if not fn.endswith(".json") or fn in NON_LIB_JSON:
+                continue
+            with open(os.path.join(results_dir, fn)) as fh:
+                r = json.load(fh)
+            if isinstance(r, dict) and "lib" in r and "results" in r:
+                rows[r["lib"]] = r
     if not rows:
         sys.exit(f"no results found in {results_dir} (run benchmarks/compare/run_all.sh first)")
     return rows
+
+
+def aggregate(rows, results_dir, run_id=None):
+    """Write results.json (all numbers in one file) and environment.json."""
+    lead = rows.get("injectq") or next(iter(rows.values()))
+    m = lead.get("meta") or {}
+    libs = {}
+    for r in rows.values():
+        libs.update({k: v for k, v in (r.get("meta", {}).get("libraries") or {}).items() if v})
+    if not run_id:  # keep the id of the run that produced these files
+        try:
+            with open(os.path.join(results_dir, "environment.json")) as fh:
+                run_id = json.load(fh).get("run_id")
+        except (OSError, ValueError):
+            run_id = None
+    env = {
+        "run_id": run_id or os.path.basename(os.path.abspath(results_dir)),
+        "date": m.get("date"),
+        "cpu": m.get("cpu"),
+        "cpu_count": m.get("cpu_count"),
+        "os": m.get("os"),
+        "python": m.get("python"),
+        "libraries": dict(sorted(libs.items())),
+        "repeats": m.get("repeats"),
+        "target_seconds_per_repeat": m.get("target_seconds_per_repeat"),
+        "statistic": m.get("statistic"),
+    }
+    combined = {
+        "run_id": env["run_id"],
+        "unit": "microseconds per operation (build scenarios: per container build)",
+        "scenarios": FULL_SCEN,
+        "results": {l: rows[l]["results"] for l in libs_present(rows)},
+        "verified": {l: rows[l].get("verified", []) for l in libs_present(rows)},
+    }
+    for fn, obj in (("results.json", combined), ("environment.json", env)):
+        with open(os.path.join(results_dir, fn), "w") as fh:
+            json.dump(obj, fh, indent=2)
+            fh.write("\n")
 
 
 def num(rows, lib, scen):
@@ -93,7 +159,9 @@ def fmt(v):
 
 
 def libs_present(rows):
-    return [l for l in ORDER if l in rows]
+    """injectq first, then the other libraries alphabetically, hand-written last."""
+    others = sorted(l for l in rows if l not in ("injectq", BASE))
+    return [l for l in ["injectq", *others, BASE] if l in rows]
 
 
 def name(lib):
@@ -113,27 +181,68 @@ def ratio(a, b):
     return None if a is None or not b else a / b
 
 
+COMPACT_SCEN = ["S1", "S2", "S3", "S4", "S5", "S6"]
+COMPACT_HEAD = {
+    "S1": "S1 singleton",
+    "S2": "S2 transient chain",
+    "S3": "S3 wide graph",
+    "S4": "S4 request scope",
+    "S5": "S5 injected call",
+    "S6": "S6 async chain",
+}
+
+
 def readme_table(rows):
+    """Libraries as rows, S1-S6 as columns (µs/op). Fastest DI library per column in bold,
+    then a rank row for injectq. Footnotes: setup differences and n/a reasons per library."""
     libs = libs_present(rows)
-    head = ["µs/op (median, lower is better)"] + [name(l) for l in libs] + ["injectq vs hand-written", "fastest DI library"]
-    out = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
-    for s in README_SCEN:
-        best, bv = fastest_di(rows, s)
+    di = [l for l in libs if l != BASE]
+    best = {s: fastest_di(rows, s)[0] for s in COMPACT_SCEN}
+    notes = []  # (lib, text) in row order
+
+    def footnote(l):
+        parts = []
+        if l in SETUP:
+            parts.append(SETUP[l] + ".")
+        nas = [f"{s} {NA_REASON.get((l, s), 'n/a')}" for s in COMPACT_SCEN if num(rows, l, s) is None and rows[l]["results"].get(s) is None]
+        if nas:
+            parts.append("n/a: " + "; ".join(nas) + ".")
+        return " ".join(parts)
+
+    head = ["µs/op (median, lower is better)"] + [COMPACT_HEAD[s] for s in COMPACT_SCEN]
+    out = ["| " + " | ".join(head) + " |", "|---|" + "--:|" * len(COMPACT_SCEN)]
+    for l in libs:
+        txt = footnote(l) if l != BASE else ""
+        mark = ""
+        if txt:
+            notes.append((l, txt))
+            mark = f" [{len(notes)}]"
+        label = (f"**{l}**" if l == "injectq" else name(l)) if l != BASE else "_hand-written (floor)_"
         cells = []
-        for l in libs:
+        for s in COMPACT_SCEN:
             v = num(rows, l, s)
             t = fmt(v)
-            if l == best and v is not None:
+            if l == best[s] and v is not None:
                 t = f"**{t}**"
+            elif l == BASE and v is not None:
+                t = f"_{t}_"
             cells.append(t)
-        r = ratio(num(rows, "injectq", s), num(rows, BASE, s))
-        rel = f"{r:.1f}x" if r is not None else "n/a"
+        out.append(f"| {label}{mark} | " + " | ".join(cells) + " |")
+    rank = []
+    for s in COMPACT_SCEN:
         iv = num(rows, "injectq", s)
-        if best == "injectq" or iv is None:
-            who = "injectq" if best == "injectq" else (best or "n/a")
-        else:
-            who = f"{best} ({iv / bv:.1f}x faster than injectq)"
-        out.append(f"| {WHAT[s]} | " + " | ".join(cells) + f" | {rel} | {who} |")
+        vals = sorted(v for v in (num(rows, l, s) for l in di) if v is not None)
+        rank.append(f"{vals.index(iv) + 1} of {len(vals)}" if iv is not None and iv in vals else "n/a")
+    out.append("| **injectq rank** | " + " | ".join(f"**{r}**" for r in rank) + " |")
+    wins = []
+    for s in COMPACT_SCEN:
+        b = best[s]
+        wins.append("injectq" if b == "injectq" else (b or "n/a"))
+    out.append("| fastest DI library | " + " | ".join(wins) + " |")
+    out.append("")
+    out.append("Bold: fastest DI library in the column (hand-written excluded). n/a: the library has no such feature.")
+    for i, (l, t) in enumerate(notes, 1):
+        out.append(f"\n[{i}] **{name(l)}**: {t}")
     return "\n".join(out)
 
 
@@ -214,10 +323,20 @@ def meta_md(rows):
     return "\n".join(parts)
 
 
+def short_meta(rows):
+    m = (rows.get("injectq") or next(iter(rows.values()))).get("meta") or {}
+    py = m.get("python", {})
+    di = len([l for l in rows if l != BASE])
+    return (f"_{di} libraries, {m.get('cpu')}, CPython {py.get('version')}, median of {m.get('repeats')} repeats, "
+            f"{(m.get('date') or '')[:10]}. Full table, chart and method: `docs/benchmarks.md`._")
+
+
 # ----------------------------------------------------------------------- SVG
 COLORS = {
     "injectq": "#E4572E", "wireup": "#4C78A8", "dishka": "#2A9D8F", "that-depends": "#B279A2",
     "dependency-injector": "#9D755D", "lagom": "#54A24B", "svcs": "#C9A227", BASE: "#8A9099",
+    "aioinject": "#F58518", "diwire": "#72B7B2", "inject": "#D67195", "injector": "#5778A4",
+    "kink": "#A0CBE8", "punq": "#8CD17D", "rodi": "#B6992D",
 }
 
 
@@ -340,16 +459,24 @@ def update_docs(path, blocks):
         print(f"warning: markers not found in {path}: {', '.join(missing)}", file=sys.stderr)
 
 
+def fill(path, key, value):
+    update_docs(path, {key: value})
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("legacy", nargs="?", help=argparse.SUPPRESS)
     ap.add_argument("--results-dir", default=DEFAULT_DIR)
     ap.add_argument("--svg")
     ap.add_argument("--update-docs")
+    ap.add_argument("--update-readme", help="fill <!-- BENCH:README_TABLE --> in this file (e.g. README.md)")
+    ap.add_argument("--update-skill", help="fill <!-- BENCH:SKILL_TABLE --> in this file (e.g. docs/skill.md)")
+    ap.add_argument("--run-id", help="recorded in results.json/environment.json (default: results dir name)")
     a = ap.parse_args()
     rd = os.path.abspath(a.results_dir)
     rows = load(rd)
 
+    aggregate(rows, rd, a.run_id)
     rt, ft, nf, mm = readme_table(rows), full_table(rows), not_fastest(rows), meta_md(rows)
     for fn, txt in (("readme_table.md", rt), ("full_table.md", ft), ("not_fastest.md", nf), ("meta.md", mm)):
         with open(os.path.join(rd, fn), "w") as fh:
@@ -365,6 +492,11 @@ def main():
             "CHART": "![Resolution cost per scenario, log scale](assets/benchmarks.svg)",
             "HTTP_TABLE": http_table(rd),
         })
+    short = rt + "\n\n" + short_meta(rows)
+    if a.update_readme:
+        fill(a.update_readme, "README_TABLE", short)
+    if a.update_skill:
+        fill(a.update_skill, "SKILL_TABLE", short)
     print(mm + "\n")
     print(rt)
     print("\nWhere injectq is not fastest:\n" + nf)
