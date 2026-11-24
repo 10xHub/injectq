@@ -10,7 +10,7 @@ InjectQ 0.6 rewrites the resolution engine, the scopes and the context handling.
     pytest -W error::DeprecationWarning
     ```
 
-2. Rename deprecated names using the [table below](#deprecated-names). They still work in 0.6 and are removed in 0.7.
+2. Rename deprecated names using the [table below](#deprecated-names). They still work in 0.6 and 0.7 and are removed in 0.8.
 3. Replace removed names using the [removed names table](#removed-names). These raise `ImportError` or `AttributeError` now.
 4. Read [Behaviour changes](#behaviour-changes) and [Things that now raise](#things-that-now-raise). These are the changes that do not show up as an import error.
 
@@ -18,7 +18,7 @@ Two bugs drive most of the changes: the "current container" was shared by all as
 
 ## Deprecated names
 
-These work in 0.6, emit a `DeprecationWarning` when used, and are removed in 0.7.
+These work in 0.6 and 0.7, emit a `DeprecationWarning` when used, and are removed in 0.8.
 
 | Old name | New name | Where |
 |---|---|---|
@@ -60,7 +60,7 @@ def test_x():
 
 `container_fixture(name="container")` takes the fixture name, so `container_fixture(name="di")` gives a fixture called `di`.
 
-`thread_safe=` and `use_async_scopes=` do nothing now. They are deprecated: still accepted, but passing either emits a `DeprecationWarning` ("accepted and ignored since 0.6, will be removed in 0.7"). `InjectQ()` stays silent. Reads never take a lock, and creating a singleton or a scoped instance is always safe under threads and tasks.
+`thread_safe=` and `use_async_scopes=` do nothing now. They are deprecated: still accepted, but passing either emits a `DeprecationWarning` ("accepted and ignored since 0.6, will be removed in 0.8"). `InjectQ()` stays silent. Reads never take a lock, and creating a singleton or a scoped instance is always safe under threads and tasks.
 
 ```python
 # Before (0.5)

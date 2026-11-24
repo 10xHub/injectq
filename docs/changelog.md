@@ -7,7 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.6.1] - Unreleased
+## [0.7.0] - Unreleased
+
+### Fixed
+
+- A parameter with a real default now uses that default when its key is not bound, instead of auto-building the annotated class (which failed for classes like pydantic `BaseSettings`). This applies to `get()`, `aget()`, `validate()`, `compile()` and `@inject`, for both `X | None = None` and `X = default`. Bound and overridden keys are still injected; parameters without a default, and `Inject[X]` markers, are still auto-built.
+
+### Changed
+
+- A defaulted parameter whose type is not bound no longer gets an auto-built instance; it gets its default. To inject it, bind the type.
+- The names deprecated in 0.6 still work in 0.7 (with a `DeprecationWarning`). Their removal moves to 0.8.
+
+---
+
+## [0.6.1] - Released
 
 ### Fixed
 

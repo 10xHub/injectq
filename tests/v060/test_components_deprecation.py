@@ -1,4 +1,4 @@
-"""injectq.components is deprecated in 0.6 (removed in 0.7) and loaded lazily."""
+"""injectq.components is deprecated in 0.6 (removed in 0.8) and loaded lazily."""
 
 from __future__ import annotations
 

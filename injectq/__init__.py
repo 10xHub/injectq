@@ -4,7 +4,7 @@ Combines the simplicity of kink, the power of python-injector,
 and the advanced features of modern DI frameworks.
 """
 
-__version__ = "0.6.1"
+__version__ = "0.7.0"
 
 # Core
 from .core import (
@@ -116,7 +116,7 @@ _LAZY_DIAGNOSTICS = frozenset(
     {"DependencyProfiler", "DependencyValidator", "DependencyVisualizer"}
 )
 
-# Deprecated since 0.6, removed in 0.7. Not in __all__, so `import *` stays silent.
+# Deprecated since 0.6, removed in 0.8. Not in __all__, so `import *` stays silent.
 _DEPRECATED_COMPONENT_NAMES = frozenset(
     {
         "Component",
@@ -145,7 +145,7 @@ def __getattr__(name: str) -> object:
         import warnings  # noqa: PLC0415
 
         warnings.warn(
-            f"injectq.{name} is deprecated since 0.6 and will be removed in 0.7; "
+            f"injectq.{name} is deprecated since 0.6 and will be removed in 0.8; "
             "use injectq.Module / providers and container bindings instead.",
             DeprecationWarning,
             stacklevel=2,

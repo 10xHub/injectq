@@ -245,7 +245,10 @@ def test_module_binder_bind_without_implementation():
 
 
 def test_outer_default_does_not_hide_missing_nested_dependency():
+    # Wraps is bound, so it is built (an unbound type with a default gets the
+    # default); its missing Iface must still raise, not fall back to None.
     c = InjectQ()
+    c.bind(Wraps, Wraps)
     with pytest.raises(DependencyNotFoundError):
         c.get(OuterWithDefault)
 

@@ -1,9 +1,9 @@
 ---
 name: injectq
-description: Use when writing, reviewing or debugging Python code that uses the injectq 0.6 dependency injection library - containers, @inject, scopes, resources, modules, FastAPI/Taskiq/FastMCP integration, test overrides - or when upgrading from injectq 0.5.
+description: Use when writing, reviewing or debugging Python code that uses the injectq 0.7 dependency injection library - containers, @inject, scopes, resources, modules, FastAPI/Taskiq/FastMCP integration, test overrides - or when upgrading from injectq 0.5.
 ---
 
-# injectq 0.6: guide for AI coding agents
+# injectq 0.7: guide for AI coding agents
 
 injectq is a Python dependency injection container (Python 3.10+, github.com/10xhub/injectq). You bind types to classes, factories or instances in an `InjectQ` container and resolve them with `container.get(T)` / `await container.aget(T)`, constructor injection, or `@inject`. Scopes (singleton, transient, request, custom) control lifetime. Extras: `injectq[fastapi]`, `injectq[taskiq]`, `injectq[fastmcp]` (fastmcp >= 2.14).
 
@@ -63,7 +63,7 @@ assert main() == "sqlite://"
 
 ## 2. Core API
 
-Imports: `from injectq import ...`. Names below exist in 0.6.0.
+Imports: `from injectq import ...`. Names below exist in 0.7.0.
 
 ### Container and constructor
 
@@ -735,7 +735,7 @@ assert c.get(Db) is c.get(Db)             # bound as an instance
 
 ## 7. Rules and pitfalls
 
-Things that raise in 0.6, with the fix:
+Things that raise in 0.7, with the fix:
 
 | Mistake | Raises | Fix |
 |---|---|---|
@@ -755,7 +755,7 @@ Behaviour traps (no exception, wrong result):
 - The current container and scopes are `ContextVar`s: plain `threading.Thread` and `loop.run_in_executor` do not see them, and already-running sibling tasks do not see a later `activate()` (section 4).
 - Sync Taskiq task bodies run in `run_in_executor`: `get_instance()` and `@inject` there use the global container. Use `async def` tasks.
 - `override()` is local to the current context, slows resolution while active, and does not change objects that already hold the old value (see section 6).
-- Parameter defaults are used only when the parameter's own key (by type, or name) is not bound. A bound key always beats the default.
+- Parameter defaults are used only when the parameter's own key (by type, or name) is not bound. A bound key always beats the default. An unbound type with a default is never auto-built (since 0.7): `settings: Settings | None = None` gets `None` unless `Settings` is bound.
 - `Inject[T]` marker beats a bound parameter name. An unresolvable `Inject[...]` raises; it never passes through as a value.
 - Last registration wins for a key, whatever kind. Rebinding drops that key's cached singleton. `bind_factory` is transient by default (called on every resolve): add `scope="singleton"` to cache.
 - Exceptions raised by your own `@inject` function pass through unchanged. Only resolution failures are `InjectionError`. Constructor errors during resolution are wrapped in `InjectionError` once, for the class that failed; injectq's own errors are not wrapped.
@@ -859,12 +859,12 @@ Tuning:
 
 Order of work:
 
-1. Install 0.6, run tests with `pytest -W error::DeprecationWarning` to surface deprecated names.
-2. Rename deprecated names (still work in 0.6, removed in 0.7).
+1. Install 0.7, run tests with `pytest -W error::DeprecationWarning` to surface deprecated names.
+2. Rename deprecated names (still work in 0.6 and 0.7, removed in 0.8).
 3. Replace removed names (raise `ImportError`/`AttributeError`).
 4. Review the behaviour changes below.
 
-### Deprecated (warn in 0.6, removed in 0.7)
+### Deprecated (warn since 0.6, removed in 0.8)
 
 | Old | New |
 |---|---|

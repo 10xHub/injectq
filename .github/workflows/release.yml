@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run tests
+        run: uv run pytest -q --benchmark-disable
+
+      - name: Verify tag matches package version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION=$(sed -nE 's/^__version__ *= *"([^"]+)".*/\1/p' injectq/__init__.py | head -n1)
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not read __version__ from injectq/__init__.py"
+            exit 1
+          fi
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::Tag $TAG does not match injectq.__version__ v$VERSION. Bump injectq/__init__.py or retag."
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Verify release notes exist
+        run: |
+          if [ ! -f "RELEASE_NOTES_${VERSION}.md" ]; then
+            echo "::error::RELEASE_NOTES_${VERSION}.md not found at repo root."
+            exit 1
+          fi
+
+      - name: Build
+        run: uv build
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" dist/* \
+            --title "InjectQ $VERSION" \
+            --notes-file "RELEASE_NOTES_${VERSION}.md"

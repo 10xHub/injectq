@@ -127,7 +127,7 @@ def deprecated_alias(func: F, old: str, new: str) -> F:
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         warnings.warn(
-            f"{old} is deprecated and will be removed in injectq 0.7; use {new}",
+            f"{old} is deprecated and will be removed in injectq 0.8; use {new}",
             DeprecationWarning,
             stacklevel=2,
         )

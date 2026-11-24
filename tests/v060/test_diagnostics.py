@@ -245,7 +245,7 @@ def test_root_exports_and_lazy_diagnostics():
 
     code = (
         "import sys, injectq;"
-        "assert injectq.__version__ == '0.6.1';"
+        "assert injectq.__version__ == '0.7.0';"
         "assert 'injectq.diagnostics' not in sys.modules;"
         "names = ['AlreadyRegisteredError', 'ModuleBinder', 'ResourceError', 'ScopeError'];"
         "[getattr(injectq, n) for n in names];"

@@ -75,7 +75,7 @@ def test_old_pytest_container_fixture_warns():
 
 
 def test_old_names_still_importable():
-    """Guard: deprecated aliases stay importable until 0.7."""
+    """Guard: deprecated aliases stay importable until 0.8."""
     from injectq.testing import (  # noqa: F401
         TestModule,
         pytest_container_fixture,

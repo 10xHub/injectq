@@ -753,7 +753,7 @@ class DependencyResolver:
             def from_world(layer: OverrideLayer) -> tuple[Any, Any, bool]:
                 world = world_of(layer.keys)
                 key = world.lookup_key(param)
-                if key is _MISSING or not world.can_resolve(key):
+                if key is _MISSING or not world.usable(param, key):
                     if has_default:
                         return default, None, False
                     if key is _MISSING and base is not None:
@@ -804,6 +804,20 @@ class DependencyResolver:
             return self.provider(key) is not None or is_auto_resolvable(key)
         except TypeError:  # unhashable key
             return False
+
+    def usable(self, param: Param, key: Any) -> bool:
+        """True if ``key`` should be injected for ``param``.
+
+        A parameter with a real default (not an ``Inject[...]`` marker) uses
+        its key only when that key is bound; otherwise the default applies
+        and the annotated class is never auto-built.
+        """
+        if param.has_default and param.marker is _MISSING:
+            try:
+                return self.provider(key) is not None
+            except TypeError:  # unhashable key
+                return False
+        return self.can_resolve(key)
 
     def params(self, target: Any) -> tuple[Param, ...]:
         """Cached parameter analysis of ``target``."""
@@ -896,7 +910,7 @@ class DependencyResolver:
         pending: list[Dep] = []  # skipped positional-only defaults
         for param in self.params(target):
             dep_key = self.lookup_key(param)
-            if dep_key is not _MISSING and not self.can_resolve(dep_key):
+            if dep_key is not _MISSING and not self.usable(param, dep_key):
                 if not param.has_default:
                     raise DependencyNotFoundError(dep_key)
                 dep_key = _MISSING
@@ -1471,7 +1485,7 @@ class DependencyResolver:
             dep_key = self.lookup_key(param)
             if dep_key is _MISSING:
                 continue
-            if param.has_default and not self.can_resolve(dep_key):
+            if param.has_default and not self.usable(param, dep_key):
                 continue
             out.append(dep_key)
         return out

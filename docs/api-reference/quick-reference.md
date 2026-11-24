@@ -1,6 +1,6 @@
 # API Quick Reference
 
-Everything here exists in InjectQ 0.6. Names in the migration guide's [deprecated table](../migration-0.6.md#deprecated-names) are not listed.
+Everything here exists in InjectQ 0.7. Names in the migration guide's [deprecated table](../migration-0.6.md#deprecated-names) are not listed.
 
 ## Exports
 
