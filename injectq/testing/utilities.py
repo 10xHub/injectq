@@ -224,7 +224,7 @@ def container_fixture(name: str = "container") -> Any:
 
 
 # --------------------------------------------------------------------------
-# Deprecated names (removed in 0.7). They are served by the module
+# Deprecated names (removed in 0.8). They are served by the module
 # ``__getattr__`` below rather than defined at module level, so pytest never
 # sees them here; each warns when used.
 
@@ -232,7 +232,7 @@ def container_fixture(name: str = "container") -> Any:
 def _deprecated(old: str, new: str) -> None:
     warnings.warn(
         f"injectq.testing.{old} is deprecated since 0.6 and will be removed in "
-        f"0.7; use {new} instead.",
+        f"0.8; use {new} instead.",
         DeprecationWarning,
         stacklevel=3,
     )

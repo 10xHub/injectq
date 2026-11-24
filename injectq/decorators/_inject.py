@@ -702,7 +702,7 @@ class _Injector:
                 else:
                     late = self._late(container, param, is_async=is_async)
                     slot = _Slot(j, sig, None, late, fail, coro=is_async)
-            elif not resolver.can_resolve(key):
+            elif not resolver.usable(param, key):
                 if not param.has_default:  # e.g. Inject[Unbound]: raises if needed
                     missing = functools.partial(_raise_missing, key)
                     slot = _Slot(j, sig, key, missing, fail)

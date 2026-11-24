@@ -17,7 +17,7 @@ def test_silent_by_default():
 @pytest.mark.parametrize("name", ["thread_safe", "use_async_scopes"])
 @pytest.mark.parametrize("value", [True, False])
 def test_warns_when_passed(name, value):
-    with pytest.warns(DeprecationWarning, match=f"{name}.*will be removed in 0.7"):
+    with pytest.warns(DeprecationWarning, match=f"{name}.*will be removed in 0.8"):
         container = InjectQ(**{name: value})
     container.bind(int, 1)
     assert container.get(int) == 1

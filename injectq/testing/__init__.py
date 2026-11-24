@@ -3,7 +3,7 @@
 ``isolated_container()``, ``container_fixture()`` and ``MockModule`` were
 called ``test_container()``, ``pytest_container_fixture()`` and
 ``TestModule`` before 0.6; the old names still work (with a
-``DeprecationWarning``) until 0.7.
+``DeprecationWarning``) until 0.8.
 """
 
 from typing import Any

@@ -32,7 +32,7 @@ from injectq.utils.exceptions import InjectQError
 
 
 _DEPRECATION_MESSAGE = (
-    "injectq.components is deprecated since 0.6 and will be removed in 0.7. "
+    "injectq.components is deprecated since 0.6 and will be removed in 0.8. "
     "Use plain modules/providers (injectq.Module, container.bind) and the "
     "container lifecycle (scopes, @resource, container.shutdown()) instead."
 )
@@ -668,7 +668,7 @@ class ComponentContainer(InjectQ):
     def __init__(self, thread_safe: bool = True) -> None:
         warnings.warn(
             "ComponentContainer is deprecated since 0.6 and will be removed "
-            "in 0.7; use InjectQ with modules/providers instead.",
+            "in 0.8; use InjectQ with modules/providers instead.",
             DeprecationWarning,
             stacklevel=2,
         )

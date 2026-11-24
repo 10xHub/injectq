@@ -49,7 +49,7 @@ _D = TypeVar("_D")
 def _warn_deprecated_arg(name: str) -> None:
     warnings.warn(
         f"InjectQ({name}=...) is deprecated: accepted and ignored since 0.6, "
-        "will be removed in 0.7",
+        "will be removed in 0.8",
         DeprecationWarning,
         stacklevel=3,
     )

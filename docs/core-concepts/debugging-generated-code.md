@@ -1,6 +1,6 @@
 # Debugging Generated Code
 
-InjectQ 0.6 compiles each service into one Python function. For a `Service` that needs `Repo`, which needs `Db`, it builds a function that creates all three with plain constructor calls.
+Since 0.6, InjectQ compiles each service into one Python function. For a `Service` that needs `Repo`, which needs `Db`, it builds a function that creates all three with plain constructor calls.
 
 This page shows how to read that code and how to turn it off for simpler tracebacks.
 
